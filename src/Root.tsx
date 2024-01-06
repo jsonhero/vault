@@ -39,7 +39,6 @@ export default function Root() {
       removeEventListener("hashchange", cb);
     };
   }, []); // ignore -- theRoom is managed by the effect
-  console.log('updating???')
 
   return (
     <ProsemirrorAdapterProvider>

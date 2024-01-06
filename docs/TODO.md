@@ -29,4 +29,15 @@
 - Add markdown editing like Obsidian
 
 
-// https://news.ycombinator.com/item?id=33374402
+
+
+##### Search
+
+- Add fallback FTS index when query is < 3 characters since it won't able to use the trigram tokenzier, probs just use default tokenizer.
+- Implement custom query match highlighting since SQLite highlight() isn't great, and isn't good with a ui framework.
+- Include spaces where doc_text new line characters should be
+- Add doc_text snippet() SQLite aux function for narrowing down large documents.
+- Maybe add a spellfix index to enable fuzzy search. I think it would work by first parsing the search query words, hitting the spellfix index to get a list of auxillary terms, and then hit the FTS index with those terms.
+
+https://www.sqlite.org/fts5.html
+https://www.sqlite.org/spellfix1.html

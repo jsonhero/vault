@@ -73,6 +73,8 @@ export const TextEditor = ({
   onUpdate,
   docJson,
 }: TextEditorProps) => {
+
+  console.log('Is updating!!!')
   const nodeViewFactory = useNodeViewFactory()
   const pluginViewFactory = usePluginViewFactory()
   const editorViewRef = useRef<EditorView>(null)

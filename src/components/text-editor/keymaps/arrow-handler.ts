@@ -8,9 +8,7 @@ export function arrowHandler(dir: "up" | "down" | "left" | "right" | "forward" |
       let $head = state.selection.$head
       let nextPos = TextSelection.near(
         state.doc.resolve(side > 0 ? $head.after() : $head.before()), side)
-        // console.log(dir, ': dir', nextPos.$head.parent.type.name)
       if (nextPos.$head && nextPos.$head.parent.type.name == "codemirror") {
-        // console.log('okay!')
         if (dispatch) {
           dispatch(state.tr.setSelection(nextPos))
         }

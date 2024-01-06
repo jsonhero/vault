@@ -95,7 +95,6 @@ export class CodeMirrorNodeView {
 
   setSelection(anchor: number, head: number) {
     this.cm.focus()
-    console.log('focusing!!!!')
     this.updating = true
     this.cm.dispatch({ selection: { anchor, head } })
     this.updating = false

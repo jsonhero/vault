@@ -16,7 +16,6 @@ export const ScriptBlockNode = () => {
     frame.setAttribute("sandbox", "allow-scripts allow-popups allow-modals allow-forms allow-same-origin")
     frame.src = "/sandbox.html"
     let code = node.textContent
-    console.log(node.textContent)
     let channel = new MessageChannel()
     channel.port2.onmessage = event => {
       setComputedValue(JSON.stringify(event.data.value))

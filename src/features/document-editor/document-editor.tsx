@@ -23,8 +23,6 @@ export const DocumentEditor = ({ entityDocId }: { entityDocId: number }) => {
     await db.execute("UPDATE document SET doc = ?, doc_text = ? WHERE id = ? RETURNING *", [JSON.stringify(docJson), docText, documentId])
   }
 
-  console.log(entityDocument, 'doc')
-
   const onEditorUpdate = useCallback((state: EditorState) => {
     if (entityDocument) {
       saveDocument(entityDocument!.document_id, state.toJSON(), state.doc.textContent)
