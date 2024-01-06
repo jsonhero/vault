@@ -1,4 +1,4 @@
-##### Persisted CRDT frameworks to watch
+#### Persisted CRDT frameworks to watch
 - https://vlcn.io/docs/cr-sqlite/intro (SQLite, most extendible <3) partial replication coming soon
 - https://electric-sql.com/ (SQLite) partial replication coming soon
 - https://www.evolu.dev/docs/faq (SQLite)
@@ -10,14 +10,14 @@ Runner ups:
 - https://github.com/surrealdb/surrealdb.wasm (indexdb.. :( )
 - https://www.mongodb.com/developer/products/realm/ (paid.. Atlas is closed souce)
 
-##### Knowledge systems to watch
+#### Knowledge systems to watch
 - https://obsidian.md/
 - https://affine.pro/ (open-source-ish)
 - https://www.notion.so/
 - https://museapp.com/
 
 
-##### Articles
+#### Articles
 
 General:
 - https://localfirstweb.dev/
