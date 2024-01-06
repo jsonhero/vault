@@ -27,7 +27,7 @@ export const DocumentEditor = ({ entityDocId }: { entityDocId: number }) => {
     if (entityDocument) {
       saveDocument(entityDocument!.document_id, state.toJSON(), state.doc.textContent)
     }
-  }, [entityDocument])
+  }, [entityDocument.document_id])
 
   const docJson = useMemo(() => entityDocument?.document_doc, [entityDocument?.document_id])
   

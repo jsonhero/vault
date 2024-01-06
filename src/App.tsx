@@ -1,14 +1,15 @@
 import { CtxAsync, useCachedState, useSync } from "@vlcn.io/react";
 
 import SyncWorker from "./sync-worker.js?worker";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { nanoid } from 'nanoid'
+import { Search } from 'lucide-react'
 
 import { Table } from '~/features/table'
 import { DocumentEditor } from '~/features/document-editor'
 import { useDatabase, useQuery } from '~/context/database-context'
 import { Entity, DataSchema } from '~/types/db-types'
-import { Search } from "~/features/search";
+import { useSearch } from "~/features/search";
 
 function getEndpoint() {
   let proto = "ws:";
@@ -25,8 +26,9 @@ const worker = new SyncWorker();
 
 function App({ dbname }: { dbname: string }) {
 
-  const [selectedEntity, setSelectedEntity] = useState<Entity | undefined>()
+  const [selectedEntityId, setSelectedEntityId] = useState<number | undefined>()
   const db = useDatabase()
+  const search = useSearch()
 
   useSync({
     dbname,
@@ -38,6 +40,10 @@ function App({ dbname }: { dbname: string }) {
   const data = useQuery<Entity[]>(
     "SELECT * FROM entity WHERE type IN ('table', 'document') ORDER BY created_at DESC"
   ).data;
+
+  const selectedEntity = useMemo(() => {
+    return data.find((e) => e.id === selectedEntityId)
+  }, [data, selectedEntityId])
 
   const onClickAddTable = async () => {
     const defaultSchema = {
@@ -56,7 +62,7 @@ function App({ dbname }: { dbname: string }) {
     const entity = await db.execute<Entity>(`INSERT INTO entity (title, type, data_schema_id) VALUES ('Placeholder', 'table', ${dataSchema.id}) RETURNING *`, [], {
       takeFirst: true,
     })
-    setSelectedEntity(entity);
+    setSelectedEntityId(entity.id);
   }
 
   const onClickAddDocument = async () => {
@@ -65,11 +71,19 @@ function App({ dbname }: { dbname: string }) {
     })
     await db.execute(`INSERT INTO document (entity_id) VALUES (?) RETURNING *`, [entity.id])
 
-    setSelectedEntity(entity);
+    setSelectedEntityId(entity.id);
   }
 
   const onSelectTable = (entity: Entity) => {
-    setSelectedEntity(entity)
+    setSelectedEntityId(entity.id)
+  }
+
+  const openSearch = () => {
+    search.open({
+      onClickResult(entityId) {
+        setSelectedEntityId(entityId)
+      },
+    })
   }
 
   return (
@@ -78,7 +92,10 @@ function App({ dbname }: { dbname: string }) {
       <div className="w-[300px] bg-gray-800 text-white p-4">
         {/* Sidebar content goes here */}
         <h2 className="text-2xl font-semibold mb-4">Vault</h2>
-        <Search setSelectedEntity={setSelectedEntity} />
+        <button className="flex gap-1 align-center" onClick={openSearch}>
+          <Search size={20} />
+          <span>Search</span>
+        </button>
         <div className="flex justify-between">
           <button onClick={onClickAddDocument}>
             Add Document

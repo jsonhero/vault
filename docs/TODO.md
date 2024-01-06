@@ -29,7 +29,8 @@
 - Add markdown editing like Obsidian
 
 
-
+##### Text Editor
+- fix react flushSync issue when changing docs, this may be an issue with the react prosemirror adapter.
 
 ##### Search
 
@@ -38,6 +39,7 @@
 - Include spaces where doc_text new line characters should be
 - Add doc_text snippet() SQLite aux function for narrowing down large documents.
 - Maybe add a spellfix index to enable fuzzy search. I think it would work by first parsing the search query words, hitting the spellfix index to get a list of auxillary terms, and then hit the FTS index with those terms.
+- Maybe use https://github.com/pacocoursey/cmdk
 
 https://www.sqlite.org/fts5.html
 https://www.sqlite.org/spellfix1.html

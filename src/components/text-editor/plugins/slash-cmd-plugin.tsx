@@ -5,6 +5,7 @@ import { NodeSelection, Plugin, PluginKey, TextSelection } from "prosemirror-sta
 import { useRef, useState, useMemo, useEffect } from "react";
 import { schema } from "../schema";
 import { nanoid } from 'nanoid'
+import { useSearch, searchContext } from "~/features/search";
 
 const SlashPluginKey = new PluginKey('SlashPlugin')
 
@@ -15,19 +16,21 @@ interface Point {
 
 const menuItems = [
   {
+    id: 'table',
+    name: 'Table'
+  },
+  {
+    id: 'script',
     name: 'Script',
-  },
-  {
-    name: 'Other'
-  },
-  {
-    name: 'Thing'
   }
 ]
 
 const SlashComponent = () => {
   const { view } = usePluginViewContext()
   const ref = useRef<HTMLDivElement>(null)
+
+  const search = useSearch()
+
   const [coords, setCoords] = useState<Point | undefined>(undefined)
   const [isOpen, setOpen] = useState(false)
 
@@ -49,7 +52,7 @@ const SlashComponent = () => {
       // temp hack till ark doesn't auto focus
       setTimeout(() => {
         view.focus()
-      }, 10)
+      }, 100)
     } else if (isActive && !pluginState.mounted) {
       setCoords(undefined)
       setOpen(false)
@@ -148,6 +151,10 @@ export function createSlashPlugin(factory: (options: ReactPluginViewUserOptions)
           view.dispatch(tr)
           return true
         } else if (pluginState.mounted && event.code === 'Enter') {
+
+          // need some sort of relay system of keyboard input to the component, so react context and stores can be used 
+          // or use solid lul
+
           const tr = view.state.tr.setMeta(SlashPluginKey, { ...defaultState })
           let {$from, to} = view.state.selection, pos
           let same = $from.sharedDepth(to)

@@ -4,7 +4,7 @@
 - https://www.evolu.dev/docs/faq (SQLite)
 
 Runner ups:
-- https://rxdb.info/ (PouchDb)
+- https://rxdb.info/ (PouchDb, SQLite?)
 - https://www.powersync.com/ (SQLite + paid *barf*)
 - https://octobase.pro/ (block based??)
 - https://github.com/surrealdb/surrealdb.wasm (indexdb.. :( )
@@ -28,8 +28,9 @@ General:
 - https://blog.turso.tech/is-nosql-dead-fe57c5e4
 - https://www.youtube.com/watch?v=BmgL1SRfUyc&ab_channel=WorkerConf
 - https://engineering.fb.com/2020/03/02/data-infrastructure/messenger/
+- https://webkit.org/blog/12257/the-file-system-access-api-with-origin-private-file-system/
 
-PouchDb:
+PouchDb: (No partial replication ever.)
 - https://news.ycombinator.com/item?id=28995268
 - https://blog.inkdrop.app/how-ive-support-5-platforms-aa4cdd18e9b4
 
@@ -39,3 +40,10 @@ Other:
 
 SQLLite:
 - https://litesync.io/en/
+- https://litestream.io/
+
+
+
+###### AI
+
+AI models that run in a web assembly and can be embedded into the browser?

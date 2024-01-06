@@ -1,3 +1,4 @@
+import React from 'react'
 import { 
   useNodeViewFactory,
   usePluginViewFactory, 
@@ -68,19 +69,17 @@ function dispatchTransactionFactory(view: EditorView, onUpdate?: (state: EditorS
 
 }
 
-export const TextEditor = ({
+export const TextEditor = React.memo(({
   docId,
   onUpdate,
   docJson,
 }: TextEditorProps) => {
 
-  console.log('Is updating!!!')
   const nodeViewFactory = useNodeViewFactory()
   const pluginViewFactory = usePluginViewFactory()
   const editorViewRef = useRef<EditorView>(null)
 
   const plugins = useMemo(() => [createSlashPlugin(pluginViewFactory), keymapPlugin, lineNumberPlugin], [])
-
 
   useEffect(() => {
     if (docId) {
@@ -132,4 +131,4 @@ export const TextEditor = ({
   return (
     <div className="editor" ref={editorRef} />
   )
-}
+}, (prevProps, nextProps) => prevProps.docId === nextProps.docId)
