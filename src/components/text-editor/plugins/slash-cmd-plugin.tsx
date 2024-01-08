@@ -5,7 +5,7 @@ import { NodeSelection, Plugin, PluginKey, TextSelection } from "prosemirror-sta
 import { useRef, useState, useMemo, useEffect } from "react";
 import { schema } from "../schema";
 import { nanoid } from 'nanoid'
-import { useSearch, searchContext } from "~/features/search";
+import { searchService } from "~/features/search";
 
 const SlashPluginKey = new PluginKey('SlashPlugin')
 
@@ -29,8 +29,6 @@ const SlashComponent = () => {
   const { view } = usePluginViewContext()
   const ref = useRef<HTMLDivElement>(null)
 
-  const search = useSearch()
-
   const [coords, setCoords] = useState<Point | undefined>(undefined)
   const [isOpen, setOpen] = useState(false)
 
@@ -41,7 +39,7 @@ const SlashComponent = () => {
   const isActive = useMemo(() => coords !== undefined, [coords])
 
   useEffect(() => {
-    if (pluginState.mounted && !isActive) {
+    if (pluginState?.mounted && !isActive) {
       const coords = view.coordsAtPos(view.state.selection.head)
 
       setCoords({
@@ -53,7 +51,7 @@ const SlashComponent = () => {
       setTimeout(() => {
         view.focus()
       }, 100)
-    } else if (isActive && !pluginState.mounted) {
+    } else if (isActive && !pluginState?.mounted) {
       setCoords(undefined)
       setOpen(false)
     }
@@ -74,7 +72,7 @@ const SlashComponent = () => {
           {menuItems.map((item, i) => {
             const extraProps: any = {}
 
-            if (i === pluginState.selectedMenuItemIndex) {
+            if (i === pluginState?.selectedMenuItemIndex) {
               extraProps['data-highlighted'] = true
             }
             return (
@@ -95,6 +93,7 @@ export function createSlashPlugin(factory: (options: ReactPluginViewUserOptions)
     view: factory({
       component: SlashComponent,
     }),
+
     state: {
       init() {
         return { ...defaultState }
@@ -106,7 +105,6 @@ export function createSlashPlugin(factory: (options: ReactPluginViewUserOptions)
       },
     },
     props: {
-
       handleKeyDown(view, event) {
         const pluginState = this.getState(view.state)
 
@@ -155,28 +153,66 @@ export function createSlashPlugin(factory: (options: ReactPluginViewUserOptions)
           // need some sort of relay system of keyboard input to the component, so react context and stores can be used 
           // or use solid lul
 
-          const tr = view.state.tr.setMeta(SlashPluginKey, { ...defaultState })
-          let {$from, to} = view.state.selection, pos
-          let same = $from.sharedDepth(to)
-          if (same == 0) return false
-          pos = $from.before(same)
-          const parentNode = NodeSelection.create(view.state.doc, pos)
-          tr.setSelection(parentNode)
+          const item = menuItems[pluginState.selectedMenuItemIndex]
+          
+          if (item.id === 'table') {
+            const tr = view.state.tr.setMeta(SlashPluginKey, { ...defaultState })
 
-          const scriptId = nanoid()
-          const codemirrorblock = schema.nodes.codemirror.create({
-            scriptId
-          })
-          const scriptblock = schema.nodes.scriptblock.create({
-            id: scriptId
-          }, codemirrorblock)
+            
+            view.dispatch(tr)
 
-          tr.replaceSelectionWith(scriptblock)
-          // console.log(parentNode, 'node')
-          // goto inside of new code block
-          tr.setSelection(TextSelection.create(tr.doc, pos + 2))
-          view.dispatch(tr)
-          return true
+            setTimeout(() => {
+              searchService.open({
+                entityTypeFilter: 'table',
+                onClickResult(entityId) {
+
+                  const {$from, to} = view.state.selection
+                  const same = $from.sharedDepth(to)
+                  if (same == 0) return false
+                  const pos = $from.before(same)
+                  const parentNode = NodeSelection.create(view.state.doc, pos)
+                  tr.setSelection(parentNode)
+                  
+                  const tableblock = schema.nodes.tableblock.create({
+                    entityId,
+                  })
+
+                  tr.replaceSelectionWith(tableblock)
+
+                  view.dispatch(tr)
+                  // view.state.
+                  // how to access current view state...
+                  // console.log(entityId, 'omg!')
+                },
+              })
+            }, 150)
+
+            return true
+          } else if (item.id === 'script') {
+            const tr = view.state.tr.setMeta(SlashPluginKey, { ...defaultState })
+            const {$from, to} = view.state.selection
+            const same = $from.sharedDepth(to)
+            if (same == 0) return false
+            const pos = $from.before(same)
+            const parentNode = NodeSelection.create(view.state.doc, pos)
+            tr.setSelection(parentNode)
+
+            const scriptId = nanoid()
+            const codemirrorblock = schema.nodes.codemirror.create({
+              scriptId
+            })
+            const scriptblock = schema.nodes.scriptblock.create({
+              id: scriptId
+            }, codemirrorblock)
+
+            tr.replaceSelectionWith(scriptblock)
+            // console.log(parentNode, 'node')
+            // goto inside of new code block
+            tr.setSelection(TextSelection.create(tr.doc, pos + 2))
+            view.dispatch(tr)
+            return true
+          }
+
         }
       },
     }

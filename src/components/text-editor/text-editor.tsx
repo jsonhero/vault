@@ -14,7 +14,7 @@ import { CodeMirrorNodeView } from './node-view'
 import { schema } from './schema'
 import { arrowHandler, createLineblockOnEnter, backspace } from './keymaps'
 import { lineNumberPlugin, createSlashPlugin } from './plugins'
-import { LineBlockNode, ScriptBlockNode } from './nodes'
+import { LineBlockNode, ScriptBlockNode, TableBlockNode } from './nodes'
 
 const keymapPlugin = keymap({
   Enter: createLineblockOnEnter,
@@ -114,6 +114,17 @@ export const TextEditor = React.memo(({
             ele.className = 'flex';
             return ele
           },
+        }),
+        tableblock: nodeViewFactory({
+          component: TableBlockNode,
+          as() {
+            const ele = document.createElement('div');
+            ele.className = 'w-full';
+            return ele
+          },
+          stopEvent() {
+            return true
+          }
         }),
         scriptblock: nodeViewFactory({
           component: ScriptBlockNode,

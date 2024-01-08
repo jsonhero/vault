@@ -43,6 +43,20 @@ export const schema = new Schema({
         { tag: 'scriptblock' }
       ],
     },
+    tableblock: {
+      group: 'block',
+      atom: true,
+      isolating: true,
+      selectable: true,
+      attrs: {
+        entityId: {
+          default: null,
+        },
+      },
+      parseDOM: [
+        { tag: 'tableblock' }
+      ],
+    },
     text: {
       inline: true
     }

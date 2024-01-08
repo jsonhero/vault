@@ -1,1 +1,1 @@
-export { SearchProvider, useSearch, searchContext } from './search.context'
+export { SearchProvider, useSearchService, searchContext, searchService } from './search.context'

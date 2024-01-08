@@ -1,57 +1,56 @@
 import { useContext, createContext, useState, useCallback } from "react";
+import { makeAutoObservable } from 'mobx'
 
 import { Search } from './search.component'
 
+
+class SearchService {
+  isOpen: boolean;
+  openProps: SearchOpenProps
+
+  constructor() {
+    makeAutoObservable(this)
+    this.isOpen = false
+    this.openProps = {}
+  }
+
+  close() {
+    this.isOpen = false
+  }
+
+  open(props?: SearchOpenProps) {
+    this.isOpen = true
+    if (props) {
+      this.openProps = props
+    }
+  }
+
+  toggle(open: boolean) {
+    if (open) {
+      this.open()
+    } else {
+      this.close()
+    }
+  }  
+}
+
+export const searchService = new SearchService()
 
 export interface SearchOpenProps {
   onClickResult?: (entityId: number) => void
   entityTypeFilter?: string;
 }
 
-export interface SearchProviderProps {
-  isOpen: boolean;
-  open: (props?: SearchOpenProps) => void;
-  close: () => void;
-  toggle: (open: boolean) => void;
-}
+export const searchContext = createContext<SearchService>(null)
 
-export const searchContext = createContext<SearchProviderProps>(null)
-
-export const useSearch = () => useContext(searchContext)
+export const useSearchService = () => useContext(searchContext)
 
 export const SearchProvider = ({ children }) => {
-  const [isOpen, setIsOpen] = useState<boolean>(false)
-  const [props, setProps] = useState<SearchOpenProps>({})
-
-  const open = (props?: SearchOpenProps) => {
-    setIsOpen(true)
-    if (props) {
-      setProps(props)
-    }
-  }
-
-  const close = () => {
-    setIsOpen(false)
-  }
-
-  const toggle = (toggleOpen: boolean) => {
-    if (toggleOpen) {
-      open()
-    } else {
-      close()
-    }
-  }
-
   return (
-    <searchContext.Provider value={{
-      isOpen,
-      open,
-      close,
-      toggle,
-    }}>
+    <searchContext.Provider value={searchService}>
       <>
         {children}
-        <Search open={open} isOpen={isOpen} close={close} toggle={toggle} openProps={props} />
+        <Search />
       </>
     </searchContext.Provider>
   )

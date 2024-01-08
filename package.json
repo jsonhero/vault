@@ -31,6 +31,8 @@
     "kysely": "^0.27.1",
     "lodash": "^4.17.21",
     "lucide-react": "^0.304.0",
+    "mobx": "^6.12.0",
+    "mobx-react-lite": "^4.0.5",
     "postcss": "^8.4.32",
     "prosemirror-commands": "^1.5.2",
     "prosemirror-keymap": "^1.2.2",

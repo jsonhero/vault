@@ -2,7 +2,8 @@ import { Dialog, Portal } from "@ark-ui/react"
 import { useCallback, useMemo, useState } from "react"
 import { Input } from "~/components/input"
 import { useDatabase, useQuery } from "~/context/database-context"
-import type { SearchProviderProps, SearchOpenProps } from './search.context'
+import { useSearchService } from './search.context'
+import { observer } from 'mobx-react-lite'
 
 const sanitize = (query: string) =>
   query
@@ -37,16 +38,8 @@ function textHighlightArray(inputText: string): any[] {
   return result.length ? result : [{ text: inputText, highlight: false }]
 }
 
-interface SearchProps extends SearchProviderProps {
-  openProps?: SearchOpenProps
-}
-
-export const Search = ({
-  isOpen,
-  toggle,
-  openProps,
-  close,
-}: SearchProps) => {
+export const Search = observer(() => {
+  const search = useSearchService()
   const db = useDatabase()
 
   const [query, setQuery] = useState('')
@@ -57,28 +50,28 @@ export const Search = ({
     setQuery(value)
 
     let q = "SELECT entity_fts.rowid, highlight(entity_fts, 0, '!#!', '!#!') as title_match, highlight(entity_fts, 1, '!#!', '!#!') as doc_match FROM entity_fts INNER JOIN entity ON entity.id = entity_fts.rowid WHERE entity_fts MATCH ?"
-    if (openProps?.entityTypeFilter) {
+    if (search.openProps?.entityTypeFilter) {
       q += " AND entity.type = ?"
     }
 
     const data = await db.execute<any>(
       q, 
-      [sanitize(value) + '*', openProps?.entityTypeFilter])
+      [sanitize(value) + '*', search.openProps?.entityTypeFilter])
     setResults(data)
-  }, [openProps?.entityTypeFilter])
+  }, [search.openProps, search.openProps?.entityTypeFilter])
 
   const onClickResult = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     // maybe make helpers for accessing dataset
     const entityId = parseInt(e.currentTarget.dataset.entityId || '', 10)
-    if (openProps?.onClickResult) {
-      openProps.onClickResult(entityId)
+    if (search.openProps?.onClickResult) {
+      search.openProps.onClickResult(entityId)
     }
-    close()
-  }, [openProps?.onClickResult, close])
+    search.close()
+  }, [search.openProps?.onClickResult])
 
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={(e) => toggle(e.open)}>
+    <Dialog.Root open={search.isOpen} onOpenChange={(e) => search.toggle(e.open)}>
       <Portal>
         <Dialog.Backdrop className="absolute top-0 left-0 w-full h-full" style={{
           background: 'rgba(0, 0, 0, 0.8)',
@@ -132,4 +125,4 @@ export const Search = ({
       </Portal>
     </Dialog.Root>
   )
-}
+})

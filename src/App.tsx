@@ -9,7 +9,7 @@ import { Table } from '~/features/table'
 import { DocumentEditor } from '~/features/document-editor'
 import { useDatabase, useQuery } from '~/context/database-context'
 import { Entity, DataSchema } from '~/types/db-types'
-import { useSearch } from "~/features/search";
+import { useSearchService } from "~/features/search";
 
 function getEndpoint() {
   let proto = "ws:";
@@ -28,7 +28,7 @@ function App({ dbname }: { dbname: string }) {
 
   const [selectedEntityId, setSelectedEntityId] = useState<number | undefined>()
   const db = useDatabase()
-  const search = useSearch()
+  const search = useSearchService()
 
   useSync({
     dbname,
