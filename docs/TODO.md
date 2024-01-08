@@ -4,6 +4,7 @@
 - Setup prosemirror again with React ( :DDDD )
 - Add simple title editing
 
+- Figure out app state persistence
 
 - Think through search
   - Title, document text, searchable table text columns

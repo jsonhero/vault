@@ -33,6 +33,16 @@ CREATE TABLE IF NOT EXISTS document (
 
 SELECT crsql_as_crr('document');
 
+CREATE TABLE IF NOT EXISTS app_state (
+    id INTEGER PRIMARY KEY NOT NULL,
+    type TEXT,
+    data TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+SELECT crsql_as_crr('app_state');
+
+
 CREATE VIEW IF NOT EXISTS search_vw AS 
 SELECT entity.id, entity.title, d.doc_text FROM entity
     LEFT JOIN document d ON d.entity_id = entity.id

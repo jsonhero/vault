@@ -2,6 +2,7 @@ export interface EntityDocument {
   id: number
   entity_id: number;
   doc: any
+  doc_text: any
 }
 
 export interface Entity {

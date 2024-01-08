@@ -5,14 +5,16 @@ import { Menu, Popover } from '@ark-ui/react'
 import { useDatabase, useQuery  } from '~/context/database-context';
 
 import { DataSchemaValue, DataSchema, Entity, } from '~/types/db-types'
-import { TitleEditor } from '../title-editor';
+import { useAppStateService } from '../app-state';
+import { observer } from 'mobx-react-lite';
 
-export const Table = (props: { tableId: number }) => {
+export const TableEditor = ({ entity }: { entity: Entity }) => {
   const db = useDatabase()
+  const appState = useAppStateService()
 
-  const tableEntity = useQuery<Entity & { schema: DataSchemaValue }>(
-    "SELECT entity.*, ds.schema FROM entity INNER JOIN data_schema ds ON ds.id = entity.data_schema_id WHERE entity.id = ?",
-    [props.tableId],
+  const dataSchema = useQuery<DataSchema>(
+    "SELECT * FROM data_schema WHERE id = ?",
+    [entity.data_schema_id],
     {
       takeFirst: true,
       jsonFields: ['schema'],
@@ -21,7 +23,7 @@ export const Table = (props: { tableId: number }) => {
 
   const records = useQuery<Entity[]>(
     "SELECT * FROM entity WHERE data_schema_id = ? AND type = ?",
-    [tableEntity?.data_schema_id, 'table_record'],
+    [dataSchema.id, 'document'],
     {
       jsonFields: ['data'],
     }
@@ -29,15 +31,22 @@ export const Table = (props: { tableId: number }) => {
 
   const onInsertRow = useCallback(async () => {
     const defaultData = {}
-    await db.execute(`INSERT INTO entity (title, type, data_schema_id, data) VALUES ('', 'table_record', ${tableEntity?.data_schema_id}, '${JSON.stringify(defaultData)}')`)
-  }, [tableEntity?.data_schema_id])
+    await db.execute(`INSERT INTO entity (title, type, data_schema_id, data) VALUES ('', 'document', ?, ?)`, [dataSchema.id, JSON.stringify(defaultData)])
+  }, [dataSchema.id])
 
   const onUpdateRowColumn = async (rowId: number, columnId: string, value: any) => {
-    await db.execute(`UPDATE entity SET data = json_set(data, ?, ?) WHERE id = ?`, [`$.${columnId}`, value, rowId])
+    const schemaColumn = dataSchema.schema.columns.find((column) => column.id === columnId)
+  
+    if (schemaColumn?.type === 'title') {
+      await db.execute('UPDATE entity SET title = ? WHERE id = ?', [value, rowId])
+    } else {
+      await db.execute(`UPDATE entity SET data = json_set(data, ?, ?) WHERE id = ?`, [`$.${columnId}`, value, rowId])
+    }
+
   }
 
   const onAddColumn = async () => {
-    const record = await db.execute<DataSchema>("SELECT * FROM data_schema WHERE id = ?", [tableEntity?.data_schema_id], {
+    const record = await db.execute<DataSchema>("SELECT * FROM data_schema WHERE id = ?", [dataSchema.id], {
       takeFirst: true,
       jsonFields: ['schema']
     })
@@ -51,7 +60,7 @@ export const Table = (props: { tableId: number }) => {
   }
 
   const onUpdateSchema = async (fn: (schema: DataSchemaValue) => DataSchemaValue) => {
-    const record = await db.execute<DataSchema>("SELECT * FROM data_schema WHERE id = ?", [tableEntity?.data_schema_id], {
+    const record = await db.execute<DataSchema>("SELECT * FROM data_schema WHERE id = ?", [dataSchema.id], {
       takeFirst: true,
       jsonFields: ['schema']
     })
@@ -62,7 +71,6 @@ export const Table = (props: { tableId: number }) => {
 
   return (
     <div className="p-2 w-full bg-red-500">
-      <TitleEditor entity={tableEntity} />
       <div className="w-full">
         <table className="w-full">
           <thead>
@@ -70,7 +78,7 @@ export const Table = (props: { tableId: number }) => {
               <th>
                 ID
               </th>
-              {tableEntity.schema?.columns.map((column) => (
+              {dataSchema.schema?.columns.map((column) => (
                 <th key={column.id}>
                   <Popover.Root positioning={{
                     offset: {
@@ -145,12 +153,25 @@ export const Table = (props: { tableId: number }) => {
                   <td>
                     {row.id}
                   </td>
-                  {tableEntity.schema?.columns.map((column) => {
+                  {dataSchema.schema?.columns.map((column) => {
                     const value = _.get(row.data, column.id)
 
                     let component;
 
-                    if (column.type === 'title' || column.type === 'text') {
+                    if (column.type === 'title') {
+                      component = (
+                        <div className="group flex">
+                          <input 
+                            defaultValue={row.title} 
+                            onBlur={(e) => onUpdateRowColumn(row.id, column.id, e.target.value)} 
+                            className="bg-transparent w-full focus-visible:outline-none focus-visible:border-none outline-none border-none"
+                          />
+                          <div className="hidden group-hover:block">
+                            <button onClick={() => appState.setSelectedEntityId(row.id)}>Open</button>
+                          </div>
+                        </div>
+                      )
+                    } else if (column.type === 'text') {
                       component = (
                         <input 
                           defaultValue={value} 

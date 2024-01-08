@@ -1,0 +1,1 @@
+export { EntityEditor } from './entity-editor'

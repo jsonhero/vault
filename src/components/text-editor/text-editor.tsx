@@ -27,7 +27,7 @@ const keymapPlugin = keymap({
 
 
 interface TextEditorProps {
-  docId: number | null | undefined;
+  renderId: string | null | undefined;
   docJson: string | null | undefined;
   onUpdate: (state: EditorState) => void;
 }
@@ -49,7 +49,7 @@ function createEditorState(doc: string | null | undefined, plugins: ProseMirrorP
     _editorState = EditorState.fromJSON({
       schema,
       plugins
-    }, JSON.parse(doc))
+    }, doc)
   }
 
   return _editorState
@@ -70,7 +70,7 @@ function dispatchTransactionFactory(view: EditorView, onUpdate?: (state: EditorS
 }
 
 export const TextEditor = React.memo(({
-  docId,
+  renderId,
   onUpdate,
   docJson,
 }: TextEditorProps) => {
@@ -82,11 +82,11 @@ export const TextEditor = React.memo(({
   const plugins = useMemo(() => [createSlashPlugin(pluginViewFactory), keymapPlugin, lineNumberPlugin], [])
 
   useEffect(() => {
-    if (docId) {
+    if (renderId) {
       const newNoteState = createEditorState(docJson, plugins)
       editorViewRef.current?.updateState(newNoteState)
     }
-  }, [docJson, docId])
+  }, [docJson, renderId])
 
   useEffect(() => {
     if (onUpdate) {
@@ -142,4 +142,4 @@ export const TextEditor = React.memo(({
   return (
     <div className="editor" ref={editorRef} />
   )
-}, (prevProps, nextProps) => prevProps.docId === nextProps.docId)
+}, (prevProps, nextProps) => prevProps.renderId === nextProps.renderId)

@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react'
 import { SearchProvider } from "~/features/search";
 import { DatabaseProvider } from '~/context/database-context'
+import { AppStateProvider } from "~/features/app-state";
+
 /**
  * Generates a random room name to sync with or pulls one from local storage.
  */
@@ -48,11 +50,13 @@ export default function Root() {
       }}
       Render={() => (
         <DatabaseProvider dbName={theRoom}>
-          <SearchProvider>
-            <ProsemirrorAdapterProvider>
-              <App dbname={theRoom} />
-            </ProsemirrorAdapterProvider>
-          </SearchProvider>
+          <AppStateProvider>
+            <SearchProvider>
+              <ProsemirrorAdapterProvider>
+                <App dbname={theRoom} />
+              </ProsemirrorAdapterProvider>
+            </SearchProvider>
+          </AppStateProvider>
         </DatabaseProvider>
       )}
     />

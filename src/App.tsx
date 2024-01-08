@@ -4,12 +4,13 @@ import SyncWorker from "./sync-worker.js?worker";
 import { useMemo, useState } from "react";
 import { nanoid } from 'nanoid'
 import { Search } from 'lucide-react'
+import { observer } from "mobx-react-lite";
 
-import { Table } from '~/features/table'
-import { DocumentEditor } from '~/features/document-editor'
+import { EntityEditor } from '~/features/entity-editor'
 import { useDatabase, useQuery } from '~/context/database-context'
 import { Entity, DataSchema } from '~/types/db-types'
 import { useSearchService } from "~/features/search";
+import { useAppStateService } from "~/features/app-state";
 
 function getEndpoint() {
   let proto = "ws:";
@@ -24,9 +25,9 @@ function getEndpoint() {
 const worker = new SyncWorker();
 
 
-function App({ dbname }: { dbname: string }) {
+const App = observer(({ dbname }: { dbname: string }) => {
 
-  const [selectedEntityId, setSelectedEntityId] = useState<number | undefined>()
+  const appState = useAppStateService()
   const db = useDatabase()
   const search = useSearchService()
 
@@ -42,8 +43,8 @@ function App({ dbname }: { dbname: string }) {
   ).data;
 
   const selectedEntity = useMemo(() => {
-    return data.find((e) => e.id === selectedEntityId)
-  }, [data, selectedEntityId])
+    return data.find((e) => e.id === appState.selectedEntityId)
+  }, [data, appState.selectedEntityId])
 
   const onClickAddTable = async () => {
     const defaultSchema = {
@@ -62,7 +63,7 @@ function App({ dbname }: { dbname: string }) {
     const entity = await db.execute<Entity>(`INSERT INTO entity (title, type, data_schema_id) VALUES ('Placeholder', 'table', ${dataSchema.id}) RETURNING *`, [], {
       takeFirst: true,
     })
-    setSelectedEntityId(entity.id);
+    appState.setSelectedEntityId(entity.id)
   }
 
   const onClickAddDocument = async () => {
@@ -71,17 +72,17 @@ function App({ dbname }: { dbname: string }) {
     })
     await db.execute(`INSERT INTO document (entity_id) VALUES (?) RETURNING *`, [entity.id])
 
-    setSelectedEntityId(entity.id);
+    appState.setSelectedEntityId(entity.id)
   }
 
   const onSelectTable = (entity: Entity) => {
-    setSelectedEntityId(entity.id)
+    appState.setSelectedEntityId(entity.id)
   }
 
   const openSearch = () => {
     search.open({
       onClickResult(entityId) {
-        setSelectedEntityId(entityId)
+        appState.setSelectedEntityId(entityId)
       },
     })
   }
@@ -105,17 +106,16 @@ function App({ dbname }: { dbname: string }) {
           </button>
         </div>
         <div>
-          {data.map((d) => (<button className="w-full"  key={d.id} onClick={() => onSelectTable(d)}>{`${d.id}:${d.type}`}</button>))}
+          {data.map((d) => (<button className="w-full"  key={d.id} onClick={() => onSelectTable(d)}>{`${d.id}:${d.type}:${d.title}`}</button>))}
         </div>
       </div>
       {/* Main Content: causes flash right now when entity is null.. */}
       <div className="flex-1 p-8 bg-gray-400">
-        {selectedEntity?.type === 'table' && <Table tableId={selectedEntity.id} />}
-        {selectedEntity?.type === 'document' && <DocumentEditor entityDocId={selectedEntity.id} />}
+        {selectedEntity?.id && <EntityEditor entityId={selectedEntity.id} />}
       </div>
     </div>
   );
-}
+})
 
 function EditableItem({
   ctx,

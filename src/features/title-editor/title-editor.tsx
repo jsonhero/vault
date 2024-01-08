@@ -17,7 +17,7 @@ export const TitleEditor = React.memo(({
   
   useEffect(() => {
     setTitle(entity.title)
-  }, [entity.id])
+  }, [entity.id, entity.title])
 
   const onChangeTitle = (e: React.ChangeEvent<HTMLInputElement> ) => {
     const value = e.target.value
@@ -26,8 +26,7 @@ export const TitleEditor = React.memo(({
     setTitle(value)
   }
 
-
   return (
     <Input value={title} className="font-bold mb-2 text-3xl" onChange={onChangeTitle} autoFocus />
   )
-}, (prevProps, nextProps) => prevProps.entity.id === nextProps.entity.id)
+}, (prevProps, nextProps) => prevProps.entity.id === nextProps.entity.id && prevProps.entity.title === nextProps.entity.title)
