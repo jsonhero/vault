@@ -13,7 +13,7 @@ import { keymap } from 'prosemirror-keymap';
 import { CodeMirrorNodeView } from './node-view'
 import { schema } from './schema'
 import { arrowHandler, createLineblockOnEnter, backspace } from './keymaps'
-import { lineNumberPlugin, createSlashPlugin } from './plugins'
+import { lineNumberPlugin, createSlashPlugin, createRefPlugin } from './plugins'
 import { LineBlockNode, ScriptBlockNode, TableBlockNode } from './nodes'
 
 const keymapPlugin = keymap({
@@ -79,7 +79,7 @@ export const TextEditor = React.memo(({
   const pluginViewFactory = usePluginViewFactory()
   const editorViewRef = useRef<EditorView>(null)
 
-  const plugins = useMemo(() => [createSlashPlugin(pluginViewFactory), keymapPlugin, lineNumberPlugin], [])
+  const plugins = useMemo(() => [createSlashPlugin(pluginViewFactory), createRefPlugin(pluginViewFactory), keymapPlugin, lineNumberPlugin], [])
 
   useEffect(() => {
     if (renderId) {

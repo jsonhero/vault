@@ -1,12 +1,11 @@
 import React, { useCallback, useMemo } from 'react'
 import _ from 'lodash'
 import { nanoid } from 'nanoid'
-import { Menu, Popover } from '@ark-ui/react'
+import { Popover } from '@ark-ui/react'
 import { useDatabase, useQuery  } from '~/context/database-context';
 
 import { DataSchemaValue, DataSchema, Entity, } from '~/types/db-types'
 import { useAppStateService } from '../app-state';
-import { observer } from 'mobx-react-lite';
 
 export const TableEditor = ({ entity }: { entity: Entity }) => {
   const db = useDatabase()

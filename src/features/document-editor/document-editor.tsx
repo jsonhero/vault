@@ -20,10 +20,8 @@ export const DocumentEditor = ({ entity }: { entity: Entity }) => {
   const onEditorUpdate = useCallback(async (state: EditorState) => {
     const bindings = [JSON.stringify(state.toJSON()), state.doc.textContent]
     if (document?.id) {
-      console.log('update')
       await db.execute("UPDATE document SET doc = ?, doc_text = ? WHERE id = ? RETURNING *", [...bindings, document.id])
     } else {
-      console.log('insert')
       await db.execute("INSERT INTO document (doc, doc_text, entity_id) VALUES(?, ?, ?)", [...bindings, entity.id])
     }
   }, [entity.id, document?.id])

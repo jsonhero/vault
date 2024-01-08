@@ -59,6 +59,6 @@ export const schema = new Schema({
     },
     text: {
       inline: true
-    }
+    },
   }
 })
