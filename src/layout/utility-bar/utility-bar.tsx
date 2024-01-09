@@ -29,7 +29,6 @@ export const UtilityBar = observer(() => {
     appState.setSelectedEntityId(entityId)
   }
 
-
   return (
     <div className="w-full h-full p-5">
       <div className="flex flex-col gap-3">
@@ -38,7 +37,7 @@ export const UtilityBar = observer(() => {
           <div className="mt-2 flex flex-col gap-2">
             {fromGraph.map((e) => (
               <button onClick={onClickEntityLink} className="text-left bg-tertiary py-1 px-2 rounded-md" data-entity-id={e.id}>
-                <div>{e.title}</div>
+                <div>{e.type}: {e.title}</div>
               </button>
             ))}
           </div>
@@ -48,7 +47,7 @@ export const UtilityBar = observer(() => {
           <div className="mt-2 flex flex-col gap-2">
             {toGraph.map((e) => (
               <button onClick={onClickEntityLink} className="text-left bg-tertiary py-1 px-2 rounded-md" data-entity-id={e.id}>
-                <div>{e.title}</div>
+                <div>{e.type}: {e.title}</div>
               </button>
             ))}
           </div>

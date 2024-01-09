@@ -7,6 +7,9 @@ import { useDatabase, useQuery  } from '~/context/database-context';
 import { DataSchemaValue, DataSchema, Entity, } from '~/types/db-types'
 import { useAppStateService } from '../app-state';
 
+import { TextCell, TitleCell } from './cells'
+import { TableRow } from './row'
+
 export const TableEditor = ({ entity }: { entity: Entity }) => {
   const db = useDatabase()
   const appState = useAppStateService()
@@ -71,14 +74,14 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
   return (
     <div className="p-2 w-full">
       <div className="w-full">
-        <table className="w-full">
+        <table className="w-full border-collapse">
           <thead>
             <tr className="border-b">
-              <th>
+              <th className="w-[50px]">
                 ID
               </th>
               {dataSchema.schema?.columns.map((column) => (
-                <th key={column.id}>
+                <th key={column.id} className="w-[250px]">
                   <Popover.Root positioning={{
                     offset: {
                       mainAxis: 0,
@@ -148,7 +151,7 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
           <tbody>
             {
               records.map((row) => (
-                <tr key={row.id} className="border-b">
+                <TableRow key={row.id} className="border-b">
                   <td>
                     {row.id}
                   </td>
@@ -159,23 +162,20 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
 
                     if (column.type === 'title') {
                       component = (
-                        <div className="group flex">
-                          <input 
-                            defaultValue={row.title} 
-                            onBlur={(e) => onUpdateRowColumn(row.id, column.id, e.target.value)} 
-                            className="bg-transparent w-full focus-visible:outline-none focus-visible:border-none outline-none border-none"
-                          />
-                          <div className="hidden group-hover:block">
-                            <button onClick={() => appState.setSelectedEntityId(row.id)}>Open</button>
-                          </div>
-                        </div>
+                        <TitleCell 
+                          column={column} 
+                          row={row} 
+                          onUpdateRowColumn={onUpdateRowColumn} 
+                          setSelectedEntityId={appState.setSelectedEntityId} 
+                        />
                       )
                     } else if (column.type === 'text') {
                       component = (
-                        <input 
-                          defaultValue={value} 
-                          onBlur={(e) => onUpdateRowColumn(row.id, column.id, e.target.value)} 
-                          className="bg-transparent w-full focus-visible:outline-none focus-visible:border-none outline-none border-none"
+                        <TextCell
+                          column={column} 
+                          row={row} 
+                          onUpdateRowColumn={onUpdateRowColumn}
+                          value={value}
                         />
                       )
                     } else {
@@ -188,7 +188,7 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
                       </td>
                     )
                   })}
-                </tr>
+                </TableRow>
               ))
             }
             <tr>
