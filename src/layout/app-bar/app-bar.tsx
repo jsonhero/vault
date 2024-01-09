@@ -36,7 +36,6 @@ export const AppBar = () => {
         </button>
       </div>
       <div className="flex-1 w-auto">
-        Tabs Here
       </div>
       <div className="w-[370px] flex items-center justify-end pr-4">
         <button onClick={onClickPanelRight}>
