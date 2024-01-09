@@ -30,8 +30,13 @@
 - Add markdown editing like Obsidian
 
 
+- Figure out react renderse for prosemirror... how to handle passing state from pluginstate to react? For example, long dyanaimc lists that mount and need to select one item with keyboard inputs. MObx Observers in portal states might not work?
+
+
 ##### Text Editor
 - fix react flushSync issue when changing docs, this may be an issue with the react prosemirror adapter.
+- Make decision on WSIWYG or WSIWYG-lite (obsidian syntax)
+  - Maybe WSIWYG with virtual characters for block markdown styling
 
 ##### Search
 

@@ -2,6 +2,7 @@
 - https://vlcn.io/docs/cr-sqlite/intro (SQLite, most extendible <3) partial replication coming soon
 - https://electric-sql.com/ (SQLite) partial replication coming soon
 - https://www.evolu.dev/docs/faq (SQLite)
+- https://replicache.dev/
 
 Runner ups:
 - https://rxdb.info/ (PouchDb, SQLite?)

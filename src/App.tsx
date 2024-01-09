@@ -1,16 +1,14 @@
 import { CtxAsync, useCachedState, useSync } from "@vlcn.io/react";
 
 import SyncWorker from "./sync-worker.js?worker";
-import { useMemo, useState } from "react";
-import { nanoid } from 'nanoid'
-import { Search } from 'lucide-react'
-import { observer } from "mobx-react-lite";
 
-import { EntityEditor } from '~/features/entity-editor'
-import { useDatabase, useQuery } from '~/context/database-context'
-import { Entity, DataSchema } from '~/types/db-types'
-import { useSearchService } from "~/features/search";
-import { useAppStateService } from "~/features/app-state";
+import { AppBar } from "~/layout/app-bar";
+import { IconBar } from "~/layout/icon-bar";
+import { ExplorerBar } from "~/layout/explorer-bar";
+import { Main } from "~/layout/main";
+import { UtilityBar } from "./layout/utility-bar";
+import { useAppStateService } from "./features/app-state";
+import { observer } from "mobx-react-lite";
 
 function getEndpoint() {
   let proto = "ws:";
@@ -26,10 +24,7 @@ const worker = new SyncWorker();
 
 
 const App = observer(({ dbname }: { dbname: string }) => {
-
   const appState = useAppStateService()
-  const db = useDatabase()
-  const search = useSearchService()
 
   useSync({
     dbname,
@@ -38,83 +33,29 @@ const App = observer(({ dbname }: { dbname: string }) => {
     worker,
   });
 
-  const data = useQuery<Entity[]>(
-    "SELECT * FROM entity WHERE type IN ('table', 'document') ORDER BY created_at DESC"
-  ).data;
-
-  const selectedEntity = useMemo(() => {
-    return data.find((e) => e.id === appState.selectedEntityId)
-  }, [data, appState.selectedEntityId])
-
-  const onClickAddTable = async () => {
-    const defaultSchema = {
-      columns: [
-        {
-          id: nanoid(),
-          type: 'title',
-          name: 'Name'
-        }
-      ]
-    }
-
-    const dataSchema = await db.execute<DataSchema>(`INSERT INTO data_schema (schema) VALUES ('${JSON.stringify(defaultSchema)}') RETURNING *`, [], {
-      takeFirst: true,
-    });
-    const entity = await db.execute<Entity>(`INSERT INTO entity (title, type, data_schema_id) VALUES ('Placeholder', 'table', ${dataSchema.id}) RETURNING *`, [], {
-      takeFirst: true,
-    })
-    appState.setSelectedEntityId(entity.id)
-  }
-
-  const onClickAddDocument = async () => {
-    const entity = await db.execute<Entity>(`INSERT INTO entity (title, type) VALUES ('Placeholder', 'document') RETURNING *`, [], {
-      takeFirst: true,
-    })
-    await db.execute(`INSERT INTO document (entity_id) VALUES (?) RETURNING *`, [entity.id])
-
-    appState.setSelectedEntityId(entity.id)
-  }
-
-  const onSelectTable = (entity: Entity) => {
-    appState.setSelectedEntityId(entity.id)
-  }
-
-  const openSearch = () => {
-    search.open({
-      onClickResult(entityId) {
-        appState.setSelectedEntityId(entityId)
-      },
-    })
-  }
-
   return (
-    <div className="font-sans bg-gray-100 flex h-screen">
-      {/* Sidebar */}
-      <div className="w-[300px] bg-gray-800 text-white p-4">
-        {/* Sidebar content goes here */}
-        <h2 className="text-2xl font-semibold mb-4">Vault</h2>
-        <button className="flex gap-1 align-center" onClick={openSearch}>
-          <Search size={20} />
-          <span>Search</span>
-        </button>
-        <div className="flex justify-between">
-          <button onClick={onClickAddDocument}>
-            Add Document
-          </button>
-          <button onClick={onClickAddTable}>
-            Add Table
-          </button>
-        </div>
-        <div>
-          {data.map((d) => (<button className="w-full"  key={d.id} onClick={() => onSelectTable(d)}>{`${d.id}:${d.type}:${d.title}`}</button>))}
-        </div>
+    <div className="primary-grid h-screen text-secondary">
+      <div className="header-gi bg-primary">
+        <AppBar />
       </div>
-      {/* Main Content: causes flash right now when entity is null.. */}
-      <div className="flex-1 p-8 bg-gray-400">
-        {selectedEntity?.id && <EntityEditor entityId={selectedEntity.id} />}
+      <div className="icon-bar-gi bg-tertiary">
+        <IconBar />
+      </div>
+      <div className="explorer-bar-gi bg-secondary overflow-x-hidden transition-[width] duration-300" style={{
+        width: appState.isLeftBarExpanded ? '275px' : '0px'
+      }}>
+        <ExplorerBar />
+      </div>
+      <div className="main-gi bg-tertiary">
+        <Main />
+      </div>
+      <div className="utility-gi bg-secondary overflow-x-hidden transition-[width] duration-300" style={{
+        width: appState.isRightBarExpanded ? '370px' : '0px'
+      }}>
+        <UtilityBar />
       </div>
     </div>
-  );
+  )
 })
 
 function EditableItem({
@@ -148,19 +89,3 @@ function EditableItem({
 }
 
 export default App;
-
-// const nanoid = (t = 21) =>
-//   crypto
-//     .getRandomValues(new Uint8Array(t))
-//     .reduce(
-//       (t, e) =>
-//         (t +=
-//           (e &= 63) < 36
-//             ? e.toString(36)
-//             : e < 62
-//             ? (e - 26).toString(36).toUpperCase()
-//             : e > 62
-//             ? "-"
-//             : "_"),
-//       ""
-//     );

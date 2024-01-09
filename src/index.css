@@ -66,11 +66,57 @@
   }
 }
  
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+body {
+  --slate-1: #111113;
+  --slate-2: #18191b;
+  --slate-3: #212225;
+  --slate-4: #272a2d;
+  --slate-5: #2e3135;
+  --slate-6: #363a3f;
+  --slate-7: #43484e;
+  --slate-8: #5a6169;
+  --slate-9: #696e77;
+  --slate-10: #777b84;
+  --slate-11: #b0b4ba;
+  --slate-12: #edeef0;
+}
+
+.prose {
+  --tw-prose-body: var(--sand-12);
+  --tw-prose-bold: var(--sand-12);
+  --tw-prose-links: var(--sand-12);
+  --tw-prose-headings: var(--sand-12);
+  --tw-prose-code: var(--sand-12);
+  --tw-prose-quotes: var(--sand-11);
+}
+
+
+.primary-grid {
+  display: grid;
+  grid-template-areas: 
+    "header header header header"
+    "icon-bar explorer-bar main utility-bar"
+  ;
+  grid-template-columns: 40px min-content 1fr min-content;
+  grid-template-rows: 48px auto;
+}
+
+.header-gi {
+  grid-area: header;
+}
+
+.icon-bar-gi {
+  grid-area: icon-bar;
+}
+
+.explorer-bar-gi {
+  grid-area: explorer-bar;
+}
+
+.main-gi {
+  grid-area: main;
+}
+
+.utility-gi {
+  grid-area: utility-bar;
 }

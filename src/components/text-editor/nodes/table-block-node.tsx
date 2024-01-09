@@ -14,7 +14,7 @@ export const TableBlockNode = () => {
   }, [selected])
 
   return (
-    <div className="w-full bg-red-500 min-h-9" contentEditable={false} ref={ref}>
+    <div className="w-full  min-h-9" contentEditable={false} ref={ref}>
       <EntityEditor entityId={node.attrs.entityId} />
     </div>
   )

@@ -1,0 +1,1 @@
+export { IconBar } from './icon-bar'

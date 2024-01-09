@@ -69,7 +69,7 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
   }
 
   return (
-    <div className="p-2 w-full bg-red-500">
+    <div className="p-2 w-full">
       <div className="w-full">
         <table className="w-full">
           <thead>

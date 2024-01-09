@@ -4,9 +4,12 @@ import {
   usePluginViewFactory, 
 } from '@prosemirror-adapter/react'
 
+import {inputRules, wrappingInputRule, textblockTypeInputRule,
+  InputRule,
+  smartQuotes, emDash, ellipsis} from "prosemirror-inputrules"
 import { EditorView } from 'prosemirror-view'
-import { DOMParser } from 'prosemirror-model'
-import { EditorState, Plugin as ProseMirrorPlugin, Transaction } from 'prosemirror-state'
+import { DOMParser, NodeType } from 'prosemirror-model'
+import { EditorState, Plugin as ProseMirrorPlugin, Transaction, TextSelection } from 'prosemirror-state'
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { keymap } from 'prosemirror-keymap';
 
@@ -31,6 +34,51 @@ interface TextEditorProps {
   docJson: string | null | undefined;
   onUpdate: (state: EditorState) => void;
 }
+const boldRegex = /\*\*([^*]+)\*\*/
+export function boldRule () {
+  return new InputRule(boldRegex, (state, match, start, end) => {
+    console.log(match, 'match??!?')
+    const tr = state.tr
+    tr.addMark(start, end, schema.marks.strong.create())
+                .insertText(match[1], start, end)
+                .removeStoredMark(schema.marks.strong)
+      
+
+      return tr
+    
+
+    // return state.tr
+  })
+}
+
+
+const TestPlugin = new ProseMirrorPlugin({
+  props: {
+    handleKeyDown(view, event) {
+      if (event.key === '*') {
+        const node = view.state.doc.resolve(view.state.selection.anchor).parent
+
+        const match = boldRegex.exec(node.textContent)
+        if (match) {
+          const tr = view.state.tr
+          const end = view.state.selection.anchor
+          const start = end - node.textContent.length
+
+
+          tr.addMark(start, end, schema.marks.strong.create())
+                .insertText(match[1], start, end)
+                .removeStoredMark(schema.marks.strong)
+                // .setSelection(TextSelection.create(view.state.doc, tr.selection.anchor + 1))
+
+          view.dispatch(tr)
+          return true
+        }
+        
+      }
+
+    }
+  }
+})
 
 function createEditorState(doc: string | null | undefined, plugins: ProseMirrorPlugin[]): EditorState {
   const parser = DOMParser.fromSchema(schema);
@@ -79,7 +127,7 @@ export const TextEditor = React.memo(({
   const pluginViewFactory = usePluginViewFactory()
   const editorViewRef = useRef<EditorView>(null)
 
-  const plugins = useMemo(() => [createSlashPlugin(pluginViewFactory), createRefPlugin(pluginViewFactory), keymapPlugin, lineNumberPlugin], [])
+  const plugins = useMemo(() => [createSlashPlugin(pluginViewFactory), createRefPlugin(pluginViewFactory), keymapPlugin, lineNumberPlugin, inputRules({ rules: [boldRule()]})], [])
 
   useEffect(() => {
     if (renderId) {
@@ -140,6 +188,6 @@ export const TextEditor = React.memo(({
   }, [])
   
   return (
-    <div className="editor" ref={editorRef} />
+    <div className="editor focus:outline-none" ref={editorRef} />
   )
 }, (prevProps, nextProps) => prevProps.renderId === nextProps.renderId)

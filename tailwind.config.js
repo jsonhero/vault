@@ -17,40 +17,26 @@ module.exports = {
       },
     },
     extend: {
+      gridTemplateColumns: {
+        header: '40px min-content 1fr min-content'
+      },
+      gridTemplateRows: {
+        layout: '48px auto'
+      },
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
+        primary: 'var(--slate-12)',
+        secondary: 'var(--slate-11)',
+        tertiary: 'var(--slate-10)'
+      },
+      textColor: {
+        primary: 'var(--slate-12)',
+        secondary: 'var(--slate-11)',
+        tertiary: 'var(--slate-10)'
+      },
+      backgroundColor: {
+        primary: 'var(--slate-1)',
+        secondary: 'var(--slate-2)',
+        tertiary: 'var(--slate-3)'
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -73,5 +59,8 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require('@tailwindcss/typography'),
+  ],
 }
