@@ -1,3 +1,4 @@
+import { BaseCell } from './base-cell'
 
 interface TextCellProps {
   row: any;
@@ -12,10 +13,12 @@ export const TextCell = ({
   onUpdateRowColumn
 }: TextCellProps) => {
   return (
-    <input 
-      defaultValue={value} 
-      onBlur={(e) => onUpdateRowColumn(row.id, column.id, e.target.value)} 
-      className="bg-transparent w-full focus-visible:outline-none focus-visible:border-none outline-none border-none"
-    />
+    <BaseCell>
+      <input 
+        defaultValue={value} 
+        onBlur={(e) => onUpdateRowColumn(row.id, column.id, e.target.value)} 
+        className="bg-transparent w-full focus-visible:outline-none focus-visible:border-none outline-none border-none"
+      />
+    </BaseCell>
   )
 }

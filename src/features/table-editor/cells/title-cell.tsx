@@ -1,3 +1,4 @@
+import { BaseCell } from './base-cell'
 
 interface TitleCellProps {
   row: any;
@@ -13,7 +14,7 @@ export const TitleCell = ({
   setSelectedEntityId,
 }: TitleCellProps) => {
   return (
-    <div className="group flex">
+    <BaseCell className="group">
       <input 
         defaultValue={row.title} 
         onBlur={(e) => onUpdateRowColumn(row.id, column.id, e.target.value)} 
@@ -22,6 +23,6 @@ export const TitleCell = ({
       <div className="hidden group-hover:block">
         <button onClick={() => setSelectedEntityId(row.id)}>Open</button>
       </div>
-    </div>
+    </BaseCell>
   )
 }

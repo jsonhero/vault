@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
+import { DBProvider } from "@vlcn.io/react";
+import { NextUIProvider } from "@nextui-org/react";
+
 import App from "./App.tsx";
 import schemaContent from "./schemas/main2.sql?raw";
-import { DBProvider } from "@vlcn.io/react";
-import { useEffect, useState } from "react";
 import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react'
 import { SearchProvider } from "~/features/search";
 import { DatabaseProvider } from '~/context/database-context'
@@ -49,15 +51,17 @@ export default function Root() {
         content: schemaContent,
       }}
       Render={() => (
-        <DatabaseProvider dbName={theRoom}>
-          <AppStateProvider>
-            <SearchProvider>
-              <ProsemirrorAdapterProvider>
-                <App dbname={theRoom} />
-              </ProsemirrorAdapterProvider>
-            </SearchProvider>
-          </AppStateProvider>
-        </DatabaseProvider>
+        <NextUIProvider>
+          <DatabaseProvider dbName={theRoom}>
+            <AppStateProvider>
+              <SearchProvider>
+                <ProsemirrorAdapterProvider>
+                  <App dbname={theRoom} />
+                </ProsemirrorAdapterProvider>
+              </SearchProvider>
+            </AppStateProvider>
+          </DatabaseProvider>
+        </NextUIProvider>
       )}
     />
   );

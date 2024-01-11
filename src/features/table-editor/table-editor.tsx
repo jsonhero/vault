@@ -7,8 +7,9 @@ import { useDatabase, useQuery  } from '~/context/database-context';
 import { DataSchemaValue, DataSchema, Entity, } from '~/types/db-types'
 import { useAppStateService } from '../app-state';
 
-import { TextCell, TitleCell } from './cells'
+import { TextCell, TitleCell, NumberCell, BooleanCell } from './cells'
 import { TableRow } from './row'
+import { HeaderPopover } from './header'
 
 export const TableEditor = ({ entity }: { entity: Entity }) => {
   const db = useDatabase()
@@ -82,65 +83,7 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
               </th>
               {dataSchema.schema?.columns.map((column) => (
                 <th key={column.id} className="w-[250px]">
-                  <Popover.Root positioning={{
-                    offset: {
-                      mainAxis: 0,
-                    },
-                    placement: 'bottom-start'
-                  }}>
-                    <Popover.Trigger asChild>
-                      <button className='min-w-[24px] w-full text-left'>
-                        {column.name || '_'} 
-                      </button>
-                    </Popover.Trigger>
-                    <Popover.Positioner>
-                      <Popover.Content className="bg-blue-500 p-2 shadow-md">
-                        <div>
-                          <div>
-                            <input defaultValue={column.name} onBlur={(e) => onUpdateSchema((schema) => {
-                              schema.columns = schema.columns.map((schemaColumn) => {
-                                if (schemaColumn.id === column.id) {
-                                  schemaColumn.name = e.target.value
-                                }
-                                return schemaColumn
-                              })
-                              return schema
-                            })} />
-                          </div>
-                          <div className="m-3">
-                            <div>
-                              <button onClick={() => onUpdateSchema((schema) => {
-                                schema.columns = schema.columns.map((schemaColumn) => {
-                                  if (schemaColumn.id === column.id) {
-                                    schemaColumn.type = 'number'
-                                  }
-                                  return schemaColumn
-                                })
-                                return schema
-                              })}>Set Number</button>
-                            </div>
-                            <div>
-                              <button onClick={() => onUpdateSchema((schema) => {
-                                schema.columns = schema.columns.map((schemaColumn) => {
-                                  if (schemaColumn.id === column.id) {
-                                    schemaColumn.type = 'text'
-                                  }
-                                  return schemaColumn
-                                })
-                                return schema
-                              })}>Set Text</button>
-                            </div>
-                          </div>
-                          <div className='m-1'>
-                            <button onClick={() => onUpdateSchema((schema) => {
-                              schema.columns = schema.columns.filter((col) => col.id !== column.id)
-                              return schema
-                            })}>Delete</button>
-                          </div>
-                        </div>
-                      </Popover.Content>
-                    </Popover.Positioner>
-                  </Popover.Root>
+                  <HeaderPopover dataSchema={dataSchema} column={column} onUpdateSchema={onUpdateSchema} />
                 </th>
               ))}
               <th className="min-w-[70px] flex-1 text-left">
@@ -172,6 +115,24 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
                     } else if (column.type === 'text') {
                       component = (
                         <TextCell
+                          column={column} 
+                          row={row} 
+                          onUpdateRowColumn={onUpdateRowColumn}
+                          value={value}
+                        />
+                      )
+                    } else if (column.type === 'number') {
+                      component = (
+                        <NumberCell
+                          column={column} 
+                          row={row} 
+                          onUpdateRowColumn={onUpdateRowColumn}
+                          value={value}
+                        />
+                      )
+                    } else if (column.type === 'boolean') {
+                      component = (
+                        <BooleanCell
                           column={column} 
                           row={row} 
                           onUpdateRowColumn={onUpdateRowColumn}
