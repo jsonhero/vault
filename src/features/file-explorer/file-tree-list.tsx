@@ -1,11 +1,24 @@
 import _ from "lodash"
 import { ChevronDownIcon, ChevronRightIcon, FolderIcon, FolderOpenIcon, FileTextIcon, Table2Icon } from "lucide-react"
 import { useCallback, useMemo, useState } from "react"
-import { useImmer } from "use-immer"
 import { Menu } from "@ark-ui/react";
 
 import type { FileTreeNode } from './file-explorer'
-import { useDatabase } from "~/context";
+
+function getDeepChildCount(node: FileTreeNode) {
+  if (node.type === 'file' || node.children.length === 0 ) {
+    return 0; // No children, return 0
+  }
+
+  let count = 0;
+  if (node.meta.expanded) {
+    for (const child of node.children) {
+      count += 1 + getDeepChildCount(child); // Add 1 for the current child and count its descendants
+    }
+  
+  }
+  return count;
+}
 
 const ListItemFolder = ({
   item,
@@ -17,16 +30,19 @@ const ListItemFolder = ({
     onClickListItem(item.id)
   }, [item.id, onClickListItem])
 
-  // todo add folder line with height of children depth using line svg
-
   return (
     <ListItem depth={item.depth} onClick={onClick} selected={selected} data-node-id={item.id} data-node-type="folder">
       <div className="folder pointer-events-none">
         <button className="flex items-center gap-1">
           {item.meta.expanded ? <ChevronDownIcon size={14} /> : <ChevronRightIcon size={14} />}
-          <FolderIcon size={14} />
+          {item.meta.expanded ? <FolderOpenIcon size={14} /> : <FolderIcon size={14} />}
           <div>{item.name}</div>
         </button>
+      </div>
+      <div className="absolute w-[1px] bg-zinc-800 top-[24px] group-hover:bg-zinc-600" style={{
+        height: (24 * getDeepChildCount(item)) + 'px'
+      }}>
+
       </div>
     </ListItem>
   )
@@ -57,7 +73,7 @@ const ListItem = ({ depth, children, selected, ...props }) => {
   const pixelPadding = depth * 12 + 4
 
   return (
-    <li className="hover:bg-zinc-800 h-[24px] flex items-center cursor-pointer" style={{
+    <li className="group hover:bg-zinc-800 h-[24px] flex items-center cursor-pointer relative" style={{
       paddingLeft: pixelPadding + 'px',
       background: selected && 'rgba(255, 255, 255, 0.15)',
     }} {...props}>
@@ -91,7 +107,7 @@ const FolderMenu = ({
           }
         ]
       }]
-    } else {
+    } else if (nodeType === 'folder') {
       return [{
         groupId: '2',
         children: [
@@ -111,6 +127,24 @@ const FolderMenu = ({
             id: 'delete',
             name: 'Delete',
           }
+        ]
+      }]
+    } else {
+      return [{
+        groupId: '3',
+        children: [
+          {
+            id: 'new_document',
+            name: 'New Document',
+          },
+          {
+            id: 'new_table',
+            name: 'New Table',
+          },
+          {
+            id: 'new_folder',
+            name: 'New Folder',
+          },
         ]
       }]
     }
