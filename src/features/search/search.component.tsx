@@ -63,6 +63,7 @@ export const Search = observer(() => {
   const onClickResult = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     // maybe make helpers for accessing dataset
     const entityId = parseInt(e.currentTarget.dataset.entityId || '', 10)
+    
     if (search.openProps?.onClickResult) {
       search.openProps.onClickResult(entityId)
     }

@@ -1,5 +1,38 @@
+
+
+
 # TODO
 
+
+#### Phases
+
+1. Basic MVP (3 Months)
+
+* Text editor (markdown, commands, nodes, plugins)
+* Table editor (Filtering, sorting, views)
+* File tree
+* Tab system
+* Linking/Refs
+* Extension demo
+* Data Graphing demo
+
+
+2. Usable MVP (3 Months)
+* Overhaul UI
+* Infinite canvas (React flow?)
+* Link graph view
+* Data Replication
+* Realtime Collaboration
+
+
+3. Releaseable MVP (3 Months)
+* Partial Data Replication
+* Extendable API
+* Documentation
+
+
+
+#### Random
 
 - Setup prosemirror again with React ( :DDDD )
 - Add simple title editing

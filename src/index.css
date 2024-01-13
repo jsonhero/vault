@@ -120,3 +120,24 @@ body {
 .utility-gi {
   grid-area: utility-bar;
 }
+
+
+.tree {
+  list-style-type: none;
+  padding: 0;
+}
+
+.tree li {
+  margin: 0;
+  padding: 3px 0 0 12px;
+  position: relative;
+  font-size: 14px;
+}
+
+.tree > li {
+  padding: 0;
+}
+
+/* .tree li:last-child::before {
+  border-color: red !important;
+} */
