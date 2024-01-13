@@ -1,5 +1,5 @@
 import _ from "lodash"
-import { ChevronDownIcon, ChevronRightIcon } from "lucide-react"
+import { ChevronDownIcon, ChevronRightIcon, FolderIcon, FolderOpenIcon, FileTextIcon, Table2Icon } from "lucide-react"
 import { useCallback, useMemo, useState } from "react"
 import { useImmer } from "use-immer"
 import { Menu } from "@ark-ui/react";
@@ -24,6 +24,7 @@ const ListItemFolder = ({
       <div className="folder pointer-events-none">
         <button className="flex items-center gap-1">
           {item.meta.expanded ? <ChevronDownIcon size={14} /> : <ChevronRightIcon size={14} />}
+          <FolderIcon size={14} />
           <div>{item.name}</div>
         </button>
       </div>
@@ -42,7 +43,12 @@ const ListItemFile = ({
 
   return (
     <ListItem depth={item.depth} onClick={onClick} selected={selected} data-node-id={item.id} data-node-type="file">
-      <div className="pointer-events-none">{item.entity.title}</div>
+      <div className="pointer-events-none">
+        <button className="flex items-center gap-1">
+          {item.entity.type === 'document' ? <FileTextIcon size={14} /> : <Table2Icon size={14} />}
+          <div>{item.entity.title}</div>
+        </button>
+      </div>
     </ListItem>
   )
 }
@@ -53,7 +59,7 @@ const ListItem = ({ depth, children, selected, ...props }) => {
   return (
     <li className="hover:bg-zinc-800 h-[24px] flex items-center cursor-pointer" style={{
       paddingLeft: pixelPadding + 'px',
-      background: selected && 'blue',
+      background: selected && 'rgba(255, 255, 255, 0.15)',
     }} {...props}>
       {children}
     </li>
@@ -90,8 +96,12 @@ const FolderMenu = ({
         groupId: '2',
         children: [
           {
-            id: 'new_file',
-            name: 'New File',
+            id: 'new_document',
+            name: 'New Document',
+          },
+          {
+            id: 'new_table',
+            name: 'New Table',
           },
           {
             id: 'new_folder',
@@ -107,8 +117,10 @@ const FolderMenu = ({
   }, [nodeType])
 
   const onSelect = useCallback(({ value }: any) => {
-    if (value === 'new_file') {
-      onAddFile(nodeId)
+    if (value === 'new_document') {
+      onAddFile(nodeId, 'document')
+    } else if (value === 'new_table') {
+      onAddFile(nodeId, 'table')
     } else if (value === 'new_folder') {
       onAddFolder(nodeId)
     } else if (value === 'delete') {
@@ -128,7 +140,7 @@ const FolderMenu = ({
           {list.map((group => (
             <Menu.ItemGroup id={group.groupId} key={group.groupId}>
               {group.children.map((item) => (
-                <Menu.Item id={item.id} key={item.id} className="data-[highlighted]:bg-zinc-800">{item.name}</Menu.Item>
+                <Menu.Item id={item.id} key={item.id} className="data-[highlighted]:bg-zinc-800 p-[2px]">{item.name}</Menu.Item>
               ))}
             </Menu.ItemGroup>
           )))}

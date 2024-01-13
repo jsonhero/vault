@@ -4,7 +4,7 @@ import _ from 'lodash'
 import { useDatabase } from "~/context";
 import { useQuery } from "~/context/database-context";
 
-import { Entity } from "~/types/db-types";
+import { DataSchema, Entity } from "~/types/db-types";
 import { FolderTreeList } from './file-tree-list'
 import { useAppStateService } from "../app-state";
 
@@ -127,14 +127,34 @@ export const FileExplorer = () => {
     return flattenTree(rootNode, entities)
   }, [rootNode, entities])
 
-  const onAddFile = useCallback(async (nodeId?: string) => {
+  const onAddFile = useCallback(async (nodeId: string | undefined, type: string) => {
 
     const cloned: FileTreeNode = _.cloneDeep(rootNode)
 
-    const entity = await db.execute<Entity>(`INSERT INTO entity (title, type) VALUES ('Placeholder', 'document') RETURNING *`, [], {
-      takeFirst: true,
-    })
-    await db.execute(`INSERT INTO document (entity_id) VALUES (?) RETURNING *`, [entity.id])
+    let entity
+
+    if (type === 'document') {
+      entity = await db.execute<Entity>(`INSERT INTO entity (title, type) VALUES ('Placeholder', ?) RETURNING *`, [type], {
+        takeFirst: true,
+      })
+      await db.execute(`INSERT INTO document (entity_id) VALUES (?) RETURNING *`, [entity.id])
+    } else if (type === 'table') {
+      const defaultSchema = {
+        columns: [
+          {
+            id: nanoid(),
+            type: 'title',
+            name: 'Name'
+          }
+        ]
+      }
+      const dataSchema = await db.execute<DataSchema>(`INSERT INTO data_schema (schema) VALUES (?) RETURNING *`, [JSON.stringify(defaultSchema)], {
+        takeFirst: true,
+      });
+      entity = await db.execute<Entity>(`INSERT INTO entity (title, type, data_schema_id) VALUES ('Placeholder', 'table', ?) RETURNING *`, [dataSchema.id], {
+        takeFirst: true,
+      })
+    }
 
     const file = {
       id: nanoid(10),
@@ -214,7 +234,7 @@ export const FileExplorer = () => {
         await db.execute(`DELETE FROM entity WHERE id IN (${entityIdsToDelete.join(', ')})`)
       }
     }
-
+    
     await db.execute("UPDATE app_state SET data = ? WHERE type = 'file_tree'", [JSON.stringify(cloned)])
 
   }, [rootNode])
