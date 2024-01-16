@@ -61,7 +61,7 @@
         - Maybe also have a Todo table extension row view
       - Todo would have a reference to the note its created on
 - Add markdown editing like Obsidian
-
+- Paid community extensions?
 
 - Figure out react renderse for prosemirror... how to handle passing state from pluginstate to react? For example, long dyanaimc lists that mount and need to select one item with keyboard inputs. MObx Observers in portal states might not work?
 
@@ -82,3 +82,5 @@
 
 https://www.sqlite.org/fts5.html
 https://www.sqlite.org/spellfix1.html
+
+

@@ -49,6 +49,9 @@ export const Search = observer(() => {
     const value = e.target.value;
     setQuery(value)
 
+
+  
+
     let q = "SELECT entity_fts.rowid, highlight(entity_fts, 0, '!#!', '!#!') as title_match, highlight(entity_fts, 1, '!#!', '!#!') as doc_match FROM entity_fts INNER JOIN entity ON entity.id = entity_fts.rowid WHERE entity_fts MATCH ?"
     if (search.openProps?.entityTypeFilter) {
       q += " AND entity.type = ?"

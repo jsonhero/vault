@@ -3,6 +3,7 @@
 - https://electric-sql.com/ (SQLite) partial replication coming soon
 - https://www.evolu.dev/docs/faq (SQLite)
 - https://replicache.dev/
+- https://www.triplit.dev/
 
 Runner ups:
 - https://rxdb.info/ (PouchDb, SQLite?)

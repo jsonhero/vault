@@ -255,8 +255,20 @@ export const FileExplorer = () => {
     await db.execute("UPDATE app_state SET data = ? WHERE type = 'file_tree'", [JSON.stringify(cloned)])
 
   }, [rootNode])
-  console.log(rootNode, 'node')
 
+  const onRenameNode = useCallback(async (nodeId: string, title: string) => {
+    const cloned: FileTreeNode = _.cloneDeep(rootNode)
+      const node = findNode(cloned, nodeId)
+      if (node) {
+        if (node.type === 'folder') {
+          node.name = title
+          await db.execute("UPDATE app_state SET data = ? WHERE type = 'file_tree'", [JSON.stringify(cloned)])
+        } else if (node.type === 'file') {
+          await db.execute("UPDATE entity SET title = ? WHERE id = ?", [title, node.meta.entityId])
+        }
+      }
+    
+  }, [rootNode])
 
   return (
     <FolderTreeList
@@ -265,6 +277,7 @@ export const FileExplorer = () => {
       onAddFile={onAddFile} 
       onAddFolder={onAddFolder}
       onClickItem={onClickItem}
+      onRenameNode={onRenameNode}
       onDeleteNode={onDeleteNode}
     />
   )

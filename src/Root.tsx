@@ -8,7 +8,7 @@ import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react'
 import { SearchProvider } from "~/features/search";
 import { DatabaseProvider } from '~/context/database-context'
 import { AppStateProvider } from "~/features/app-state";
-
+import { queryManager, loadWasmDatabase, queryManagerContext } from '~/query-manager.ts'
 /**
  * Generates a random room name to sync with or pulls one from local storage.
  */
@@ -43,6 +43,14 @@ export default function Root() {
     };
   }, []); // ignore -- theRoom is managed by the effect
 
+  useEffect(() => {
+    if (theRoom) {
+      loadWasmDatabase(theRoom).then((db) => {
+        queryManager.applyDb(db)
+      })
+    }
+  }, [theRoom])
+
   return (
     <DBProvider
       dbname={theRoom}
@@ -51,17 +59,19 @@ export default function Root() {
         content: schemaContent,
       }}
       Render={() => (
-        <NextUIProvider>
-          <DatabaseProvider dbName={theRoom}>
-            <AppStateProvider>
-              <SearchProvider>
-                <ProsemirrorAdapterProvider>
-                  <App dbname={theRoom} />
-                </ProsemirrorAdapterProvider>
-              </SearchProvider>
-            </AppStateProvider>
-          </DatabaseProvider>
-        </NextUIProvider>
+        <queryManagerContext.Provider value={queryManager}>
+          <NextUIProvider>
+            <DatabaseProvider dbName={theRoom}>
+              <AppStateProvider>
+                <SearchProvider>
+                  <ProsemirrorAdapterProvider>
+                    <App dbname={theRoom} />
+                  </ProsemirrorAdapterProvider>
+                </SearchProvider>
+              </AppStateProvider>
+            </DatabaseProvider>
+          </NextUIProvider>
+        </queryManagerContext.Provider>
       )}
     />
   );

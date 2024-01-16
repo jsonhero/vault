@@ -3,7 +3,9 @@ import { ChevronDownIcon, ChevronRightIcon, FolderIcon, FolderOpenIcon, FileText
 import { useCallback, useMemo, useState } from "react"
 import { Menu } from "@ark-ui/react";
 
+
 import type { FileTreeNode } from './file-explorer'
+import { Input } from "~/components/input";
 
 function getDeepChildCount(node: FileTreeNode) {
   if (node.type === 'file' || node.children.length === 0 ) {
@@ -23,21 +25,26 @@ function getDeepChildCount(node: FileTreeNode) {
 const ListItemFolder = ({
   item,
   onClickListItem,
-  selected
+  onRenameNode,
+  selected,
 }: any) => {
 
   const onClick = useCallback(() => {
     onClickListItem(item.id)
   }, [item.id, onClickListItem])
 
+  const onInputBlur = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onRenameNode(item.id, e.target.value)
+  }, [item.id, onRenameNode])
+
   return (
     <ListItem depth={item.depth} onClick={onClick} selected={selected} data-node-id={item.id} data-node-type="folder">
-      <div className="folder pointer-events-none">
-        <button className="flex items-center gap-1">
+      <div className="folder flex items-center gap-1 pointer-events-none">
+        <button className="flex items-center">
           {item.meta.expanded ? <ChevronDownIcon size={14} /> : <ChevronRightIcon size={14} />}
           {item.meta.expanded ? <FolderOpenIcon size={14} /> : <FolderIcon size={14} />}
-          <div>{item.name}</div>
         </button>
+        <Input defaultValue={item.name} id={`folder:${item.id}`} onBlur={onInputBlur} />
       </div>
       <div className="absolute w-[1px] bg-zinc-800 top-[24px] group-hover:bg-zinc-600" style={{
         height: (24 * getDeepChildCount(item)) + 'px'
@@ -51,19 +58,22 @@ const ListItemFolder = ({
 const ListItemFile = ({
   item,
   onClickListItem,
+  onRenameNode,
   selected,
 }) => {
   const onClick = useCallback(() => {
     onClickListItem(item.id)
   }, [item.id, onClickListItem])
 
+  const onInputBlur = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onRenameNode(item.id, e.target.value)
+  }, [item.id, onRenameNode])
+
   return (
     <ListItem depth={item.depth} onClick={onClick} selected={selected} data-node-id={item.id} data-node-type="file">
-      <div className="pointer-events-none">
-        <button className="flex items-center gap-1">
-          {item.entity.type === 'document' ? <FileTextIcon size={14} /> : <Table2Icon size={14} />}
-          <div>{item.entity.title}</div>
-        </button>
+      <div className="flex items-center pointer-events-none gap-1">
+        {item.entity.type === 'document' ? <FileTextIcon size={14} /> : <Table2Icon size={14} />}
+        <Input defaultValue={item.entity.title} id={`file:${item.id}`} onBlur={onInputBlur} />
       </div>
     </ListItem>
   )
@@ -102,9 +112,13 @@ const FolderMenu = ({
             name: 'Open',
           },
           {
+            id: 'rename_file',
+            name: 'Rename'
+          },
+          {
             id: 'delete',
             name: 'Delete',
-          }
+          },
         ]
       }]
     } else if (nodeType === 'folder') {
@@ -124,9 +138,13 @@ const FolderMenu = ({
             name: 'New Folder',
           },
           {
+            id: 'rename_folder',
+            name: 'Rename',
+          },
+          {
             id: 'delete',
             name: 'Delete',
-          }
+          },
         ]
       }]
     } else {
@@ -161,6 +179,10 @@ const FolderMenu = ({
       onDeleteNode(nodeId)
     } else if (value === 'open_file') {
       onOpenItem(nodeId)
+    } else if (value === 'rename_folder') {
+      document.getElementById(`folder:${nodeId}`)?.focus()
+    } else if (value === 'rename_file') {
+      document.getElementById(`file:${nodeId}`)?.focus()
     }
 
     onCloseMenu()
@@ -195,6 +217,7 @@ export const FolderTreeList = ({
   onAddFolder,
   onClickItem,
   onDeleteNode,
+  onRenameNode,
 }: FolderTreeListProps) => {
   const [menuProps, setMenuProps] = useState<any>({})
 
@@ -224,17 +247,21 @@ export const FolderTreeList = ({
           list.map((node) => {
             if (node.type === 'file') {
               return (
-                <ListItemFile 
+                <ListItemFile
+                  key={node.id}
                   item={node} 
-                  onClickListItem={onClickItem} 
+                  onClickListItem={onClickItem}
+                  onRenameNode={onRenameNode}
                   selected={node.id === selectedNodeId} 
                 />
               )
             }
             return (
               <ListItemFolder 
+                key={node.id}
                 item={node} 
-                onClickListItem={onClickItem} 
+                onClickListItem={onClickItem}
+                onRenameNode={onRenameNode}
                 selected={node.id === selectedNodeId} 
               />
             )

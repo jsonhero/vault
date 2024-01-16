@@ -11,6 +11,7 @@ export interface Entity {
   type: 'table' | 'document' | 'table_record';
   data_schema_id: number;
   data: any;
+  updated_at: Date;
 }
 
 export interface DataSchemaValue {

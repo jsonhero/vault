@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node ./server.js",
     "start": "NODE_ENV=production node ./server.js",
-    "build": "tsc && vite build",
+    "build": "vite build",
+    "preview": "vite preview",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
@@ -33,6 +34,7 @@
     "express": "^4.18.2",
     "framer-motion": "^10.18.0",
     "kysely": "^0.27.1",
+    "kysely-plugin-serialize": "^0.5.6",
     "lodash": "^4.17.21",
     "lucide-react": "^0.304.0",
     "mobx": "^6.12.0",

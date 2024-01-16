@@ -1,24 +1,29 @@
 import { useState } from "react";
 import { FolderTreeIcon, ListIcon } from 'lucide-react'
-import { useQuery } from "~/context/database-context";
 import { useAppStateService } from "~/features/app-state";
 import { Entity } from "~/types/db-types";
 import { FileExplorer } from '~/features/file-explorer'
 
-export const ExplorerBar = () => {
+import { useObservableQuery  } from "~/query-manager";
+import { observer } from "mobx-react-lite";
+
+export const ExplorerBar = observer(() => {
   const appState = useAppStateService()
   const [active, setActive] = useState('file_tree')
 
-  const entities = useQuery<Entity[]>(
-    "SELECT * FROM entity WHERE type IN ('table', 'document') ORDER BY created_at DESC"
-  ).data;
-
+  const { data: entities } = useObservableQuery(
+    (db) => db.selectFrom('entity')
+        .where('type', 'in', ['table', 'document'])
+        .orderBy('updated_at desc')
+        .selectAll(),
+        {
+          autoLoad: true,
+        }
+  )
 
   const onSelectEntity = (entity: Entity) => {
     appState.setSelectedEntityId(entity.id)
-  }
-
-  
+  }  
   
   return (
     <div className="w-full h-full">
@@ -47,4 +52,4 @@ export const ExplorerBar = () => {
       )}
     </div>
   )
-}
+})

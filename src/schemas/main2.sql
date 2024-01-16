@@ -74,3 +74,7 @@ CREATE TRIGGER IF NOT EXISTS document_fts_update AFTER UPDATE OF doc_text ON doc
     INSERT INTO entity_fts(entity_fts, rowid, doc_text) VALUES ('delete', OLD.entity_id, OLD.doc_text);
     INSERT INTO entity_fts(rowid, doc_text) VALUES (NEW.entity_id, NEW.doc_text);
 END;
+
+CREATE TRIGGER IF NOT EXISTS entity_updated_at AFTER UPDATE ON entity FOR EACH ROW WHEN NEW.updated_at <= OLD.updated_at BEGIN
+    UPDATE entity SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
