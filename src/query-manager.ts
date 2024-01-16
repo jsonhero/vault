@@ -41,18 +41,22 @@ export const queryManagerContext = createContext<QueryManager>(null)
 
 export const useObservableQuery = <T, A extends any[]>(
   queryFn: QueryFn<T, A, DB>,
+  deps: A = [] as unknown as A,
   options?: ObserverQueryOptions<DB>,
 ) => {
   const manager = useContext(queryManagerContext)
 
   const [query] = useState(() => manager.observableQuery(queryFn, options))
+
+  useEffect(() => {
+    query.updateFetchParams(...deps)
+  }, [...deps])
   
   useEffect(() => {
     return () => {
-      console.log('unmount beitych')
       query.dispose()
     }
-  })
+  }, [])
 
   return query
 }

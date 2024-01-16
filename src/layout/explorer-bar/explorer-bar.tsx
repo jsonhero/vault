@@ -12,13 +12,13 @@ export const ExplorerBar = observer(() => {
   const [active, setActive] = useState('file_tree')
 
   const { data: entities } = useObservableQuery(
-    (db) => db.selectFrom('entity')
+    (db, order: 'asc' | 'desc') => db.selectFrom('entity')
         .where('type', 'in', ['table', 'document'])
-        .orderBy('updated_at desc')
+        .orderBy('updated_at', order)
         .selectAll(),
-        {
-          autoLoad: true,
-        }
+        [
+          'desc'
+        ],
   )
 
   const onSelectEntity = (entity: Entity) => {
