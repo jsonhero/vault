@@ -1,12 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { nanoid } from 'nanoid'
 import _ from 'lodash'
-import { useDatabase } from "~/context";
-import { useQuery } from "~/context/database-context";
 
-import { DataSchema, Entity } from "~/types/db-types";
+import { Entity } from "~/types/db-types";
 import { FolderTreeList } from './file-tree-list'
 import { useAppStateService } from "../app-state";
+import { useDbQuery, useTakeFirstDbQuery } from "~/query-manager";
+import { fileTreeService } from "~/services/file-tree.service";
+import { entityService } from "~/services/entity.service";
 
 export interface FileTreeNode {
   id: string;
@@ -104,14 +105,14 @@ function flattenTree(node: FileTreeNode, entities: Entity[], currentDepth = 0): 
 }
 
 export const FileExplorer = () => {
-  const db = useDatabase()
   const appState = useAppStateService()
   const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>(undefined)
 
-  const fileTreeState = useQuery<any>("SELECT * FROM app_state WHERE type = 'file_tree'", [], {
-    takeFirst: true,
-    jsonFields: ['data']
-  }).data
+  const { data: fileTreeState } = useTakeFirstDbQuery({
+    query: (db) => db.selectFrom('app_state')
+      .where('type', '=', 'file_tree')
+      .selectAll()
+  })
 
   const rootNode = useMemo(() => {
     return fileTreeState?.data || DEFAULT_ROOT
@@ -121,7 +122,12 @@ export const FileExplorer = () => {
     return pickEntityIds(rootNode)
   }, [rootNode])
 
-  const entities = useQuery<Entity[]>(`SELECT * FROM entity WHERE id IN (${entityIds.join(', ')})`, []).data
+  const { data: entities } = useDbQuery({
+    keys: [entityIds],
+    query: (db) => db.selectFrom('entity')
+      .where('id', 'in', entityIds)
+      .selectAll()
+  })
 
   const fileTreeList = useMemo(() => {
     return flattenTree(rootNode, entities)
@@ -134,26 +140,9 @@ export const FileExplorer = () => {
     let entity
 
     if (type === 'document') {
-      entity = await db.execute<Entity>(`INSERT INTO entity (title, type) VALUES ('Placeholder', ?) RETURNING *`, [type], {
-        takeFirst: true,
-      })
-      await db.execute(`INSERT INTO document (entity_id) VALUES (?) RETURNING *`, [entity.id])
+      entity = await entityService.insertDocument()
     } else if (type === 'table') {
-      const defaultSchema = {
-        columns: [
-          {
-            id: nanoid(),
-            type: 'title',
-            name: 'Name'
-          }
-        ]
-      }
-      const dataSchema = await db.execute<DataSchema>(`INSERT INTO data_schema (schema) VALUES (?) RETURNING *`, [JSON.stringify(defaultSchema)], {
-        takeFirst: true,
-      });
-      entity = await db.execute<Entity>(`INSERT INTO entity (title, type, data_schema_id) VALUES ('Placeholder', 'table', ?) RETURNING *`, [dataSchema.id], {
-        takeFirst: true,
-      })
+      entity = await entityService.insertTable()
     }
 
     const file = {
@@ -178,9 +167,9 @@ export const FileExplorer = () => {
 
 
     if (rootNode.children.length === 0) {
-      await db.execute("INSERT INTO app_state (type, data) VALUES (?, ?)", ['file_tree', JSON.stringify(cloned)])
+      fileTreeService.insert(cloned)
     } else {
-      await db.execute("UPDATE app_state SET data = ? WHERE type = 'file_tree'", [JSON.stringify(cloned)])
+      fileTreeService.update(cloned)
     }
   }, [rootNode])
 
@@ -209,9 +198,9 @@ export const FileExplorer = () => {
     setSelectedNodeId(folder.id)
 
     if (rootNode.children.length === 0) {
-      await db.execute("INSERT INTO app_state (type, data) VALUES (?, ?)", ['file_tree', JSON.stringify(cloned)])
+      fileTreeService.insert(cloned)
     } else {
-      await db.execute("UPDATE app_state SET data = ? WHERE type = 'file_tree'", [JSON.stringify(cloned)])
+      fileTreeService.update(cloned)
     }
   }, [rootNode])
 
@@ -221,22 +210,18 @@ export const FileExplorer = () => {
     const parent = findParentNode(cloned, nodeId)
     const node = findNode(cloned, nodeId)
 
-    // await db.execute("DELETE FROM app_state WHERE type = 'file_tree'")
-
     if (parent && node) {
       if (node.type === 'file') {
         parent.children = parent.children.filter((node) => node.id !== nodeId)
-        await db.execute("DELETE FROM entity WHERE id = ?", [node.meta.entityId])
+        entityService.deleteById(node.meta.entityId)
       } else if (node.type === 'folder') {
         const entityIdsToDelete = pickEntityIds(node)
-        console.log(entityIdsToDelete, 'delete')
         parent.children = parent.children.filter((node) => node.id !== nodeId)
-        await db.execute(`DELETE FROM entity WHERE id IN (${entityIdsToDelete.join(', ')})`)
+        entityService.deleteByIds(entityIdsToDelete)
       }
     }
-    
-    await db.execute("UPDATE app_state SET data = ? WHERE type = 'file_tree'", [JSON.stringify(cloned)])
 
+    fileTreeService.update(cloned)
   }, [rootNode])
 
   const onClickItem = useCallback(async (nodeId: string) => {
@@ -252,8 +237,7 @@ export const FileExplorer = () => {
       setSelectedNodeId(nodeId)
     }
 
-    await db.execute("UPDATE app_state SET data = ? WHERE type = 'file_tree'", [JSON.stringify(cloned)])
-
+    fileTreeService.update(cloned)
   }, [rootNode])
 
   const onRenameNode = useCallback(async (nodeId: string, title: string) => {
@@ -262,9 +246,9 @@ export const FileExplorer = () => {
       if (node) {
         if (node.type === 'folder') {
           node.name = title
-          await db.execute("UPDATE app_state SET data = ? WHERE type = 'file_tree'", [JSON.stringify(cloned)])
+          fileTreeService.update(cloned)
         } else if (node.type === 'file') {
-          await db.execute("UPDATE entity SET title = ? WHERE id = ?", [title, node.meta.entityId])
+          entityService.updateTitle(node.meta.entityId, title)
         }
       }
     

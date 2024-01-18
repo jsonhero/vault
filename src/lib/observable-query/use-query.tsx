@@ -1,9 +1,8 @@
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Kysely, QueryResult, SelectQueryBuilder } from "kysely";
 import  { DB } from "@vlcn.io/crsqlite-wasm";
 import tblrx from "@vlcn.io/rx-tbl";
 
-// import type { QueryFn } from './types'
 import { InMemoryCache } from './in-memory-cache'
 import { getUsedTables } from './utils';
 
@@ -76,6 +75,8 @@ function createDbQueryHooks<Schema>(context: React.Context<DatabaseQueryManager<
       const disposerRef = useRef<(() => void) | null>(null)
   
       const queryManager = useContext(context)
+
+      const jsonKeys = JSON.stringify(params.keys)
   
       const runQuery = useCallback(() => {
         const queryId = { queryId: Math.random().toString(36).slice(2) }
@@ -89,7 +90,9 @@ function createDbQueryHooks<Schema>(context: React.Context<DatabaseQueryManager<
   
         const sql = compiledQuery.sql
   
-        const cacheId = `${sql}:${JSON.stringify(params.keys)}`
+        const cacheId = `${sql}:${jsonKeys}`
+
+        console.log(cacheId, ':: updating')
   
         if (params.options?.policy !== 'compute-only' && queryManager.queryCache.has(cacheId)) {
           const cachedValue = queryManager.queryCache.get(cacheId)
@@ -114,7 +117,7 @@ function createDbQueryHooks<Schema>(context: React.Context<DatabaseQueryManager<
             }
           })
         }
-      }, [params.keys, params.options])
+      }, [jsonKeys, params.options])
   
   
       useEffect(() => {

@@ -1,41 +1,18 @@
 import { FilePlus, Table } from "lucide-react"
-import { nanoid } from 'nanoid'
 
-import { useDatabase } from "~/context"
 import { useAppStateService } from "~/features/app-state"
-import { Entity, DataSchema } from "~/types/db-types"
-
+import { entityService } from "~/services/entity.service"
 
 export const IconBar = () => {
-  const db = useDatabase()
   const appState = useAppStateService()
 
   const onClickAddDocument = async () => {
-    const entity = await db.execute<Entity>(`INSERT INTO entity (title, type) VALUES ('Placeholder', 'document') RETURNING *`, [], {
-      takeFirst: true,
-    })
-    await db.execute(`INSERT INTO document (entity_id) VALUES (?) RETURNING *`, [entity.id])
-
+    const entity = await entityService.insertDocument()
     appState.setSelectedEntityId(entity.id)
   }
 
   const onClickAddTable = async () => {
-    const defaultSchema = {
-      columns: [
-        {
-          id: nanoid(),
-          type: 'title',
-          name: 'Name'
-        }
-      ]
-    }
-
-    const dataSchema = await db.execute<DataSchema>(`INSERT INTO data_schema (schema) VALUES ('${JSON.stringify(defaultSchema)}') RETURNING *`, [], {
-      takeFirst: true,
-    });
-    const entity = await db.execute<Entity>(`INSERT INTO entity (title, type, data_schema_id) VALUES ('Placeholder', 'table', ${dataSchema.id}) RETURNING *`, [], {
-      takeFirst: true,
-    })
+    const entity = await entityService.insertTable()
     appState.setSelectedEntityId(entity.id)
   }
 

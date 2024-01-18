@@ -1,21 +1,18 @@
-import { Entity } from '~/types/db-types'
 import { TitleEditor } from '~/features/title-editor';
-import { useQuery  } from '~/context/database-context';
 import { TableEditor } from '~/features/table-editor';
 import { DocumentEditor } from '../document-editor';
+import { useTakeFirstDbQuery } from '~/query-manager';
 
 export const EntityEditor = ({ entityId }: { entityId: number }) => {
 
-  const entity = useQuery<Entity>(
-    `SELECT 
-        entity.*
-    FROM entity
-    WHERE entity.id = ?`,
-    [entityId],
-    {
-      takeFirst: true,
-    }
-  ).data;
+  const { data: entity } = useTakeFirstDbQuery({
+    keys: [entityId],
+    query: (db) => db.selectFrom('entity')
+      .where('id', '=', entityId)
+      .selectAll()
+  })
+
+  if (!entity) return null;
 
   return (
     <div>

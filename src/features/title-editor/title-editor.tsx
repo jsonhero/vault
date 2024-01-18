@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Input } from '~/components/input'
-import { useDatabase } from '~/context'
+import { entityService } from '~/services/entity.service'
 
 import { Entity } from '~/types/db-types'
 
@@ -11,8 +11,6 @@ interface TitleEditorProps {
 export const TitleEditor = React.memo(({
   entity
 }: TitleEditorProps) => {
-  const db = useDatabase()
-
   const [title, setTitle] = useState(entity.title || '')
   
   useEffect(() => {
@@ -21,8 +19,7 @@ export const TitleEditor = React.memo(({
 
   const onChangeTitle = (e: React.ChangeEvent<HTMLInputElement> ) => {
     const value = e.target.value
-
-    db.execute('UPDATE entity SET title = ? WHERE id = ?', [value, entity.id])
+    entityService.updateTitle(entity.id, value)
     setTitle(value)
   }
 

@@ -4,7 +4,7 @@ export interface EntityTable {
   id: Generated<number>;
   title: string;
   type: 'table' | 'document' | 'table_record';
-  data_schema_id: number;
+  data_schema_id?: number;
   data: {
     values: {
       [key: string]: string
@@ -25,9 +25,39 @@ export interface DataSchemaTable {
   };
 }
 
+export interface EntityFTS {
+  rowid: number;
+}
+
+export interface DocumentTable {
+  id: Generated<number>;
+  entity_id: number;
+  doc?: any;
+  doc_text?: string
+}
+
+export interface AppStateTable {
+  id: Generated<number>;
+  type: 'file_tree',
+  data: any
+  updated_at: ColumnType<Date, string | undefined, never>;
+  created_at: ColumnType<Date, string | undefined, never>;
+}
+
+export interface EntityGraphTable {
+  id: Generated<number>;
+  entity_id: number
+  to_entity_id: number
+  category?: string
+}
+
 export interface DB {
   entity: EntityTable;
   data_schema: DataSchemaTable;
+  entity_fts: EntityFTS;
+  document: DocumentTable;
+  app_state: AppStateTable;
+  entity_graph: EntityGraphTable;
 }
 
 export type NewEntity = Insertable<EntityTable>

@@ -1,9 +1,10 @@
 import { Dialog, Portal } from "@ark-ui/react"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useState } from "react"
+import { sql } from 'kysely'
 import { Input } from "~/components/input"
-import { useDatabase, useQuery } from "~/context/database-context"
 import { useSearchService } from './search.context'
 import { observer } from 'mobx-react-lite'
+import { useDbQuery } from '~/query-manager'
 
 const sanitize = (query: string) =>
   query
@@ -40,28 +41,33 @@ function textHighlightArray(inputText: string): any[] {
 
 export const Search = observer(() => {
   const search = useSearchService()
-  const db = useDatabase()
 
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<any>([])
 
+  const { data: results } = useDbQuery({
+    keys: [search.openProps?.entityTypeFilter, query],
+    query: (db) => {
+      let q = db.selectFrom('entity_fts')
+        .select([
+          'entity_fts.rowid', 
+          sql<string>`highlight(entity_fts, 0, '!#!', '!#!')`.as('title_match'),
+          sql<string>`highlight(entity_fts, 1, '!#!', '!#!')`.as('doc_match'),
+        ])
+        .innerJoin('entity', 'entity.id', 'entity_fts.rowid')
+        .where(sql`entity_fts MATCH ${sanitize(query)}` as any)
+
+      if (search.openProps?.entityTypeFilter) {
+        q = q.where('entity.type', '=', search.openProps?.entityTypeFilter as any)
+      }
+
+      return q
+    }
+  })
+  
   const onSearchChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value)
-
-
-  
-
-    let q = "SELECT entity_fts.rowid, highlight(entity_fts, 0, '!#!', '!#!') as title_match, highlight(entity_fts, 1, '!#!', '!#!') as doc_match FROM entity_fts INNER JOIN entity ON entity.id = entity_fts.rowid WHERE entity_fts MATCH ?"
-    if (search.openProps?.entityTypeFilter) {
-      q += " AND entity.type = ?"
-    }
-
-    const data = await db.execute<any>(
-      q, 
-      [sanitize(value) + '*', search.openProps?.entityTypeFilter])
-    setResults(data)
-  }, [search.openProps, search.openProps?.entityTypeFilter])
+  }, [])
 
   const onClickResult = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     // maybe make helpers for accessing dataset

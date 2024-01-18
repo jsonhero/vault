@@ -1,94 +1,51 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback } from 'react'
 import _ from 'lodash'
-import { nanoid } from 'nanoid'
-import { Popover } from '@ark-ui/react'
-import { useDatabase, useQuery  } from '~/context/database-context';
 
-import { DataSchemaValue, DataSchema, Entity, } from '~/types/db-types'
+import { DataSchemaValue, Entity, } from '~/types/db-types'
 import { useAppStateService } from '../app-state';
-import { useQueryManager, useService } from '~/query-manager'
-import { TableEditorService } from './table-editor.service'
+import { useTakeFirstDbQuery, useDbQuery } from '~/query-manager'
 
 import { TextCell, TitleCell, NumberCell, BooleanCell } from './cells'
 import { TableRow } from './row'
 import { HeaderPopover } from './header'
-import { useEffectOnce } from '~/lib/create-effect-once'
-import { observer } from 'mobx-react-lite';
+import { tableEditorService } from '~/services/table.service'
+import { dataSchemaService } from '~/services/data-schema.service';
 
-export const TableEditor = observer(({ entity }: { entity: Entity }) => {
-  // const db = useDatabase()
-  // const appState = useAppStateService()
-  const manager = useQueryManager()
+export const TableEditor = ({ entity }: { entity: Entity }) => {
+  const appState = useAppStateService()
 
-  const service = useService(() => {
-    const s = new TableEditorService(manager)
-    console.log('creating :: ', s.id)
-    return s
+  const { data: dataSchema } = useTakeFirstDbQuery({
+    keys: [entity.data_schema_id],
+    query: (db) => db.selectFrom('data_schema')
+      .where('id', '=', entity.data_schema_id)
+      .selectAll()
   })
 
-  useEffect(() => {
-    console.log('service changed!')
-  }, [service.id])
+  const { data: records } = useDbQuery({
+    keys: [entity.data_schema_id],
+    query: (db) => db.selectFrom('entity')
+      .where('data_schema_id', '=', entity.data_schema_id)
+      .where('type', '=', 'document')
+      .selectAll()
+  })
 
-  console.log(service.id)
-
-  const { data: dataSchema } = service.schemaQuery
-  // const { data: records } = service.recordsQuery
-
-  useEffect(() => {
-    service.schemaQuery.updateFetchParams(entity.data_schema_id)
-    // service.recordsQuery.updateFetchParams(entity.data_schema_id)
+  const onUpdateRowColumn = useCallback((rowId: number, columnId: string, value: any) => {
+    tableEditorService.updateCell(entity.data_schema_id, rowId, columnId, value)
   }, [entity.data_schema_id])
 
-  useEffect(() => {
-    return () => {
-      console.log('untmounting')
-    }
-  }, [])
+  const onAddColumn = useCallback(() => {
+    tableEditorService.addColumn(entity.data_schema_id)
+  }, [entity.data_schema_id])
 
-  useEffectOnce(() => {
-    return () => {
-      console.log('disposing!!')
-      service.dispose()
-    }
-  })
+  const onInsertRow = useCallback(() => {
+    tableEditorService.insertRow(entity.data_schema_id)
+  }, [entity.data_schema_id])
 
-  return null
-
-  const onUpdateRowColumn = async (rowId: number, columnId: string, value: any) => {
-    // const schemaColumn = dataSchema.schema.columns.find((column) => column.id === columnId)
-  
-    // if (schemaColumn?.type === 'title') {
-    //   await db.execute('UPDATE entity SET title = ? WHERE id = ?', [value, rowId])
-    // } else {
-    //   await db.execute(`UPDATE entity SET data = json_set(data, ?, ?) WHERE id = ?`, [`$.${columnId}`, value, rowId])
-    // }
-
-  }
-
-  // const onAddColumn = async () => {
-  //   const record = await db.execute<DataSchema>("SELECT * FROM data_schema WHERE id = ?", [dataSchema.id], {
-  //     takeFirst: true,
-  //     jsonFields: ['schema']
-  //   })
-  
-  //   record.schema.columns.push({
-  //     id: nanoid(),
-  //     name: 'placeholder',
-  //     type: 'text',
-  //   })
-  //   await db.execute("UPDATE data_schema SET schema = ? WHERE id = ?", [JSON.stringify(record.schema), record.id])
-  // }
-
-  const onUpdateSchema = async (fn: (schema: DataSchemaValue) => DataSchemaValue) => {
-    const record = await db.execute<DataSchema>("SELECT * FROM data_schema WHERE id = ?", [dataSchema?.id], {
-      takeFirst: true,
-      jsonFields: ['schema']
-    })
-
+  const onUpdateSchema = useCallback(async (fn: (schema: DataSchemaValue) => DataSchemaValue) => {
+    const record = await dataSchemaService.findById(entity.data_schema_id)
     const modifiedSchema = fn(record.schema)
-    await db.execute("UPDATE data_schema SET schema = ? WHERE id = ?", [JSON.stringify(modifiedSchema), record.id])
-  }
+    dataSchemaService.update(record.id, modifiedSchema)
+  }, [entity.data_schema_id])
 
   return (
     <div className="p-2 w-full">
@@ -105,12 +62,12 @@ export const TableEditor = observer(({ entity }: { entity: Entity }) => {
                 </th>
               ))}
               <th className="min-w-[70px] flex-1 text-left">
-                <button onClick={service.addColumn}>+</button>
+                <button onClick={onAddColumn}>+</button>
               </th>
             </tr>
           </thead>
           <tbody>
-            {/* {
+            {
               records.map((row) => (
                 <TableRow key={row.id} className="border-b">
                   <td>
@@ -169,10 +126,10 @@ export const TableEditor = observer(({ entity }: { entity: Entity }) => {
                   })}
                 </TableRow>
               ))
-            } */}
+            }
             <tr>
               <td colSpan={2}>
-                <button onClick={service.insertRow} className="w-full text-blue-800">
+                <button onClick={onInsertRow} className="w-full text-blue-800">
                   Add Row
                 </button>
               </td>
@@ -182,4 +139,4 @@ export const TableEditor = observer(({ entity }: { entity: Entity }) => {
       </div>
     </div>
   )
-})
+}

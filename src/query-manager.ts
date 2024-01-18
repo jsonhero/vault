@@ -5,7 +5,7 @@ import { SerializePlugin } from 'kysely-plugin-serialize'
 
 import { CRDialect } from "~/lib/observable-query";
 import { DB } from '~/types/db'
-import { queryManagerFactory } from "./lib/observable-query/use-query";
+import { queryManagerFactory, DatabaseQueryManager } from "./lib/observable-query/use-query";
 
 export async function loadWasmDatabase(file: string) {
   const sqlite = await wasmSqlite(() => wasmUrl);
@@ -20,6 +20,8 @@ export const {
   useQueryManager,
   useTakeFirstDbQuery,
 } = queryManagerFactory<DB>()
+
+export type QueryManager = DatabaseQueryManager<DB>
 
 queryManager.onBuildKysely((db) => new Kysely<DB>({
   dialect: new CRDialect({ database: db }),

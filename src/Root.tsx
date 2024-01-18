@@ -6,7 +6,6 @@ import App from "./App.tsx";
 import schemaContent from "./schemas/main2.sql?raw";
 import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react'
 import { SearchProvider } from "~/features/search";
-import { DatabaseProvider } from '~/context/database-context'
 import { AppStateProvider } from "~/features/app-state";
 import { queryManager, loadWasmDatabase, QueryManagerProvider } from '~/query-manager.ts'
 /**
@@ -61,15 +60,13 @@ export default function Root() {
       Render={() => (
         <QueryManagerProvider>
           <NextUIProvider>
-            <DatabaseProvider dbName={theRoom}>
-              <AppStateProvider>
-                <SearchProvider>
-                  <ProsemirrorAdapterProvider>
-                    <App dbname={theRoom} />
-                  </ProsemirrorAdapterProvider>
-                </SearchProvider>
-              </AppStateProvider>
-            </DatabaseProvider>
+            <AppStateProvider>
+              <SearchProvider>
+                <ProsemirrorAdapterProvider>
+                  <App dbname={theRoom} />
+                </ProsemirrorAdapterProvider>
+              </SearchProvider>
+            </AppStateProvider>
           </NextUIProvider>
         </QueryManagerProvider>
       )}

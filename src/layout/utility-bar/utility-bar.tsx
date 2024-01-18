@@ -1,20 +1,30 @@
 import { useMemo } from 'react';
 
-import { Entity } from '~/types/db-types'
-import { useQuery  } from '~/context/database-context';
 import { useAppStateService } from '~/features/app-state';
 import { observer } from 'mobx-react-lite';
-
-type EntityWithRef = Entity & { direction: 'to' | 'from' }
+import { useDbQuery } from '~/query-manager';
+import { sql } from 'kysely';
 
 export const UtilityBar = observer(() => {
   const appState = useAppStateService()
 
-  const entityGraph = useQuery<EntityWithRef[]>(`
-    SELECT entity.*, 'to' as direction FROM entity_graph eg INNER JOIN entity ON entity.id = eg.to_entity_id WHERE eg.entity_id = ?
-    UNION ALL
-    SELECT entity.*, 'from' as direction FROM entity_graph eg INNER JOIN entity ON entity.id = eg.entity_id WHERE eg.to_entity_id = ?
-  `, [appState.selectedEntityId, appState.selectedEntityId]).data
+  const { data: entityGraph } = useDbQuery({
+    keys: [appState.selectedEntityId],
+    query: (db) => {
+      const toQuery = db.selectFrom('entity_graph')
+        .innerJoin('entity', 'entity.id', 'entity_graph.to_entity_id')
+        .where('entity_graph.entity_id', '=', appState.selectedEntityId)
+        .selectAll('entity')
+        .select(sql.val<string>`to`.as('direction'))
+      const fromQuery = db.selectFrom('entity_graph')
+        .innerJoin('entity', 'entity.id', 'entity_graph.entity_id')
+        .where('entity_graph.to_entity_id', '=', appState.selectedEntityId)
+        .selectAll('entity')
+        .select(sql.val<string>`from`.as('direction'))
+        
+      return toQuery.unionAll(fromQuery)
+    }
+  })
 
   const toGraph = useMemo(() => {
     return entityGraph.filter((e) => e.direction === 'to')

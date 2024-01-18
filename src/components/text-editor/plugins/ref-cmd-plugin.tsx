@@ -6,9 +6,10 @@ import { useRef, useState, useMemo, useEffect } from "react";
 import { schema } from "../schema";
 import { nanoid } from 'nanoid'
 import { searchService } from "~/features/search";
-import { useDatabase } from "~/context";
 import { useAppStateService, appStateService } from "~/features/app-state";
 import { observer } from "mobx-react-lite";
+import { useDbQuery } from "~/query-manager";
+import { entityGraphService } from "~/services/entity-graph.service";
 
 const RefPluginKey = new PluginKey('RefPlugin')
 
@@ -30,19 +31,15 @@ const menuItems = [
 
 const RefComponent = () => {
   const { view } = usePluginViewContext()
-  const db = useDatabase()
   const ref = useRef<HTMLDivElement>(null)
   const isActiveRef = useRef<boolean>(false)
 
   const [coords, setCoords] = useState<Point | undefined>(undefined)
   const [isOpen, setOpen] = useState(false)
-  const [results, setResults] = useState([])
 
   const pluginState = useMemo(() => {
     return RefPluginKey.getState(view.state)
   }, [view.state])
-
-  // const isActive = useMemo(() => coords !== undefined, [coords])
 
   const query = useMemo(() => {
     if (pluginState) {
@@ -51,21 +48,20 @@ const RefComponent = () => {
     return ''
   }, [pluginState?.pos, view.state.selection.anchor])
 
-  useEffect(() => {
-    
-    if (query.length) {
-      db.execute("SELECT * FROM entity WHERE title LIKE ?", [query + '%']).then((data) => {
-        setResults(data)
-      })
-    }
-  }, [query])
+  const { data: results } = useDbQuery({
+    keys: [query],
+    query: (db) => db.selectFrom('entity')
+      .where('title', 'like', query + '%')
+      .selectAll()
+  })
+
+  // const isActive = useMemo(() => coords !== undefined, [coords])
 
   useEffect(() => {
     if (pluginState?.mounted && !isActiveRef.current) {
       isActiveRef.current = true
 
       const coords = view.coordsAtPos(view.state.selection.anchor)
-      console.log(coords, view.state.selection.anchor, 'coords')
 
       setCoords({
         y: coords.top,
@@ -84,12 +80,11 @@ const RefComponent = () => {
     }
   }, [pluginState, view.state, ref.current])
 
-  console.log(pluginState, 'statey')
   const onSelectReference = (e: React.MouseEvent<HTMLDivElement>) => {
     const entityId = parseInt(e.currentTarget.dataset.entityId || '', 10)
-    db.execute('INSERT INTO entity_graph (entity_id, to_entity_id, category) VALUES (?, ?, ?)',
-      [appStateService.selectedEntityId, entityId, 'document_ref']
-    )
+    if (appStateService.selectedEntityId) {
+      entityGraphService.addEdge(appStateService.selectedEntityId, entityId, 'document_ref')
+    }
   }
 
   // console.log(results, 'results')
