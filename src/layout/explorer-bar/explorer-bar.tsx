@@ -4,22 +4,22 @@ import { useAppStateService } from "~/features/app-state";
 import { Entity } from "~/types/db-types";
 import { FileExplorer } from '~/features/file-explorer'
 
-import { useObservableQuery  } from "~/query-manager";
+import { useDbQuery  } from "~/query-manager";
 import { observer } from "mobx-react-lite";
 
-export const ExplorerBar = observer(() => {
+export const ExplorerBar = () => {
   const appState = useAppStateService()
   const [active, setActive] = useState('file_tree')
 
-  const { data: entities } = useObservableQuery(
-    (db, order: 'asc' | 'desc') => db.selectFrom('entity')
+  const { data: entities } = useDbQuery(
+    {
+      query: (db) => db.selectFrom('entity')
         .where('type', 'in', ['table', 'document'])
-        .orderBy('updated_at', order)
+        .orderBy('updated_at', 'desc')
         .selectAll(),
-        [
-          'desc'
-        ],
+    }
   )
+
 
   const onSelectEntity = (entity: Entity) => {
     appState.setSelectedEntityId(entity.id)
@@ -52,4 +52,4 @@ export const ExplorerBar = observer(() => {
       )}
     </div>
   )
-})
+}

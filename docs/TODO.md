@@ -70,6 +70,29 @@
 - fix react flushSync issue when changing docs, this may be an issue with the react prosemirror adapter.
 - Make decision on WSIWYG or WSIWYG-lite (obsidian syntax)
   - Maybe WSIWYG with virtual characters for block markdown styling
+- Card system (essentially mini notes)
+  - Allows grouping of unstructured data into a block with a #
+  - Then when you click on the # it shows all those blocks
+    - Maybe the # itself is just a page with back/to links (like roam,logseq)
+    - can make "flashcards" from them
+      - ex card: daily thoughts - dumping of unstructured info each day, with possibly structured data mixed in.
+      - ex #thorns and #roses in daily journal
+        - Could run all thorns and roses card entries through an AI to give weekly/monthly summary
+        - How to order them by date updated/created? (index this? store it on block ele inline? (store this data in entity_graph row?))
+  - Nodes will to be renderable outside of text editor context, or maybe not.. maybe can edit reference context inline.
+- Every link/ref must provide surrouding context (blocks? )
+  - https://hub.logseq.com/features/av5LyiLi5xS7EFQXy4h4K8/page-links-versus-tags/6br2khgoTLHoeAbvZL47Np
+  - For now, load all references and their entire documents, and then pick blocks from there
+    - This is not optimized at all, but will help figure out the right structure, + is more file system oriented.
+- block element renders are differenet than references (they'r einline around unstructured data)
+- Might need a higher block thhan <lineeblock> to represent a group of blocks??, or maybe that's meta data on the lineblock... <lineblock group={4}>
+
+##### Canvas
+
+2D vs 3D?
+
+- Is canvas it's own folder system? Where do notes go that are created within it?
+  - Are they blocks like affine? I don't see the value affine provides with canvas + note views. Just make then their own notes.... canvas is going to be complicated view anyways.
 
 ##### Search
 
@@ -84,3 +107,5 @@ https://www.sqlite.org/fts5.html
 https://www.sqlite.org/spellfix1.html
 
 
+#### table editor
+- allow custom commands for creating rows in text editor

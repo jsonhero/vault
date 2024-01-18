@@ -8,7 +8,7 @@ import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react'
 import { SearchProvider } from "~/features/search";
 import { DatabaseProvider } from '~/context/database-context'
 import { AppStateProvider } from "~/features/app-state";
-import { queryManager, loadWasmDatabase, queryManagerContext } from '~/query-manager.ts'
+import { queryManager, loadWasmDatabase, QueryManagerProvider } from '~/query-manager.ts'
 /**
  * Generates a random room name to sync with or pulls one from local storage.
  */
@@ -59,7 +59,7 @@ export default function Root() {
         content: schemaContent,
       }}
       Render={() => (
-        <queryManagerContext.Provider value={queryManager}>
+        <QueryManagerProvider>
           <NextUIProvider>
             <DatabaseProvider dbName={theRoom}>
               <AppStateProvider>
@@ -71,7 +71,7 @@ export default function Root() {
               </AppStateProvider>
             </DatabaseProvider>
           </NextUIProvider>
-        </queryManagerContext.Provider>
+        </QueryManagerProvider>
       )}
     />
   );

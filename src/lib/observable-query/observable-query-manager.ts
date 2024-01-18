@@ -5,7 +5,7 @@ import type { QueryFn } from './types'
 import { InMemoryCache } from './in-memory-cache'
 import { ObservableQuery, TakeFirstObservableQuery, ObserverQueryOptions } from './observable-query'
 
-export class ObserverableQueryManager<K = any> {
+export class ObserverableQueryManager<K> {
   private wasmDB?: DB;
   private kyselyBuilder?: (db: DB) => Kysely<K>; 
   private kyselyDb?: Kysely<K>

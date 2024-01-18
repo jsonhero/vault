@@ -1,7 +1,7 @@
 import { 
   CompiledQuery,
 } from "kysely";
-import { observable, runInAction, makeObservable, onBecomeObserved, onBecomeUnobserved } from 'mobx'
+import { observable, runInAction, makeObservable, onBecomeObserved, onBecomeUnobserved, createAtom } from 'mobx'
 import tblrx from "@vlcn.io/rx-tbl";
 import _ from 'lodash'
 
@@ -55,9 +55,10 @@ abstract class ObservableBaseQuery<T, A extends any[], K, R = T> {
       isLoading: observable,
       isFetching: observable,
     })
+
     onBecomeObserved(this, 'data', this.resume)
     onBecomeUnobserved(this, 'data', this.suspend)
-    console.log("creating!")
+    // this.resume()
   }
 
   private buildQuery(...args: A) {
@@ -98,16 +99,11 @@ abstract class ObservableBaseQuery<T, A extends any[], K, R = T> {
   }
 
   private resume = () => {
-    console.log('resuming')
-    if (!this.disposer) {
-      if (this.options.autoLoad) {
-
-        console.log("AUTO LOADING!")
-        this.autoFetch() // fetch with 0 params... maybe turn off autoFetch param when no props
-      }
-      this.subscribe()
+    console.log(":: resume", this.id)
+    if (this.options.autoLoad) {
+      this.autoFetch()
     }
-
+    this.subscribe()
   }
 
   private autoFetch() {
@@ -119,6 +115,7 @@ abstract class ObservableBaseQuery<T, A extends any[], K, R = T> {
   }
 
   private internalFetch(...args: A) {
+    console.log(':: fetching')
     const { query, queryId, cacheId } = this.getQuery(...args)
 
     if (this.options.policy !== 'compute-only' && this.manager.queryCache.has(cacheId)) {
@@ -157,7 +154,7 @@ abstract class ObservableBaseQuery<T, A extends any[], K, R = T> {
   }
 
   private suspend = () => {
-    console.log('suspending')
+    console.log('suspending:: ', this.id)
     if (this.disposer) this.disposer();
   }
 
@@ -188,7 +185,9 @@ abstract class ObservableBaseQuery<T, A extends any[], K, R = T> {
         this.autoFetch()
       })
     } else {
+      console.log(this.tables, 'tables')
       this.disposer = rx.onRange(this.tables, () => {
+        console.log('auto updating')
         this.autoFetch()
       })
     }

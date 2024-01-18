@@ -23,5 +23,6 @@ export type Node =
   | AliasNode
   | SelectAllNode;
 
+type Schema<T> = T extends { TYPE: infer U } ? U : unknown;
 
-export type QueryFn<T, A extends any[], K> = (db: Kysely<K>, ...args: A) => SelectQueryBuilder<K, keyof K, T>
+export type QueryFn<T, A extends any[], K> = (db: Kysely<K>, ...args: A) => SelectQueryBuilder<Kysely<K>, any, T>
