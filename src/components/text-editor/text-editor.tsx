@@ -51,6 +51,31 @@ export function boldRule () {
   })
 }
 
+const tagRegex = /#[a-zA-Z0-9]+\s/
+export function tagRule () {
+  return new InputRule(tagRegex, (state, match, start, end) => {
+    const tr = state.tr
+
+    const before = state.selection.$anchor.before(1)
+
+    const lineblock = state.doc.nodeAt(before)
+    console.log(lineblock, ':: linkeblock')
+
+    tr.setNodeAttribute(before, 'blockId', '123')
+
+    return tr
+  })
+}
+
+
+/**
+ * When I type #
+ * Then lineblock will have attributes of group ID
+ * <lineblock blockId="123" blockLocation="start" /> // don't need start
+ * <lineblock blockId="123" />
+ * <lineblock blockId="123" blockLocation="end" /> // don't need end
+ * When you hit enter inside the block it adds blockId to copied block
+ */
 
 const TestPlugin = new ProseMirrorPlugin({
   props: {
@@ -127,7 +152,7 @@ export const TextEditor = React.memo(({
   const pluginViewFactory = usePluginViewFactory()
   const editorViewRef = useRef<EditorView>(null)
 
-  const plugins = useMemo(() => [createSlashPlugin(pluginViewFactory), createRefPlugin(pluginViewFactory), keymapPlugin, lineNumberPlugin, inputRules({ rules: [boldRule()]})], [])
+  const plugins = useMemo(() => [createSlashPlugin(pluginViewFactory), createRefPlugin(pluginViewFactory), keymapPlugin, lineNumberPlugin, inputRules({ rules: [boldRule(), tagRule()]})], [])
 
   useEffect(() => {
     if (renderId) {

@@ -52,22 +52,15 @@ export class DatabaseQueryManager<Schema> {
 }
 
 
-
-export type DbQueryOptions<Schema> = {
-  policy?: 'compute-only' | 'cache-only' | 'cache-and-compute',
-  reactiveRowId?: bigint
-  reactiveTableName?: keyof Schema
-}
-
 export type QueryFn<Query, Schema> = (db: Kysely<Schema>) => SelectQueryBuilder<Kysely<Schema>, any, Query>
 
-export type DbQueryHookParams<Query, Schema> = {
+export type DbQueryOptions<Query, Schema> = {
   query: QueryFn<Query, Schema>,
   keys?: unknown[],
-  options?: DbQueryOptions<Schema>
   policy?: 'compute-only' | 'cache-only' | 'cache-and-compute',
   reactiveRowId?: bigint
   reactiveTableName?: keyof Schema
+  enabled?: boolean
 }
 
 type Wrapper<T, Switch extends [] | null> = Switch extends [] ? T[] : T | null
@@ -75,6 +68,7 @@ type Wrapper<T, Switch extends [] | null> = Switch extends [] ? T[] : T | null
 type QueryObserverResult<Query, ResultWrap extends [] | null>  = {
   isLoading: boolean;
   isFetching: boolean;
+  isSuccess: boolean;
   data: Wrapper<Query, ResultWrap>
 }
 
@@ -87,7 +81,7 @@ type QueryState<Query, ResultWrap extends [] | null> = {
 class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
   
   reactSubscribeListener?: () => void;
-  options;
+  options: DbQueryOptions<Query, Schema>;
   usedTables: string[] = []
   dbListenerDispose?: () => void;
 
@@ -98,13 +92,13 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
 
   constructor(
     private readonly manager: DatabaseQueryManager<Schema>,
-    options: DbQueryHookParams<Query, Schema>,
+    options: DbQueryOptions<Query, Schema>,
     private readonly defaultValue: any,
     private readonly resultPicker: (result: QueryResult<unknown>) => unknown
   ) {
     this.queryId = Math.random().toString(36).slice(2)
 
-    this.options = options
+    this.options = this.defaultOptions(options)
     this.queryState = {
       data: defaultValue,
       status: 'idle',
@@ -114,13 +108,17 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
     this.updateResult()
   }
 
-  setOptions(options: DbQueryHookParams<Query, Schema>) {
+  defaultOptions(options: DbQueryOptions<Query, Schema>) {
+    return { enabled: true, ...options }
+  }
+
+  setOptions(options: DbQueryOptions<Query, Schema>) {
     const previousOptions = this.options
-    this.options = options
+    this.options = this.defaultOptions(options)
 
     // I don't think it works for query fn
     if (!shallowEqualObjects(this.options.keys, previousOptions.keys)) {
-      this.executeQuery()
+      this.optionallyExecuteQuery()
     }
 
   }
@@ -160,6 +158,7 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
     const isLoading = isFetching && !this.queryState.hasLoaded
 
     return {
+      isSuccess: this.queryState.hasLoaded,
       isLoading,
       isFetching,
       data,
@@ -171,6 +170,12 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
     const executor = this.manager.db.getExecutor()
     const compiledQuery = executor.compileQuery(executor.transformQuery(node, { queryId: this.queryId }), { queryId: this.queryId })
     return compiledQuery
+  }
+
+  optionallyExecuteQuery() {
+    if (this.options.enabled) {
+      this.executeQuery()
+    }
   }
 
   executeQuery() {
@@ -217,7 +222,7 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
     this.reactSubscribeListener = reactSubscribeListener
 
     this.updateResult()
-    this.executeQuery()
+    this.optionallyExecuteQuery()
 
     // in case tables we're same as before
     this.dbSubscribeChanges()
@@ -231,11 +236,12 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
 
     if (this.options?.reactiveRowId !== undefined && this.options.reactiveTableName) {
       this.dbListenerDispose = this.manager.rx.onPoint(this.options.reactiveTableName as string, this.options.reactiveRowId, () => {
-        this.executeQuery()
+        this.optionallyExecuteQuery()
       })
     } else if (this.usedTables.length) {
       this.dbListenerDispose = this.manager.rx.onRange(this.usedTables, () => {
-        this.executeQuery()
+        // console.log('UPDATING:: ', this.options.query)
+        this.optionallyExecuteQuery()
       })
     }
   }
@@ -265,9 +271,9 @@ function createDbQueryHooks<Schema>(context: React.Context<DatabaseQueryManager<
     resultPicker: (result: QueryResult<unknown>) => unknown,
     defaultValue: any
   ) {
-    return <Query, >(params: DbQueryHookParams<Query, Schema>) => {
+    return <Query, >(options: DbQueryOptions<Query, Schema>) => {
       const queryManager = useContext(context)
-      const [observer] = useState(() => new DbQueryObserver<Schema, Query, T>(queryManager, params, defaultValue, resultPicker))
+      const [observer] = useState(() => new DbQueryObserver<Schema, Query, T>(queryManager, options, defaultValue, resultPicker))
 
       const result = useSyncExternalStore(React.useCallback((listener) => {
         observer.subscribe(listener)
@@ -280,8 +286,8 @@ function createDbQueryHooks<Schema>(context: React.Context<DatabaseQueryManager<
       )
 
       useEffect(() => {
-        observer.setOptions(params)
-      }, [params, observer])      
+        observer.setOptions(options)
+      }, [options, observer])      
 
       return result
     }

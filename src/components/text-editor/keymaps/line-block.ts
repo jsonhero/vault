@@ -21,6 +21,7 @@ export const createLineblockOnEnter = (state: EditorState, dispatch?: (tr: Trans
 
   // Check if the cursor is inside a "lineblock", create a new "lineblock" with a "paragraph" inside it
   if ($from.parent.type.name === "lineblock") {
+    console.log($from.parent.attrs, 'node attrs')
     // @ts-ignore
     const tr = state.tr.split($from.pos).setBlockType($from.pos + 1, $from.pos + 1, schema.nodes.lineblock.create(), [
       { type: schema.nodes.paragraph },

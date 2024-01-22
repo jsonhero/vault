@@ -4,6 +4,6 @@ import { useNodeViewContext } from "@prosemirror-adapter/react"
 export const LineBlockNode = () => {
   const { contentRef, selected, setAttrs, node } = useNodeViewContext()
   return (
-    <div ref={contentRef} />
+    <div ref={contentRef} data-block-id={node.attrs.blockId} />
   )
 }

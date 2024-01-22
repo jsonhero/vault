@@ -36,6 +36,11 @@ export const schema = new Schema({
       parseDOM: [
         { tag: 'lineblock' }
       ],
+      attrs: {
+        blockId: {
+          default: null
+        }
+      }
     },
     codemirror: {
       group: 'block',

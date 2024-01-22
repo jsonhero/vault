@@ -122,12 +122,15 @@ export const FileExplorer = () => {
     return pickEntityIds(rootNode)
   }, [rootNode])
 
-  const { data: entities } = useDbQuery({
+  const { data: entities, isSuccess } = useDbQuery({
     keys: [entityIds],
     query: (db) => db.selectFrom('entity')
       .where('id', 'in', entityIds)
-      .selectAll()
+      .selectAll(),
+    enabled: entityIds.length > 0,
   })
+
+  console.log(entities, ':: entites')
 
   const fileTreeList = useMemo(() => {
     return flattenTree(rootNode, entities)
@@ -253,6 +256,10 @@ export const FileExplorer = () => {
       }
     
   }, [rootNode])
+
+  if (!isSuccess) {
+    return null
+  }
 
   return (
     <FolderTreeList

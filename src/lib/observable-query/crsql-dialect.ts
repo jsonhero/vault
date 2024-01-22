@@ -24,7 +24,7 @@ class CRDialect extends SqliteDialect {
         connection = {
           async executeQuery<O>(query: CompiledQuery) {
             return {
-              rows: (await db.execO(query.sql, query.parameters)) as O[],
+              rows: (await db.execO(query.sql, query.parameters) || []) as O[],
             };
           },
           async *streamQuery() {
