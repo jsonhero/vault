@@ -5,7 +5,6 @@ import { Entity } from "~/types/db-types";
 import { FileExplorer } from '~/features/file-explorer'
 
 import { useDbQuery  } from "~/query-manager";
-import { observer } from "mobx-react-lite";
 
 export const ExplorerBar = () => {
   const appState = useAppStateService()
@@ -23,7 +22,7 @@ export const ExplorerBar = () => {
 
   const onSelectEntity = (entity: Entity) => {
     appState.setSelectedEntityId(entity.id)
-  }  
+  } 
   
   return (
     <div className="w-full h-full">

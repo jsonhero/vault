@@ -52,7 +52,8 @@ const RefComponent = () => {
     keys: [query],
     query: (db) => db.selectFrom('entity')
       .where('title', 'like', query + '%')
-      .selectAll()
+      .selectAll(),
+    enabled: query.length > 0
   })
 
   // const isActive = useMemo(() => coords !== undefined, [coords])

@@ -23,7 +23,8 @@ export const UtilityBar = observer(() => {
         .select(sql.val<string>`from`.as('direction'))
         
       return toQuery.unionAll(fromQuery)
-    }
+    },
+    enabled: appState.selectedEntityId !== null
   })
 
   const toGraph = useMemo(() => {

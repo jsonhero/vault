@@ -76,6 +76,7 @@ type QueryState<Query, ResultWrap extends [] | null> = {
   data: Wrapper<Query, ResultWrap>
   hasLoaded: boolean,
   status: 'success' | 'fetching' | 'idle'
+  isQueued: boolean
 }
 
 class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
@@ -86,9 +87,13 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
   dbListenerDispose?: () => void;
 
   currentResult: QueryObserverResult<Query, ResultWrap> = undefined!
-  queryState: QueryState<Query, ResultWrap> 
+  queryState: QueryState<Query, ResultWrap>
+
   
   queryId: string
+
+  perfTime?: number
+  
 
   constructor(
     private readonly manager: DatabaseQueryManager<Schema>,
@@ -103,6 +108,7 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
       data: defaultValue,
       status: 'idle',
       hasLoaded: false,
+      isQueued: false,
     }
 
     this.updateResult()
@@ -117,7 +123,7 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
     this.options = this.defaultOptions(options)
 
     // I don't think it works for query fn
-    if (!shallowEqualObjects(this.options.keys, previousOptions.keys)) {
+    if (!arraysShallowEqual(this.options.keys, previousOptions.keys)) {
       this.optionallyExecuteQuery()
     }
 
@@ -136,7 +142,7 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
   createResult() {
     let data: Wrapper<Query, ResultWrap> = undefined!
 
-    if (this.queryState.status === 'success') {
+    if (this.queryState.hasLoaded) {
       data = this.queryState.data
     }
     
@@ -179,6 +185,18 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
   }
 
   executeQuery() {
+    if (this.queryState.status === 'fetching') {
+      if (!this.queryState.isQueued) {
+        this.queryState.isQueued = true
+      }
+
+      console.log('throttled query query', this.queryId)
+      // exit out
+      return;
+    }
+
+    console.log("EXECUTING QUERY!", this.queryId, this.options.query)
+    const t1 = performance.now()
     const queryId = { queryId: Math.random().toString(36).slice(2) }
     const node = this.options.query(this.manager.db).toOperationNode()
     const tables = getUsedTables(node)
@@ -203,6 +221,8 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
   
     this.queryState.status = 'fetching'
 
+
+    // need to do query queueing, abort new queries if one is being fetched..ca
     this.manager.db.executeQuery<Query>(compiledQuery, queryId).then((data) => {
       const result = this.resultPicker(data)
       this.manager.queryCache.set(cacheId, result)
@@ -214,8 +234,18 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
         this.queryState.hasLoaded = true
       }
 
+      const t2 = performance.now()
+
+      console.log(t2 - t1, ':: time to load', this.queryId)
+
       this.updateResult()
+
+      if (this.queryState.isQueued) {
+        this.queryState.isQueued = false
+        this.executeQuery()
+      }
     })
+    
   }
 
   subscribe(reactSubscribeListener: () => void) {
@@ -240,7 +270,7 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
       })
     } else if (this.usedTables.length) {
       this.dbListenerDispose = this.manager.rx.onRange(this.usedTables, () => {
-        // console.log('UPDATING:: ', this.options.query)
+        console.log('UPDATING:: ', this.options.query)
         this.optionallyExecuteQuery()
       })
     }
@@ -276,6 +306,7 @@ function createDbQueryHooks<Schema>(context: React.Context<DatabaseQueryManager<
       const [observer] = useState(() => new DbQueryObserver<Schema, Query, T>(queryManager, options, defaultValue, resultPicker))
 
       const result = useSyncExternalStore(React.useCallback((listener) => {
+
         observer.subscribe(listener)
 
         // observer.updateResult()

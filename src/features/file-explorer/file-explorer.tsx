@@ -130,8 +130,6 @@ export const FileExplorer = () => {
     enabled: entityIds.length > 0,
   })
 
-  console.log(entities, ':: entites')
-
   const fileTreeList = useMemo(() => {
     return flattenTree(rootNode, entities)
   }, [rootNode, entities])

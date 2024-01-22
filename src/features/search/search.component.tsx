@@ -61,7 +61,8 @@ export const Search = observer(() => {
       }
 
       return q
-    }
+    },
+    enabled: query.length > 0
   })
   
   const onSearchChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {

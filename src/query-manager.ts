@@ -1,7 +1,7 @@
 import wasmUrl from "@vlcn.io/crsqlite-wasm/crsqlite.wasm?url";
 import wasmSqlite from "@vlcn.io/crsqlite-wasm";
 import { Kysely } from 'kysely'
-import { SerializePlugin } from 'kysely-plugin-serialize'
+import { SerializePlugin, Deserializer } from 'kysely-plugin-serialize'
 
 import { CRDialect } from "~/lib/observable-query";
 import { DB } from '~/types/db'
@@ -23,7 +23,40 @@ export const {
 
 export type QueryManager = DatabaseQueryManager<DB>
 
+
+export const defaultDeserializer: Deserializer = (parameter) => {
+  if (skipTransform(parameter)) {
+    return parameter
+  }
+  if (typeof parameter === 'string') {
+    if (/^(true|false)$/.test(parameter)) {
+      return parameter === 'true'
+    } else {
+      try {
+        // default deserializer from this plugin was super slow since it tried to JSON parse EVERY string, not just things that looked like objects.
+        // may need to handle array parsing here... but I think an array would should be on a nested object.
+        if (parameter.startsWith('{') && parameter.endsWith('}')) {
+          return JSON.parse(parameter)
+        }
+        return parameter
+      } catch (e) {
+        return parameter
+      }
+    }
+  }
+}
+
+function skipTransform(parameter: unknown) {
+  return parameter === undefined
+    || parameter === null
+    || typeof parameter === 'bigint'
+    || typeof parameter === 'number'
+    || (typeof parameter === 'object' && 'buffer' in parameter)
+}
+
 queryManager.onBuildKysely((db) => new Kysely<DB>({
   dialect: new CRDialect({ database: db }),
-  plugins: [new SerializePlugin()],
+  plugins: [new SerializePlugin({
+    deserializer: defaultDeserializer
+  })],
 }))
