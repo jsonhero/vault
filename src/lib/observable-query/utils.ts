@@ -29,3 +29,36 @@ export function getUsedTables(target: Node): string[] {
   }
   return [];
 }
+
+export function shallowEqualObjects<T>(a: T, b: T): boolean {
+  if ((a && !b) || (b && !a)) {
+    return false
+  }
+
+  for (const key in a) {
+    if (a[key] !== b[key]) {
+      return false
+    }
+  }
+
+  return true
+}
+
+export function arraysShallowEqual(
+  a: unknown[] | undefined,
+  b: unknown[] | undefined
+) {
+  if (a == null || b == null) {
+    return a === b;
+  }
+
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < a.length && i < b.length; ++i) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+}

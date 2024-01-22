@@ -9,7 +9,9 @@ export const EntityEditor = ({ entityId }: { entityId: number }) => {
     keys: [entityId],
     query: (db) => db.selectFrom('entity')
       .where('id', '=', entityId)
-      .selectAll()
+      .selectAll(),
+    reactiveRowId: BigInt(entityId),
+    reactiveTableName: 'entity',
   })
 
   if (!entity) return null;
