@@ -18,7 +18,9 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
     keys: [entity.data_schema_id],
     query: (db) => db.selectFrom('data_schema')
       .where('id', '=', entity.data_schema_id)
-      .selectAll()
+      .selectAll(),
+    reactiveRowId: BigInt(entity.data_schema_id),
+    reactiveTableName: 'data_schema'
   })
 
   const { data: records } = useDbQuery({

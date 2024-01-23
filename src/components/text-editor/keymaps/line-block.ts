@@ -2,6 +2,9 @@ import { EditorState, Transaction } from "prosemirror-state";
 import { joinTextblockBackward } from 'prosemirror-commands'
 
 import { schema } from "../schema";
+import { nanoid } from 'nanoid'
+
+const nodeid = () => nanoid(5)
 
 export const createLineblockOnEnter = (state: EditorState, dispatch?: (tr: Transaction) => void): boolean => {
   const { $from, $to } = state.selection;
@@ -12,18 +15,26 @@ export const createLineblockOnEnter = (state: EditorState, dispatch?: (tr: Trans
     $from.node($from.depth - 1).type.name === "lineblock" &&
     $from.pos === $to.pos
   ) {
+    console.log('make that shit')
     const to = $to.pos;
     const tr = state.tr
-      .split(to, 2)
+      .split(to, 2, [{
+        type: schema.nodes.lineblock,
+        attrs: {
+          blockId: nodeid(),
+        },
+      }])
       dispatch?.(tr);
       return true;
   }
 
   // Check if the cursor is inside a "lineblock", create a new "lineblock" with a "paragraph" inside it
   if ($from.parent.type.name === "lineblock") {
-    console.log($from.parent.attrs, 'node attrs')
+    console.log('creating line block')
     // @ts-ignore
-    const tr = state.tr.split($from.pos).setBlockType($from.pos + 1, $from.pos + 1, schema.nodes.lineblock.create(), [
+    const tr = state.tr.split($from.pos).setBlockType($from.pos + 1, $from.pos + 1, schema.nodes.lineblock.create({
+      blockId: nodeid(),
+    }), [
       { type: schema.nodes.paragraph },
     ]);
     dispatch?.(tr);

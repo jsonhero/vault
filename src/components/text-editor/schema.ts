@@ -38,7 +38,13 @@ export const schema = new Schema({
       ],
       attrs: {
         blockId: {
-          default: null
+          default: null,
+        },
+        blockGroupId: {
+          default: null,
+        },
+        hidden: {
+          default: false
         }
       }
     },

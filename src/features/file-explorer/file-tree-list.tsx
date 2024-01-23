@@ -73,7 +73,8 @@ const ListItemFile = ({
     <ListItem depth={item.depth} onClick={onClick} selected={selected} data-node-id={item.id} data-node-type="file">
       <div className="flex items-center pointer-events-none gap-1">
         {item.entity.type === 'document' ? <FileTextIcon size={14} /> : <Table2Icon size={14} />}
-        <Input defaultValue={item.entity.title} id={`file:${item.id}`} onBlur={onInputBlur} />
+        {/* <Input defaultValue={item.entity.title} id={`file:${item.id}`} onBlur={onInputBlur} /> */}
+        <div>{item.entity.title}</div>
       </div>
     </ListItem>
   )

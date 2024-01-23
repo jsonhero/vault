@@ -1,7 +1,8 @@
 import React from 'react'
 import { 
   useNodeViewFactory,
-  usePluginViewFactory, 
+  usePluginViewFactory,
+  useWidgetViewFactory, 
 } from '@prosemirror-adapter/react'
 
 import {inputRules, wrappingInputRule, textblockTypeInputRule,
@@ -16,7 +17,7 @@ import { keymap } from 'prosemirror-keymap';
 import { CodeMirrorNodeView } from './node-view'
 import { schema } from './schema'
 import { arrowHandler, createLineblockOnEnter, backspace } from './keymaps'
-import { lineNumberPlugin, createSlashPlugin, createRefPlugin } from './plugins'
+import { createLineNumberPlugin, createSlashPlugin, createRefPlugin } from './plugins'
 import { LineBlockNode, ScriptBlockNode, TableBlockNode } from './nodes'
 
 const keymapPlugin = keymap({
@@ -61,7 +62,7 @@ export function tagRule () {
     const lineblock = state.doc.nodeAt(before)
     console.log(lineblock, ':: linkeblock')
 
-    tr.setNodeAttribute(before, 'blockId', '123')
+    tr.setNodeAttribute(before, 'blockGroupId', '123')
 
     return tr
   })
@@ -150,9 +151,16 @@ export const TextEditor = React.memo(({
 
   const nodeViewFactory = useNodeViewFactory()
   const pluginViewFactory = usePluginViewFactory()
+  const widgetViewFactory = useWidgetViewFactory()
   const editorViewRef = useRef<EditorView>(null)
 
-  const plugins = useMemo(() => [createSlashPlugin(pluginViewFactory), createRefPlugin(pluginViewFactory), keymapPlugin, lineNumberPlugin, inputRules({ rules: [boldRule(), tagRule()]})], [])
+  const plugins = useMemo(() => [
+    createSlashPlugin(pluginViewFactory), 
+    createRefPlugin(pluginViewFactory), 
+    keymapPlugin,
+    createLineNumberPlugin(widgetViewFactory), 
+    inputRules({ rules: [boldRule(), tagRule()]})
+  ], [])
 
   useEffect(() => {
     if (renderId) {

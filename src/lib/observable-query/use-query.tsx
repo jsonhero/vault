@@ -124,6 +124,7 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
 
     // I don't think it works for query fn
     if (!arraysShallowEqual(this.options.keys, previousOptions.keys)) {
+      // console.log("New Options", this.queryId)
       this.optionallyExecuteQuery()
     }
 
@@ -184,18 +185,23 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
     }
   }
 
-  executeQuery() {
+  executeQuery(isMount = false) {
+    // Could possibly add all queries to a global queue, then make sure the same query isn't happenign twice
+    // this would improve performance in React strict mode, which will remount the observer and execute queries in parallel..
+    // will probably need to distingiush between "first mount" query and " reactive query"
+    // don't queue query if it's additional call is a mount query.
+    /// one reactive subscriber per query.. that way two of same queries don't have two multiple reactors
     if (this.queryState.status === 'fetching') {
       if (!this.queryState.isQueued) {
         this.queryState.isQueued = true
       }
 
-      console.log('throttled query query', this.queryId)
-      // exit out
+      // console.log('throttled query query', this.queryId)
+      // exit out if throttled
       return;
     }
 
-    console.log("EXECUTING QUERY!", this.queryId, this.options.query)
+    // console.log("EXECUTING QUERY!", this.queryId, this.options.query)
     const t1 = performance.now()
     const queryId = { queryId: Math.random().toString(36).slice(2) }
     const node = this.options.query(this.manager.db).toOperationNode()
@@ -236,11 +242,12 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
 
       const t2 = performance.now()
 
-      console.log(t2 - t1, ':: time to load', this.queryId)
+      // console.log(t2 - t1, ':: time to load', this.queryId)
 
       this.updateResult()
 
       if (this.queryState.isQueued) {
+        // console.log('Queued: ', this.queryId)
         this.queryState.isQueued = false
         this.executeQuery()
       }
@@ -249,6 +256,7 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
   }
 
   subscribe(reactSubscribeListener: () => void) {
+    // console.log('Subscribing', this.queryId)
     this.reactSubscribeListener = reactSubscribeListener
 
     this.updateResult()
@@ -256,6 +264,7 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
 
     // in case tables we're same as before
     this.dbSubscribeChanges()
+  
   }
 
   dbSubscribeChanges() {
@@ -270,7 +279,7 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
       })
     } else if (this.usedTables.length) {
       this.dbListenerDispose = this.manager.rx.onRange(this.usedTables, () => {
-        console.log('UPDATING:: ', this.options.query)
+        // console.log('UPDATING:: ', this.queryId, this.options.query)
         this.optionallyExecuteQuery()
       })
     }
@@ -288,9 +297,11 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
   }
 
   unsubscribe = () => {
+    // console.log('unsubscribing', this.queryId)
     if (this.dbListenerDispose) {
       this.dbListenerDispose()
       this.dbListenerDispose = undefined
+      this.reactSubscribeListener = undefined
     }
   }
 }
