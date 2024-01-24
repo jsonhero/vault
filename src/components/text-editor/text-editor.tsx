@@ -9,7 +9,7 @@ import {inputRules, wrappingInputRule, textblockTypeInputRule,
   InputRule,
   smartQuotes, emDash, ellipsis} from "prosemirror-inputrules"
 import { EditorView } from 'prosemirror-view'
-import { DOMParser, NodeType } from 'prosemirror-model'
+import { DOMParser, NodeRange, NodeType } from 'prosemirror-model'
 import { EditorState, Plugin as ProseMirrorPlugin, Transaction, TextSelection } from 'prosemirror-state'
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { keymap } from 'prosemirror-keymap';
@@ -18,7 +18,7 @@ import { CodeMirrorNodeView } from './node-view'
 import { schema } from './schema'
 import { arrowHandler, createLineblockOnEnter, backspace } from './keymaps'
 import { createLineNumberPlugin, createSlashPlugin, createRefPlugin } from './plugins'
-import { LineBlockNode, ScriptBlockNode, TableBlockNode } from './nodes'
+import { LineBlockNode, ScriptBlockNode, TableBlockNode, HashtagInlineNode } from './nodes'
 
 const keymapPlugin = keymap({
   Enter: createLineblockOnEnter,
@@ -55,14 +55,21 @@ export function boldRule () {
 const tagRegex = /#[a-zA-Z0-9]+\s/
 export function tagRule () {
   return new InputRule(tagRegex, (state, match, start, end) => {
-    const tr = state.tr
+    let tr = state.tr
 
     const before = state.selection.$anchor.before(1)
 
     const lineblock = state.doc.nodeAt(before)
-    console.log(lineblock, ':: linkeblock')
 
-    tr.setNodeAttribute(before, 'blockGroupId', '123')
+    const $start = state.doc.resolve(start)
+    const $end = state.doc.resolve(end)
+    const range = new NodeRange($start, $end, $start.depth)
+
+    if (range) {
+      tr = tr.wrap(range, [{ type: schema.nodes.hashtag }])
+    }
+
+    tr = tr.setNodeAttribute(before, 'blockGroupId', '123')
 
     return tr
   })
@@ -148,7 +155,7 @@ export const TextEditor = React.memo(({
   onUpdate,
   docJson,
 }: TextEditorProps) => {
-
+  
   const nodeViewFactory = useNodeViewFactory()
   const pluginViewFactory = usePluginViewFactory()
   const widgetViewFactory = useWidgetViewFactory()
@@ -188,6 +195,9 @@ export const TextEditor = React.memo(({
       state: createEditorState(docJson, plugins),
       dispatchTransaction: dispatchTransactionFactory(editorViewRef.current!, onUpdate),
       nodeViews: {
+        hashtag: nodeViewFactory({
+          component: HashtagInlineNode
+        }),
         lineblock: nodeViewFactory({
           component: LineBlockNode,
           contentAs() {

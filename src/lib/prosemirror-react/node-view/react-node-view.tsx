@@ -1,0 +1,180 @@
+import { Component } from 'react'
+import { Decoration, DecorationSource, EditorView, NodeView } from "prosemirror-view";
+import { Node as ProseMirrorNode, Attrs as ProseMirrorAttrs } from 'prosemirror-model'
+
+import { EditorContent, ReactRenderer } from '../react-renderer'
+import { NodeViewContextProps, NodeViewContext } from './react-node-view-context'
+
+export interface ReactNodeViewOptions {
+  // DOM
+  as?: NodeViewDOMSpec
+  contentAs?: NodeViewDOMSpec
+  manualMount?: boolean;
+  disableContent?: boolean;
+}
+
+export interface ReactNodeViewProps {
+  editor: EditorContent;
+  node: ProseMirrorNode;
+  view: EditorView;
+  getPos: () => number | undefined;
+  component: Component;
+  decorations?: readonly Decoration[]
+  innerDecorations?: DecorationSource
+}
+
+export type NodeViewDOMSpec = string | HTMLElement | ((node: ProseMirrorNode) => HTMLElement)
+
+export class ReactNodeView implements NodeView {
+  node: ProseMirrorNode;
+  view: EditorView;
+  getPos: () => number | undefined;
+  component: Component
+  dom: HTMLElement
+  contentDOM: HTMLElement | null
+  dispose!: () => void;
+  decorations?: readonly Decoration[]
+  innerDecorations?: DecorationSource
+  selected = false;
+  
+  editor: EditorContent
+  renderer!: ReactRenderer
+  childContent: HTMLElement | null = null
+  
+  constructor({ 
+    node,
+    view,
+    getPos,
+    component,
+    decorations,
+    innerDecorations,
+    editor,
+  }: ReactNodeViewProps, options?: ReactNodeViewOptions) {
+    // Store for later
+    this.node = node
+    this.view = view
+    this.getPos = getPos
+    this.component = component
+    this.decorations = decorations
+    this.innerDecorations = innerDecorations
+    this.editor = editor
+
+    // dom setup
+    this.dom = this.createDOM(options?.as)
+    this.contentDOM = options?.disableContent || node.isLeaf ? null : this.createContentDOM(options?.contentAs)
+
+    this.dom.setAttribute('data-node-view-root', 'true')
+    if (this.contentDOM) {
+      this.contentDOM.setAttribute('data-node-view-content', 'true')
+      this.contentDOM.style.whiteSpace = 'inherit'
+      this.childContent = this.contentDOM
+    }
+
+    if (!options?.manualMount) {
+      this.mount()
+    }
+  }
+
+  mount() {
+
+    const props: NodeViewContextProps = {
+      contentRef: (element) => {
+        if (element && this.contentDOM && element.firstChild !== this.contentDOM)
+          element.appendChild(this.contentDOM)
+      },
+      view: this.view,
+      getPos: this.getPos,
+      setAttrs: this.setAttrs,
+      node: this.node,
+      selected: this.selected,
+      decorations: this.decorations,
+      innerDecorations: this.innerDecorations,
+    }
+
+    const ReactNodeViewProvider: React.FunctionComponent<NodeViewContextProps> = (providerProps) => {
+      const Component = this.component
+
+      return (
+        <>
+          <NodeViewContext.Provider value={providerProps}>
+            {/* @ts-ignore */}
+            <Component />
+          </NodeViewContext.Provider>
+        </>
+      )
+    }
+
+    this.renderer = new ReactRenderer(ReactNodeViewProvider, {
+      editor: this.editor,
+      props,
+    })
+  }
+
+  #createElement(as?: string | HTMLElement | ((node: ProseMirrorNode) => HTMLElement)) {
+    const { node } = this
+    return as == null
+      ? document.createElement(node.isInline ? 'span' : 'div')
+      : as instanceof HTMLElement
+        ? as
+        : as instanceof Function
+          ? as(node)
+          : document.createElement(as)
+  }
+
+  createDOM(as?: string | HTMLElement | ((node: ProseMirrorNode) => HTMLElement)) {
+    return this.#createElement(as)
+  }
+
+  createContentDOM(as?: string | HTMLElement | ((node: ProseMirrorNode) => HTMLElement)) {
+    return this.#createElement(as)
+  }
+
+  setAttrs = (attr: ProseMirrorAttrs) => {
+    const { dispatch, state } = this.view
+    const pos = this.getPos()
+
+    if (typeof pos !== 'number')
+      return
+
+    return dispatch(
+      state.tr.setNodeMarkup(pos, undefined, {
+        ...this.node.attrs,
+        ...attr,
+      }),
+    )
+  }
+
+  update(node: ProseMirrorNode, decorations: readonly Decoration[]) {
+    if (node.type !== this.node.type) {
+      return false;
+    }
+
+    if (node === this.node && this.decorations === decorations) {
+      return true;
+    }
+    
+
+    this.node = node;
+    this.decorations = decorations;
+
+    this.renderer.updateProps({ node, decorations });
+
+    return true;
+  }
+
+  selectNode() {
+    this.renderer.updateProps({
+      selected: true,
+    });
+  }
+
+  deselectNode() {
+    this.renderer.updateProps({
+      selected: false,
+    });
+  }
+
+  destroy() {
+    this.dispose();
+  }
+}

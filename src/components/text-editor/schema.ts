@@ -22,13 +22,19 @@ export const schema = new Schema({
     doc: {content: "lineblock+"},
     paragraph: {
       group: 'block',
-      content: "text*",
+      content: "(text | hashtag)*",
       toDOM(node) { return ["p", 0] },
     },
     bold: {
       inline: true,
       content: 'text*',
-
+    },
+    hashtag: {
+      inline: true,
+      content: 'text*',
+      parseDOM: [
+        { tag: 'hashtag' }
+      ],
     },
     lineblock: {
       group: 'block',
