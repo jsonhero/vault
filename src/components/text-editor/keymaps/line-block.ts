@@ -15,13 +15,15 @@ export const createLineblockOnEnter = (state: EditorState, dispatch?: (tr: Trans
     $from.node($from.depth - 1).type.name === "lineblock" &&
     $from.pos === $to.pos
   ) {
-    console.log('make that shit')
+    const lineblock = $from.node($from.depth - 1)
+
     const to = $to.pos;
     const tr = state.tr
       .split(to, 2, [{
         type: schema.nodes.lineblock,
         attrs: {
           blockId: nodeid(),
+          blockGroupId: lineblock.attrs.blockGroupId
         },
       }])
       dispatch?.(tr);

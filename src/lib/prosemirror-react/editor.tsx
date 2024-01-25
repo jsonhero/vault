@@ -3,8 +3,8 @@ import React, {
 } from 'react'
 import ReactDOM, { flushSync } from 'react-dom'
 
-import type { ReactRenderer } from './react-renderer'
-import { reactNodeViewFactory } from './node-view'
+import type { EditorContent, ReactRenderer } from './react-renderer'
+import { buildReactNodes, buildReactPlugins } from './external'
 
 const Portals: React.FC<{ renderers: Record<string, ReactRenderer> }> = ({ renderers }) => {
   return (
@@ -20,9 +20,14 @@ export interface EditorState {
   renderers: Record<string, any>;
 }
 
+export type EditorFactoryProps = {
+  buildReactNodes: ReturnType<typeof buildReactNodes>
+  buildReactPlugins: ReturnType<typeof buildReactPlugins>
+}
+
 
 export interface EditorProps extends HTMLProps<HTMLDivElement> {
-  onInit: (element: HTMLDivElement, factory: typeof reactNodeViewFactory) => void
+  onInit: (element: HTMLDivElement, factory: EditorFactoryProps) => void
   innerRef?: ForwardedRef<HTMLDivElement | null>;
 }
 
@@ -65,16 +70,24 @@ export class Editor extends React.Component<EditorProps, EditorState> {
     }
   }
 
-  register(element: HTMLDivElement) {
+  register = (element: HTMLDivElement) => {
     if (!element || element.firstChild)
       return
 
-    this.props.onInit(element, {
-      nodeViewFactory,
-    })
+    const content: EditorContent = {
+      removeRenderer: this.removeRenderer,
+      setRenderer: this.setRenderer,
+    }
+
+    const factory: EditorFactoryProps = {
+      buildReactNodes: buildReactNodes(content),
+      buildReactPlugins: buildReactPlugins(content),
+    }
+
+    this.props.onInit(element, factory)
   }
 
-  setRenderer(id: string, renderer: ReactRenderer) {
+  setRenderer = (id: string, renderer: ReactRenderer) => {
     this.maybeFlushSync(() => {
       this.setState(({ renderers }) => ({
         renderers: {
@@ -85,7 +98,7 @@ export class Editor extends React.Component<EditorProps, EditorState> {
     })
   }
 
-  removeRenderer(id: string) {
+  removeRenderer = (id: string) => {
     this.maybeFlushSync(() => {
       this.setState(({ renderers }) => {
         const nextRenderers = { ...renderers }
@@ -102,7 +115,7 @@ export class Editor extends React.Component<EditorProps, EditorState> {
   }
 
   render() {
-    const { innerRef, ...rest } = this.props
+    const { innerRef, onInit, ...rest } = this.props
 
     return (
       <>

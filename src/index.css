@@ -141,3 +141,7 @@ body {
 /* .tree li:last-child::before {
   border-color: red !important;
 } */
+
+.ProseMirror:focus {
+  outline: none;
+}

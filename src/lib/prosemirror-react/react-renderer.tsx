@@ -23,7 +23,7 @@ export interface EditorContent {
 export interface ReactRendererOptions {
   editor: EditorContent,
   props?: Record<string, any>,
-  as?: string,
+  as?: string | HTMLElement | (() => HTMLElement)
   className?: string,
   attrs?: Record<string, string>,
 }
@@ -59,7 +59,7 @@ export class ReactRenderer<R = unknown, P = unknown> {
     this.component = component
     this.editor = editor
     this.props = props
-    this.element = document.createElement(as)
+    this.element = this.#createElement(as)
     this.element.classList.add('react-renderer')
 
     if (className) {
@@ -73,6 +73,16 @@ export class ReactRenderer<R = unknown, P = unknown> {
     }
 
     this.render()
+  }
+
+  #createElement(as?: string | HTMLElement | (() => HTMLElement)) {
+    return as == null
+      ? document.createElement('div')
+      : as instanceof HTMLElement
+        ? as
+        : as instanceof Function
+          ? as()
+          : document.createElement(as)
   }
 
   render(): void {

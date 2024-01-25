@@ -1,3 +1,4 @@
+import 'prosemirror-view/style/prosemirror.css'
 import { Component } from 'react'
 import { Decoration, DecorationSource, EditorView, NodeView } from "prosemirror-view";
 import { Node as ProseMirrorNode, Attrs as ProseMirrorAttrs } from 'prosemirror-model'
@@ -30,9 +31,9 @@ export class ReactNodeView implements NodeView {
   view: EditorView;
   getPos: () => number | undefined;
   component: Component
-  dom: HTMLElement
-  contentDOM: HTMLElement | null
-  dispose!: () => void;
+  domElement: HTMLElement
+  contentDOMElement: HTMLElement | null
+
   decorations?: readonly Decoration[]
   innerDecorations?: DecorationSource
   selected = false;
@@ -60,23 +61,30 @@ export class ReactNodeView implements NodeView {
     this.editor = editor
 
     // dom setup
-    this.dom = this.createDOM(options?.as)
-    this.contentDOM = options?.disableContent || node.isLeaf ? null : this.createContentDOM(options?.contentAs)
+    this.domElement = this.createDOM(options?.as)
+    this.contentDOMElement = options?.disableContent || node.isLeaf ? null : this.createContentDOM(options?.contentAs)
 
-    this.dom.setAttribute('data-node-view-root', 'true')
-    if (this.contentDOM) {
-      this.contentDOM.setAttribute('data-node-view-content', 'true')
-      this.contentDOM.style.whiteSpace = 'inherit'
-      this.childContent = this.contentDOM
+    // this.dom.setAttribute('data-node-view-root', 'true')
+    if (this.contentDOMElement) {
+      this.contentDOMElement.setAttribute('data-node-view-content', 'true')
+      this.contentDOMElement.style.whiteSpace = 'break-spaces'
+      this.childContent = this.contentDOMElement
     }
 
-    if (!options?.manualMount) {
+    // if (!options?.manualMount) {
       this.mount()
-    }
+    // }
+  }
+
+  get dom() {
+    return this.renderer.element as HTMLElement
+  }
+
+  get contentDOM() {
+    return this.contentDOMElement
   }
 
   mount() {
-
     const props: NodeViewContextProps = {
       contentRef: (element) => {
         if (element && this.contentDOM && element.firstChild !== this.contentDOM)
@@ -103,10 +111,13 @@ export class ReactNodeView implements NodeView {
         </>
       )
     }
+    ReactNodeViewProvider.displayName = 'ReactNodeView'
 
     this.renderer = new ReactRenderer(ReactNodeViewProvider, {
       editor: this.editor,
       props,
+      className: 'react-node-view',
+      as: this.domElement,
     })
   }
 
@@ -175,6 +186,6 @@ export class ReactNodeView implements NodeView {
   }
 
   destroy() {
-    this.dispose();
+    this.renderer.destroy()
   }
 }

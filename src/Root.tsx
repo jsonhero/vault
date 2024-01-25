@@ -62,9 +62,7 @@ export default function Root() {
           <NextUIProvider>
             <AppStateProvider>
               <SearchProvider>
-                <ProsemirrorAdapterProvider>
-                  <App dbname={theRoom} />
-                </ProsemirrorAdapterProvider>
+                <App dbname={theRoom} />
               </SearchProvider>
             </AppStateProvider>
           </NextUIProvider>

@@ -19,7 +19,7 @@ export const schema = new Schema({
     } as MarkSpec,
   },
   nodes: {
-    doc: {content: "lineblock+"},
+    doc: {content: "block+"},
     paragraph: {
       group: 'block',
       content: "(text | hashtag)*",
@@ -51,7 +51,10 @@ export const schema = new Schema({
         },
         hidden: {
           default: false
-        }
+        },
+        groupHidden: {
+          default: false,
+        },
       }
     },
     codemirror: {
