@@ -49,6 +49,9 @@ export const schema = new Schema({
         blockGroupId: {
           default: null,
         },
+        blockGroupDepth: {
+          default: null,
+        },
         hidden: {
           default: false
         },

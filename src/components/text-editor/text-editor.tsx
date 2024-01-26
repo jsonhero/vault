@@ -76,7 +76,16 @@ export function tagRule () {
       tr = tr.wrap(range, [{ type: schema.nodes.hashtag }])
     }
 
+    const parentDepth = lineblock?.attrs.blockGroupDepth
+    
     tr = tr.setNodeAttribute(before, 'blockGroupId', blockId())
+
+    if (parentDepth === null) {
+      tr = tr.setNodeAttribute(before, 'blockGroupDepth', 0)
+    } else {
+      tr = tr.setNodeAttribute(before, 'blockGroupDepth', parentDepth + 1)
+    }
+
 
     return tr
   })
@@ -170,30 +179,6 @@ const Lineblock = ProseMirrorReactNode.create({
     return ele
   },
 })
-
-// export class TextEditor extends React.Component<TextEditorProps> {
-//   view!: EditorView
-
-//   componentDidUpdate(prevProps: Readonly<TextEditorProps>, prevState: Readonly<{}>, snapshot?: any): void {
-//     const newNoteState = createEditorState(this.props.docJson, [])
-//     this.view.updateState(newNoteState)
-//   }
-
-//   onInit = (element: HTMLDivElement, factory: EditorFactoryProps) => {
-//     this.view = new EditorView(element, {
-//       state: createEditorState(this.props.docJson, []),
-//       nodeViews: {
-//         ...factory.buildReactNodes([Lineblock])
-//       },
-//     })
-//   }
-
-//   render() {
-//     return (
-//       <Editor className="editor focus:outline-none" onInit={this.onInit} />
-//     )
-//   }
-// }
 
 export const TextEditor = React.memo(({
   renderId,
@@ -312,7 +297,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
       const view = this.props.view
 
       let previousNode: Node | null = null
-      let blockGroupRootIdx: null | number = null
+      let groupDepths: { [key: number]: number } = {}
 
       view?.state.doc.forEach((node, offset, i) => {
 
@@ -320,6 +305,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
           let isBlockGroupRoot = false
 
           const blockGroupId = node.attrs.blockGroupId
+          const blockGroupDepth = node.attrs.blockGroupDepth
 
           const nodeElement = view.nodeDOM(offset) as HTMLDivElement
 
@@ -328,29 +314,37 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
           if (blockGroupId) {
             if (!previousNode) {
               isBlockGroupRoot = true
-              blockGroupRootIdx = i
+              groupDepths[blockGroupDepth] = i
             } else {
               const prevBlockGroupId = previousNode.attrs.blockGroupId
-              if (!prevBlockGroupId || prevBlockGroupId !== blockGroupId) {
+              if ((!prevBlockGroupId || prevBlockGroupId !== blockGroupId) && !(blockGroupDepth in groupDepths)) {
                 isBlockGroupRoot = true
-                blockGroupRootIdx = i
-              } else if (prevBlockGroupId === blockGroupId && blockGroupRootIdx !== null) {
-                const root = nextLines[blockGroupRootIdx]
+                groupDepths[blockGroupDepth] = i
+              }
 
-                if (root) {
-                  if (!node.attrs.hidden) {
-                    root.groupHeight += nodeHeight
+              if (blockGroupDepth != null) {
+
+                console.log(node.attrs.blockId, blockGroupDepth)
+
+                for (let d = 0; d <= blockGroupDepth; d++) {
+                  const groupIdx = groupDepths[d]
+                  const root = nextLines[groupIdx]
+
+                  if (root && !(isBlockGroupRoot && blockGroupDepth == d)) {
+                    if (!node.attrs.hidden) {
+                      root.groupHeight += nodeHeight
+                    }
+                    root.groupEndPos = offset
                   }
-                  root.groupEndPos = offset
-
-                }
+                }            
+    
   
               }
             }
+          } else {
+            groupDepths = {}
           }
-
           
-  
           previousNode = node
           if (!node.attrs.hidden) {
             nextLines.push({
@@ -359,6 +353,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
               groupStartPos: offset,
               groupEndPos: offset,
               groupHeight: 0,
+              depth: blockGroupDepth,
               isBlockGroupRoot,
               height: nodeHeight
             })
@@ -396,6 +391,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
       positions.forEach((pos) => {
         if (pos !== line.groupStartPos) {
           tr = tr.setNodeAttribute(pos, "hidden", hidden)
+          tr = tr.setNodeAttribute(pos, "groupHidden", hidden)
         } else {
           tr = tr.setNodeAttribute(pos, "groupHidden", hidden)
         }
@@ -410,24 +406,29 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
 
   render() {
     return (
-      <div className="sticky pr-3">
+      <div className="sticky pr-3 z-50">
         <div className="flex flex-col flex-shrink-0 min-w-[38px]">
           {this.state.lines.map((line: any, i: number) => {
             return (
-              <div className="flex items-center justify-between relative">
+              <div className="group flex items-center justify-between">
                 <div className="text-gray-600" style={{ height: line.height }}>{line.lineNumber}</div>
                 {line.isBlockGroupRoot && (
-                  <>
-                    <button onClick={() => this.onToggleGroup(line)}>
+                  <div className="relative top-[2px]" style={{
+                    left: line.depth * 18 + 'px'
+                  }}>
+                    <button className="bg-tertiary z-20" onClick={() => this.onToggleGroup(line)}>
                       {!line.node.attrs.groupHidden ? <ChevronDown className='text-gray-500' size={16} /> : <ChevronRight className='text-gray-500' size={16} />}
                     </button>
-                    <div className="absolute right-[8px] w-[1px] bg-gray-700" style={{
+                    <div className="absolute right-[8px] w-[1px] bg-gray-700 group-hover:bg-gray-400 group-hover:z-10" style={{
                       top: line.height + 'px',
                       height: line.groupHeight + 'px'
                     }}>
+                      <div className="absolute left-[-4px] bottom-[5px] h-[1px] w-[9px] bg-gray-700 group-hover:bg-gray-400">
+
+                      </div>
   
                     </div>
-                  </>
+                  </div>
                 )}
   
               </div>
@@ -439,3 +440,19 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
   }
 
 }
+
+
+
+/**
+ * 
+ * <block group=1 gdepth=0>
+ * <block group=1 gdepth=0>
+ * <block group=2 gdepth=1>
+ * <block group=4 gdepth=2>
+ * <block group=2 gdepth=1>
+ * <block group=3 gdepth=1> // how would I tell that this is in group 1 still, maybe highlight the chevron?
+ * 
+ * <block group=1 gdepth=0> // what if no surrounding group 1
+ * 
+ *  Maybe a toggle to show padding depth on block groups?
+ */

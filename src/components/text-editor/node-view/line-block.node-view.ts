@@ -12,12 +12,29 @@ export class LineBlockNodeView {
     if (node.attrs.blockGroupId) {
       this.dom.setAttribute('data-block-group-id', node.attrs.blockGroupId)
     }
+
+    if (node.attrs.blockGroupDepth !== null) {
+      this.dom.setAttribute('data-block-group-depth', node.attrs.blockGroupDepth)
+      this.dom.style.left = 18 * node.attrs.blockGroupDepth + 'px'
+    }
+
+    this.dom.style.position = 'relative'
+
+    this.dom.style.paddingTop = "2px"
+    this.dom.style.paddingBottom = "2px"
+
     this.node = node;
   }
 
   update(node: Node) {
-    if (!this.node.attrs.blockGroupId && node.attrs.blockGroupId) {
+    if (!this.node.attrs.blockGroupId !== node.attrs.blockGroupId) {
       this.dom.setAttribute('data-block-group-id', node.attrs.blockGroupId)
+    }
+
+    if (node.attrs.blockGroupDepth !== null) {
+      this.dom.setAttribute('data-block-group-depth', node.attrs.blockGroupDepth)
+
+      this.dom.style.left = 18 * node.attrs.blockGroupDepth + 'px'
     }
 
     if (node.attrs.hidden && !this.node.attrs.hidden) {

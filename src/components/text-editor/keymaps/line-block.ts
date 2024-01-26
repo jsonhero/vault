@@ -23,7 +23,8 @@ export const createLineblockOnEnter = (state: EditorState, dispatch?: (tr: Trans
         type: schema.nodes.lineblock,
         attrs: {
           blockId: nodeid(),
-          blockGroupId: lineblock.attrs.blockGroupId
+          blockGroupId: lineblock.attrs.blockGroupId,
+          blockGroupDepth: lineblock.attrs.blockGroupDepth
         },
       }])
       dispatch?.(tr);
