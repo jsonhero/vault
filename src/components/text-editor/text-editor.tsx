@@ -310,6 +310,12 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
           const nodeElement = view.nodeDOM(offset) as HTMLDivElement
 
           const nodeHeight = nodeElement.clientHeight
+          const previousDepth = previousNode?.attrs.blockGroupDepth
+
+          if ((blockGroupDepth === null || blockGroupDepth < previousDepth) && previousDepth !== null) {
+            delete groupDepths[previousDepth]
+          }
+
   
           if (blockGroupId) {
             if (!previousNode) {
@@ -323,14 +329,16 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
               }
 
               if (blockGroupDepth != null) {
-
-                console.log(node.attrs.blockId, blockGroupDepth)
-
                 for (let d = 0; d <= blockGroupDepth; d++) {
                   const groupIdx = groupDepths[d]
                   const root = nextLines[groupIdx]
+                  if (blockGroupId === "8NgeO" && d  == 2) {
+                    console.log(node, root, "node", groupDepths, nextLines.length)
+                  }
 
                   if (root && !(isBlockGroupRoot && blockGroupDepth == d)) {
+
+                    
                     if (!node.attrs.hidden) {
                       root.groupHeight += nodeHeight
                     }
@@ -341,11 +349,11 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
   
               }
             }
-          } else {
-            groupDepths = {}
           }
+
           
           previousNode = node
+          // think this hides lines for groups on common depth..
           if (!node.attrs.hidden) {
             nextLines.push({
               node,
