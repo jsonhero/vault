@@ -19,7 +19,7 @@ import { Editor, EditorFactoryProps, ProseMirrorReactNode, ProseMirrorReactPlugi
 import { CodeMirrorNodeView, LineBlockNodeView, HashtagNodeView } from './node-view'
 import { schema } from './schema'
 import { arrowHandler, createLineblockOnEnter, backspace } from './keymaps'
-import { lineNumberPlugin, createSlashPlugin, createRefPlugin, hashtagPlugin } from './plugins'
+import { lineNumberPlugin, createSlashPlugin, createRefPlugin, hashtagPlugin, suggestionPlugin } from './plugins'
 import { LineBlockNode, ScriptBlockNode, TableBlockNode, HashtagInlineNode } from './nodes'
 import { nanoid } from 'nanoid'
 import { ChevronDown, ChevronRight, CircleDashedIcon, CircleDotIcon, DotIcon } from 'lucide-react'
@@ -220,13 +220,14 @@ export const TextEditor = React.memo(({
       boldRule(), 
       // tagRule()
     ]}),
-    hashtagPlugin,
+    // hashtagPlugin,
   ], [])
 
   
   useEffect(() => {
     if (renderId) {
-      const newNoteState = createEditorState(docJson, plugins)
+      
+      const newNoteState = createEditorState(docJson, editorViewRef.current.state.plugins)
       setTimeout(() => {
         editorViewRef.current?.updateState(newNoteState)
       })
@@ -240,12 +241,13 @@ export const TextEditor = React.memo(({
       })
     }
   }, [onUpdate])
-  
+
 
   const onInit = useCallback((element: HTMLDivElement, factory: EditorFactoryProps) => {
+    
     // Todo: store in editor view context somewhere
     editorViewRef.current = new EditorView(element, {
-      state: createEditorState(docJson, plugins),
+      state: createEditorState(docJson, [...plugins, ...factory.buildReactPlugins([suggestionPlugin])]),
       dispatchTransaction: dispatchTransactionFactory(editorViewRef.current!, onUpdate, setEditorView),
       nodeViews: {
         lineblock: (node) => new LineBlockNodeView(node),
@@ -412,8 +414,6 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
   
   onToggleGroup = (line: any) => {
     const view = this.props.view!
-
-    console.log(line, ':: line')
 
     if (line.groupStartPos !== line.groupEndPos)  {
       const positions: number[] = []

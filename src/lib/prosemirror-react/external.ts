@@ -27,7 +27,7 @@ export class ProseMirrorReactNode {
 
 type ProseMirrorReactPluginProps = {
   name: string;
-  buildPlugin: (editor: EditorContent) => ProseMirrorPlugin
+  buildPlugin: (editor: EditorContent) => ProseMirrorPlugin | ProseMirrorPlugin[]
 }
 
 export class ProseMirrorReactPlugin {
@@ -74,6 +74,6 @@ export function buildReactNodes(editor: EditorContent) {
 
 export function buildReactPlugins(editor: EditorContent) {
   return (plugins: ProseMirrorReactPlugin[]) => {
-    return plugins.map((plugin) => plugin.props.buildPlugin(editor))
+    return plugins.flatMap((plugin) => plugin.props.buildPlugin(editor))
   }
 }

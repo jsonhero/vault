@@ -1,5 +1,5 @@
 import React, {
-  ForwardedRef, forwardRef, HTMLProps, LegacyRef, MutableRefObject,
+  ForwardedRef, forwardRef, HTMLProps, LegacyRef, MutableRefObject, useMemo
 } from 'react'
 import ReactDOM, { flushSync } from 'react-dom'
 
@@ -7,11 +7,16 @@ import type { EditorContent, ReactRenderer } from './react-renderer'
 import { buildReactNodes, buildReactPlugins } from './external'
 
 const Portals: React.FC<{ renderers: Record<string, ReactRenderer> }> = ({ renderers }) => {
+
+  const portals = useMemo(() => {
+    return Object.entries(renderers).map(([key, renderer]) => {
+      return ReactDOM.createPortal(renderer.reactElement, renderer.element, key)
+    })
+  }, [renderers])
+
   return (
     <>
-      {Object.entries(renderers).map(([key, renderer]) => {
-        return ReactDOM.createPortal(renderer.reactElement, renderer.element, key)
-      })}
+      {portals}
     </>
   )
 }

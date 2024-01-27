@@ -18,19 +18,21 @@ export const hashtagPlugin: Plugin = new Plugin({
     decorations(state) {
       const decorations: Decoration[] = []
 
-      const hashRegex = new RegExp(/(^|\s)#[a-zA-Z0-9]+/g)
+      const hashRegex = new RegExp(/(^|\s)(#[a-zA-Z0-9]+)/g)
 
       state.doc.descendants((node, pos) => {
         if (node.type.name === 'text') {
-          const allHashes = [...node.text!.matchAll(hashRegex)]
+          const text = node.text!;
+          const matches = Array.from(text.matchAll(hashRegex), match => match[2]);
 
-          for (const hash of allHashes) {
-            const start = pos + hash.index
-            const end = start + hash[0].length
+          for (const hash of matches) {
+            const hashIndex = text.indexOf(hash);
+            const start = pos + hashIndex;
+            const end = start + hash.length;
             const deco = Decoration.inline(start, end, {
               class: 'text-blue-500 cursor-pointer hover:bg-secondary px-[4px] rounded-md',
-            })
-            decorations.push(deco)
+            });
+            decorations.push(deco);
           }
         }
       })
