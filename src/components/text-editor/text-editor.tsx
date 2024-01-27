@@ -19,7 +19,7 @@ import { Editor, EditorFactoryProps, ProseMirrorReactNode, ProseMirrorReactPlugi
 import { CodeMirrorNodeView, LineBlockNodeView, HashtagNodeView } from './node-view'
 import { schema } from './schema'
 import { arrowHandler, createLineblockOnEnter, backspace } from './keymaps'
-import { lineNumberPlugin, createSlashPlugin, createRefPlugin } from './plugins'
+import { lineNumberPlugin, createSlashPlugin, createRefPlugin, hashtagPlugin } from './plugins'
 import { LineBlockNode, ScriptBlockNode, TableBlockNode, HashtagInlineNode } from './nodes'
 import { nanoid } from 'nanoid'
 import { ChevronDown, ChevronRight } from 'lucide-react'
@@ -59,7 +59,7 @@ export function boldRule () {
   })
 }
 
-const tagRegex = /#[a-zA-Z0-9]+\s/
+const tagRegex = /#[a-zA-Z0-9]/
 export function tagRule () {
   return new InputRule(tagRegex, (state, match, start, end) => {
     let tr = state.tr
@@ -85,8 +85,7 @@ export function tagRule () {
     } else {
       tr = tr.setNodeAttribute(before, 'blockGroupDepth', parentDepth + 1)
     }
-
-
+  
     return tr
   })
 }
@@ -192,7 +191,11 @@ export const TextEditor = React.memo(({
     // createRefPlugin(pluginViewFactory), 
     keymapPlugin,
     // createLineNumberPlugin(widgetViewFactory), 
-    inputRules({ rules: [boldRule(), tagRule()]})
+    inputRules({ rules: [
+      boldRule(), 
+      // tagRule()
+    ]}),
+    hashtagPlugin,
   ], [])
 
   
@@ -311,8 +314,29 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
 
           const nodeHeight = nodeElement.clientHeight
           const previousDepth = previousNode?.attrs.blockGroupDepth
+          const previousGroupId = previousNode?.attrs.blockGroupId
 
-          if ((blockGroupDepth === null || blockGroupDepth < previousDepth) && previousDepth !== null) {
+
+          /**
+           * 0:a
+           * 1:b
+           * 2:c
+           * 2:c
+           * 2:d
+           * 1:b
+           * 2e:
+           * 1:b
+           * 0:a
+           */
+
+          if (
+            previousDepth !== null &&
+            (
+              blockGroupDepth === null || 
+              blockGroupDepth < previousDepth || 
+              (blockGroupDepth === previousDepth && previousGroupId !== blockGroupId)
+            ) 
+          ) {
             delete groupDepths[previousDepth]
           }
 
@@ -332,6 +356,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
                 for (let d = 0; d <= blockGroupDepth; d++) {
                   const groupIdx = groupDepths[d]
                   const root = nextLines[groupIdx]
+
                   if (blockGroupId === "8NgeO" && d  == 2) {
                     console.log(node, root, "node", groupDepths, nextLines.length)
                   }
@@ -354,7 +379,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
           
           previousNode = node
           // think this hides lines for groups on common depth..
-          if (!node.attrs.hidden) {
+          // if (!node.attrs.hidden) {
             nextLines.push({
               node,
               lineNumber: i + 1,
@@ -365,12 +390,12 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
               isBlockGroupRoot,
               height: nodeHeight
             })
-          }
+          // }
         }
 
       })
 
-      this.setState({ lines: nextLines })
+      this.setState({ lines: nextLines.filter((line) => !line.node.attrs.hidden) })
     })
 
     if (mirror) {
@@ -428,12 +453,12 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
                       {!line.node.attrs.groupHidden ? <ChevronDown className='text-gray-500' size={16} /> : <ChevronRight className='text-gray-500' size={16} />}
                     </button>
                     <div className="absolute right-[8px] w-[1px] bg-gray-700 group-hover:bg-gray-400 group-hover:z-10" style={{
-                      top: line.height + 'px',
+                      top: (line.height - 4)  + 'px',
                       height: line.groupHeight + 'px'
                     }}>
-                      <div className="absolute left-[-4px] bottom-[5px] h-[1px] w-[9px] bg-gray-700 group-hover:bg-gray-400">
+                      {/* <div className="absolute left-[-4px] bottom-[5px] h-[1px] w-[9px] bg-gray-700 group-hover:bg-gray-400">
 
-                      </div>
+                      </div> */}
   
                     </div>
                   </div>
