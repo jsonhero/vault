@@ -1,11 +1,10 @@
-import { EditorState, Plugin, Transaction } from "prosemirror-state";
+import { Plugin } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
 
-import { useNodeViewContext, useWidgetViewContext, ReactWidgetViewUserOptions, ReactWidgetViewSpec } from '@prosemirror-adapter/react'
-import { joinTextblockBackward } from 'prosemirror-commands'
 
-
-
+const manifest = {
+  taggedBlocks: [] 
+}
 
 export const hashtagPlugin: Plugin = new Plugin({
   // state: {

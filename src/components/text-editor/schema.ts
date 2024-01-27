@@ -52,6 +52,9 @@ export const schema = new Schema({
         blockGroupDepth: {
           default: null,
         },
+        depth: {
+          default: 0
+        },
         hidden: {
           default: false
         },

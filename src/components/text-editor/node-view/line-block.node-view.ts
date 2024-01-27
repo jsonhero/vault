@@ -18,6 +18,11 @@ export class LineBlockNodeView {
       this.dom.style.left = 18 * node.attrs.blockGroupDepth + 'px'
     }
 
+    this.dom.setAttribute('data-depth', node.attrs.depth)
+    this.dom.style.left = 18 * node.attrs.depth + 'px'
+
+
+
     this.dom.style.position = 'relative'
 
     this.dom.style.paddingTop = "2px"
@@ -29,6 +34,11 @@ export class LineBlockNodeView {
   update(node: Node) {
     if (!this.node.attrs.blockGroupId !== node.attrs.blockGroupId) {
       this.dom.setAttribute('data-block-group-id', node.attrs.blockGroupId)
+    }
+
+    if (node.attrs.depth !== this.node.attrs.depth) {
+      this.dom.setAttribute('data-depth', node.attrs.depth)
+      this.dom.style.left = 18 * node.attrs.depth + 'px'
     }
 
     if (node.attrs.blockGroupDepth !== null) {

@@ -24,7 +24,7 @@ export const createLineblockOnEnter = (state: EditorState, dispatch?: (tr: Trans
         attrs: {
           blockId: nodeid(),
           blockGroupId: lineblock.attrs.blockGroupId,
-          blockGroupDepth: lineblock.attrs.blockGroupDepth
+          depth: lineblock.attrs.depth
         },
       }])
       dispatch?.(tr);
