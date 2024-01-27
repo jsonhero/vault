@@ -220,7 +220,6 @@ export const TextEditor = React.memo(({
       boldRule(), 
       // tagRule()
     ]}),
-    // hashtagPlugin,
   ], [])
 
   
@@ -247,7 +246,7 @@ export const TextEditor = React.memo(({
     
     // Todo: store in editor view context somewhere
     editorViewRef.current = new EditorView(element, {
-      state: createEditorState(docJson, [...plugins, ...factory.buildReactPlugins([suggestionPlugin])]),
+      state: createEditorState(docJson, [...plugins, ...factory.buildReactPlugins([hashtagPlugin])]),
       dispatchTransaction: dispatchTransactionFactory(editorViewRef.current!, onUpdate, setEditorView),
       nodeViews: {
         lineblock: (node) => new LineBlockNodeView(node),

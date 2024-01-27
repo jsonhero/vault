@@ -10,7 +10,7 @@ import { ReactRenderer } from '~/lib/prosemirror-react/react-renderer'
 
 const suggestionKey = new PluginKey('suggestion')
 
-export function inSuggestion(selection: Selection, decorations: DecorationSet) {
+export function inDecoration(selection: Selection, decorations: DecorationSet) {
   return decorations.find(selection.from, selection.to).length > 0;
 }
 
@@ -126,7 +126,7 @@ export function createInputRule(plugin: Plugin, type: Trigger) {
   return new InputRule(trigger, (state, match) => {
     const { decorations } = plugin.getState(state);
     // If we are currently suggesting, don't activate
-    if (inSuggestion(state.selection, decorations)) return null;
+    if (inDecoration(state.selection, decorations)) return null;
     // We are taking over the text input here
     const tr = state.tr.insertText(match[1][match[1].length - 1]).scrollIntoView();
     const meta = { action: 'add', trigger: match[1] };
@@ -191,10 +191,11 @@ export const suggestionPlugin = ProseMirrorReactPlugin.create({
           const meta = tr.getMeta(plugin)
 
           if (meta?.action === 'add') {
-            const { trigger } = meta
+            const { trigger, range } = meta
 
-            const from = tr.selection.from - trigger.length;
-            const to = tr.selection.from;
+            // include range from params?
+            const from = range?.from ?? tr.selection.from - trigger.length;
+            const to = range?.to ?? tr.selection.from;
 
             const deco = Decoration.inline(from, to, {
               class: 'autocomplete',
@@ -203,12 +204,16 @@ export const suggestionPlugin = ProseMirrorReactPlugin.create({
               inclusiveEnd: true,
             })
 
+            const query = tr.doc.textBetween(from, to).slice(trigger?.length)
+
             component?.updateProps({
               active: true,
+              query,
             })
 
             return {
               active: true,
+              query,
               trigger,
               decorations: DecorationSet.create(tr.doc, [deco]),
               range: {
@@ -225,7 +230,7 @@ export const suggestionPlugin = ProseMirrorReactPlugin.create({
 
           if (
             meta?.action === 'remove' ||
-            !inSuggestion(tr.selection, nextDecorations) ||
+            !inDecoration(tr.selection, nextDecorations) ||
             !hasDecoration
           ) {
             component?.updateProps({
@@ -262,7 +267,7 @@ export const suggestionPlugin = ProseMirrorReactPlugin.create({
         handleKeyDown(view, event) {
           const { active, decorations } = plugin.getState(view.state)
 
-          if (!active || !inSuggestion(view.state.selection, decorations)) return false;
+          if (!active || !inDecoration(view.state.selection, decorations)) return false;
 
           const { from, to } = decorations.find()[0];
           const text = view.state.doc.textBetween(from, to);
