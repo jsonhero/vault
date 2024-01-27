@@ -13,13 +13,8 @@ export class LineBlockNodeView {
       this.dom.setAttribute('data-block-group-id', node.attrs.blockGroupId)
     }
 
-    if (node.attrs.blockGroupDepth !== null) {
-      this.dom.setAttribute('data-block-group-depth', node.attrs.blockGroupDepth)
-      this.dom.style.left = 18 * node.attrs.blockGroupDepth + 'px'
-    }
-
     this.dom.setAttribute('data-depth', node.attrs.depth)
-    this.dom.style.left = 18 * node.attrs.depth + 'px'
+    this.dom.style.left = 28 * node.attrs.depth + 'px'
 
 
 
@@ -38,13 +33,7 @@ export class LineBlockNodeView {
 
     if (node.attrs.depth !== this.node.attrs.depth) {
       this.dom.setAttribute('data-depth', node.attrs.depth)
-      this.dom.style.left = 18 * node.attrs.depth + 'px'
-    }
-
-    if (node.attrs.blockGroupDepth !== null) {
-      this.dom.setAttribute('data-block-group-depth', node.attrs.blockGroupDepth)
-
-      this.dom.style.left = 18 * node.attrs.blockGroupDepth + 'px'
+      this.dom.style.left = 28 * node.attrs.depth + 'px'
     }
 
     if (node.attrs.hidden && !this.node.attrs.hidden) {

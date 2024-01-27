@@ -22,7 +22,7 @@ import { arrowHandler, createLineblockOnEnter, backspace } from './keymaps'
 import { lineNumberPlugin, createSlashPlugin, createRefPlugin, hashtagPlugin } from './plugins'
 import { LineBlockNode, ScriptBlockNode, TableBlockNode, HashtagInlineNode } from './nodes'
 import { nanoid } from 'nanoid'
-import { ChevronDown, ChevronRight, DotIcon } from 'lucide-react'
+import { ChevronDown, ChevronRight, CircleDashedIcon, CircleDotIcon, DotIcon } from 'lucide-react'
 
 const blockId = () => nanoid(5)
 
@@ -171,7 +171,7 @@ function createEditorState(doc: string | null | undefined, plugins: ProseMirrorP
   return _editorState
 }
 
-function dispatchTransactionFactory(view: EditorView, onUpdate?: (state: EditorState) => void, setState: (state: EditorState) => void) {
+function dispatchTransactionFactory(view: EditorView, onUpdate?: (state: EditorState) => void, setView: (view: EditorView) => void) {
   return (tr: Transaction) => {
     // update view state
     const newState = view.state.apply(tr);
@@ -181,7 +181,7 @@ function dispatchTransactionFactory(view: EditorView, onUpdate?: (state: EditorS
     }
   
     view.updateState(newState);
-    setState(newState)
+    setView(view)
   }
 
 }
@@ -209,7 +209,7 @@ export const TextEditor = React.memo(({
   docJson,
 }: TextEditorProps) => {
   const editorViewRef = useRef<EditorView>(null)
-  const [editorState, setEditorState] = useState<EditorState | null>(null)
+  const [editorView, setEditorView] = useState<EditorView | null>(null)
 
   const plugins = useMemo(() => [
     // createSlashPlugin(pluginViewFactory), 
@@ -236,7 +236,7 @@ export const TextEditor = React.memo(({
   useEffect(() => {
     if (onUpdate) {
       editorViewRef.current?.setProps({
-        dispatchTransaction: dispatchTransactionFactory(editorViewRef.current, onUpdate, setEditorState),
+        dispatchTransaction: dispatchTransactionFactory(editorViewRef.current, onUpdate, setEditorView),
       })
     }
   }, [onUpdate])
@@ -246,8 +246,7 @@ export const TextEditor = React.memo(({
     // Todo: store in editor view context somewhere
     editorViewRef.current = new EditorView(element, {
       state: createEditorState(docJson, plugins),
-      
-      dispatchTransaction: dispatchTransactionFactory(editorViewRef.current!, onUpdate, setEditorState),
+      dispatchTransaction: dispatchTransactionFactory(editorViewRef.current!, onUpdate, setEditorView),
       nodeViews: {
         lineblock: (node) => new LineBlockNodeView(node),
         hashtag: (node) => new HashtagNodeView(node),
@@ -284,11 +283,12 @@ export const TextEditor = React.memo(({
         // codemirror: (node, view, getPos) => new CodeMirrorNodeView(node, view, getPos)
       }
     })
+    setEditorView(editorViewRef.current)
   }, [])
   
   return (
     <div className="relative flex items-start">
-      <TextEditorGutter view={editorViewRef.current} state={editorState} />
+      <TextEditorGutter view={editorView} />
       <Editor onInit={onInit} /> 
     </div>
   )
@@ -298,7 +298,6 @@ export const TextEditor = React.memo(({
 
 interface TextEditorGutterProps {
   view: EditorView | null
-  state: EditorState | null
 }
 
 interface TextEditorGutterState {
@@ -317,19 +316,18 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
     }
   }
 
-  static getUpdatedLines(state: EditorState, view: EditorView) {
+  static getUpdatedLines(view: EditorView) {
     const nextLines: any[] = []
 
     let previousNode: Node | null = null
     let groupDepths: { [key: number]: number } = {}
 
-    state.doc.forEach((node, offset, i) => {
+    view.state.doc.forEach((node, offset, i) => {
 
       if (node.type.name === 'lineblock') {
-
         const nodeElement = view.nodeDOM(offset) as HTMLDivElement
 
-        const nodeHeight = nodeElement.clientHeight
+        const nodeHeight = nodeElement?.clientHeight || 0
 
         const prevDepth = previousNode?.attrs.depth
         const depth = node.attrs.depth
@@ -344,13 +342,15 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
 
         if (previousNode !== null && depth > prevDepth) {
           groupDepths[prevDepth] = i - 1
+          const line = nextLines[i - 1]
+          line.isGroupNode = true
         }
 
         for (let d = 0; d <= depth; d++) {
           const groupIdx = groupDepths[d]
           const root = nextLines[groupIdx]
 
-          if (root) {              
+          if (root) {
             if (!node.attrs.hidden) {
               root.groupHeight += nodeHeight
             }
@@ -361,6 +361,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
         previousNode = node
         nextLines.push({
           node,
+          isGroupNode: false,
           lineNumber: i + 1,
           groupStartPos: offset,
           groupEndPos: offset,
@@ -378,12 +379,12 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
 
   static getDerivedStateFromProps(props: TextEditorGutterProps, state: TextEditorGutterState) {
 
-    if (!props.state || !props.view) {
+    if (!props.view) {
       return state
     }
 
     return {
-      lines: TextEditorGutter.getUpdatedLines(props.state, props.view)
+      lines: TextEditorGutter.getUpdatedLines(props.view)
     }
   }
 
@@ -395,7 +396,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
 
       if (view) {
         this.setState({
-          lines: TextEditorGutter.getUpdatedLines(view.state, view)
+          lines: TextEditorGutter.getUpdatedLines(view)
         })
       }
     })
@@ -448,11 +449,11 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
               <div className="group flex items-center justify-between relative">
                 <div className="text-gray-600" style={{ height: line.height }}>{line.lineNumber}</div>
                   <div className="absolute" style={{
-                    left: 18 + line.depth * 18 + 'px'
+                    left: 24 + (line.depth * 24) + 'px'
                   }}>
-                    {(line.depth > 0 || line.groupHeight > 0) && (
-                      <button className="bg-tertiary" onClick={() => this.onToggleGroup(line)}>
-                        <DotIcon />
+                    {(line.depth > 0 || line.isGroupNode) && (
+                      <button className="bg-tertiary flex justify-center items-center w-[24px]" onClick={() => this.onToggleGroup(line)}>
+                        {line.node.attrs.groupHidden ? <CircleDotIcon size={16} /> : <DotIcon /> }
                       </button>
                     )}
                     {line.groupHeight > 0 && (

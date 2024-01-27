@@ -28,7 +28,7 @@ export const hashtagPlugin: Plugin = new Plugin({
             const start = pos + hash.index
             const end = start + hash[0].length
             const deco = Decoration.inline(start, end, {
-              class: 'text-blue-500 cursor-pointer hover:bg-secondary px-[4px] rounded-md'
+              class: 'text-blue-500 cursor-pointer hover:bg-secondary px-[4px] rounded-md',
             })
             decorations.push(deco)
           }
