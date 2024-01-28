@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS document (
     id INTEGER PRIMARY KEY NOT NULL,
     entity_id INTEGER,
     doc TEXT DEFAULT NULL,
-    doc_text DEFAULT ''
+    doc_text DEFAULT '',
+    manifest TEXT DEFAULT NULL
 );
 
 SELECT crsql_as_crr('document');

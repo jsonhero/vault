@@ -1,4 +1,5 @@
 import { Menu } from "@ark-ui/react";
+import { sql } from "kysely";
 import { InputRule, inputRules, undoInputRule } from "prosemirror-inputrules";
 
 import { EditorState, Plugin, PluginKey, Selection, Transaction } from "prosemirror-state";
@@ -7,6 +8,7 @@ import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState }
 
 import { ProseMirrorReactPlugin } from '~/lib/prosemirror-react'
 import { ReactRenderer } from '~/lib/prosemirror-react/react-renderer'
+import { useDbQuery } from "~/query-manager";
 
 const suggestionKey = new PluginKey('suggestion')
 
@@ -46,11 +48,27 @@ const menuItems = [
     name: 'Script',
   }
 ]
-const SuggestionComponent = forwardRef(({ view, active, ...rest }: { view: EditorView, active: boolean }, ref) => {
+const SuggestionComponent = forwardRef(({ view, active, query }: { view: EditorView, active: boolean }, ref) => {
   const [coords, setCoords] = useState<Point | undefined>(undefined)
   const [selectedIndex, setSelectedIndex] = useState(0)
-
+  
   const isMounted = useMemo(() => coords !== undefined, [coords])
+
+  const { data } = useDbQuery({
+    keys: [query],
+    query: () => sql<{ tag: string }>`SELECT DISTINCT item.value as tag
+      FROM document,
+      json_each(manifest, '$.taggedBlocks' ) as block,
+      json_each(json_extract(block.value, '$.tags')) as item
+      WHERE item.value LIKE ${sql.val('%' + query + '%')}
+      ORDER BY tag DESC
+      `,
+    enabled: query.length > 0,
+  })
+
+  useEffect(() => {
+    setSelectedIndex(0)
+  }, [data])
 
   useEffect(() => {
     if (active && !isMounted) {
@@ -72,11 +90,11 @@ const SuggestionComponent = forwardRef(({ view, active, ...rest }: { view: Edito
   }, [active, view.state])
 
   const upHandler = () => {
-    setSelectedIndex((selectedIndex + menuItems.length - 1) % menuItems.length)
+    setSelectedIndex((selectedIndex + data.length - 1) % data.length)
   }
 
   const downHandler = () => {
-    setSelectedIndex((selectedIndex + 1) % menuItems.length)
+    setSelectedIndex((selectedIndex + 1) % data.length)
   }
 
   useImperativeHandle(ref, () => ({
@@ -107,14 +125,14 @@ const SuggestionComponent = forwardRef(({ view, active, ...rest }: { view: Edito
     }} onInteractOutside={(event) => event.preventDefault()}>
       <Menu.Positioner>
         <Menu.Content className="bg-white shadow-md">
-          {menuItems.map((item, i) => {
+          {data.map((item, i) => {
             const extraProps: any = {}
 
             if (i === selectedIndex) {
               extraProps['data-highlighted'] = true
             }
             return (
-              <Menu.Item key={i} className="text-black p-2 data-[highlighted]:text-red-500" {...extraProps}>{item.name}</Menu.Item>
+              <Menu.Item key={i} className="text-black p-2 data-[highlighted]:text-red-500" {...extraProps}>{item.tag}</Menu.Item>
             )
           })}
         </Menu.Content>

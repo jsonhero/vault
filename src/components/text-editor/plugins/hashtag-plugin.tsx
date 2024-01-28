@@ -8,8 +8,20 @@ import { schema } from "../schema";
 
 const nodePluginKey = new PluginKey('suggest-decor')
 
+
+/**
+ * Iterate through doc
+ * find all hashtag nodes
+ * store hashtag nodes on the doc somewhere with corresponding block id?
+ * create app_state for keeping track of created hashtags
+ * Or just create a #hashtag page
+ * Or query doc info for existing tags
+ */
+
 const manifest = {
-  taggedBlocks: [] 
+  taggedBlocks: [
+    { blockId: 'zippitydoo', tags: ['shit', 'bitch']}
+  ] 
 }
 
 function createHashtagRule() {

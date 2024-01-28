@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
-import { Kysely, QueryResult, SelectQueryBuilder } from "kysely";
+import { Kysely, QueryResult, RawBuilder, SelectQueryBuilder } from "kysely";
 import  { DB } from "@vlcn.io/crsqlite-wasm";
 import tblrx, { TblRx } from "@vlcn.io/rx-tbl";
 import _ from 'lodash'
@@ -52,7 +52,7 @@ export class DatabaseQueryManager<Schema> {
 }
 
 
-export type QueryFn<Query, Schema> = (db: Kysely<Schema>) => SelectQueryBuilder<Kysely<Schema>, any, Query>
+export type QueryFn<Query, Schema> = (db: Kysely<Schema>) => SelectQueryBuilder<Kysely<Schema>, any, Query> | RawBuilder<Query>
 
 export type DbQueryOptions<Query, Schema> = {
   query: QueryFn<Query, Schema>,

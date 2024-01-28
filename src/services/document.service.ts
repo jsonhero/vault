@@ -12,23 +12,25 @@ export class DocumentService {
       .executeTakeFirstOrThrow()
   }
 
-  update(id: number, doc: object, docText: string) {
+  update(id: number, doc: object, docText: string, manifest: any) {
     return this.manager.db.updateTable('document')
       .set({
         doc,
         doc_text: docText,
+        manifest,
       })
       .where('id', '=', id)
       .returningAll()
       .execute()
   }
 
-  insert(entityId: number, doc?: object, docText?: string) {
+  insert(entityId: number, doc?: object, docText?: string, manifest?: any) {
     return this.manager.db.insertInto('document')
       .values({
         entity_id: entityId,
         doc,
         doc_text: docText,
+        manifest,
       })
       .returningAll()
       .execute()

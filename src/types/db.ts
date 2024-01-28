@@ -34,6 +34,12 @@ export interface DocumentTable {
   entity_id: number;
   doc?: any;
   doc_text?: string
+  manifest?: {
+    taggedBlocks: {
+      blockId: string;
+      tags: string[]
+    }[]
+  }
 }
 
 export interface AppStateTable {
