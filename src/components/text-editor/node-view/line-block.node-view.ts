@@ -1,13 +1,15 @@
 import { Node } from "prosemirror-model";
+import { Decoration, DecorationSource } from "prosemirror-view";
 
 export class LineBlockNodeView {
   dom;
   contentDOM;
   node;
+    // https://stackoverflow.com/questions/25897883/edit-cursor-not-displayed-on-chrome-in-contenteditable
 
   constructor(node: Node) {
     this.dom = this.contentDOM = document.createElement('div')
-    this.dom.className = node.attrs.hidden ? "hidden" : "block"
+    this.dom.className = "block"
     this.dom.setAttribute('data-block-id', node.attrs.blockId)
     if (node.attrs.blockGroupId) {
       this.dom.setAttribute('data-block-group-id', node.attrs.blockGroupId)
@@ -26,7 +28,8 @@ export class LineBlockNodeView {
     this.node = node;
   }
 
-  update(node: Node) {
+  update(node: Node, decorations: readonly Decoration[], innerDecorations: DecorationSource) {
+    console.log(decorations, innerDecorations, 'dec')
     if (!this.node.attrs.blockGroupId !== node.attrs.blockGroupId) {
       this.dom.setAttribute('data-block-group-id', node.attrs.blockGroupId)
     }
@@ -36,9 +39,13 @@ export class LineBlockNodeView {
       this.dom.style.left = 28 * node.attrs.depth + 'px'
     }
 
-    if (node.attrs.hidden && !this.node.attrs.hidden) {
+    const isHidden = decorations.find((dec) => dec.spec.hidden)
+    
+
+    // shouldn't do this every update
+    if (isHidden) {
       this.dom.className = "hidden"
-    } else if (this.node.attrs.hidden && !node.attrs.hidden) {
+    } else if (!isHidden) {
       this.dom.className = "block"
     }
 

@@ -6,8 +6,13 @@ export const Main = observer(() => {
   const appState = useAppStateService()
 
   return (
-    <div className="w-auto h-full p-10">
-      {appState.selectedEntityId && <EntityEditor entityId={appState.selectedEntityId}/>}
+    <div>
+      {/* <div className="h-[40px] bg-red-400">
+
+      </div> */}
+      <div className="w-auto h-full p-10">
+        {appState.selectedEntityId && <EntityEditor entityId={appState.selectedEntityId}/>}
+      </div>
     </div>
   )
 })

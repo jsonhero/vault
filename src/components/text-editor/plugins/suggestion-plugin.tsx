@@ -122,10 +122,6 @@ const SuggestionComponent = forwardRef(({ view, active, query }: { view: EditorV
         const node = view.state.selection.$anchor.parent
         const anchor = view.state.selection.anchor
 
-
-        // test
-
-        // te |s| t
         const diff = node.textContent.length - view.state.selection.$anchor.textOffset
         const from = anchor - view.state.selection.$anchor.textOffset - 1
         const to = anchor + diff - 1
@@ -138,8 +134,6 @@ const SuggestionComponent = forwardRef(({ view, active, query }: { view: EditorV
         const offset = from + entry.tag.length
         view.dispatch(view.state.tr.insertText(' ', offset + 1))
         view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, offset + 2)))  
-
-        console.log('wee yoo!', entry.tag)
 
 
         return true

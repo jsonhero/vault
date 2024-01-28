@@ -19,7 +19,7 @@ import { Editor, EditorFactoryProps, ProseMirrorReactNode, ProseMirrorReactPlugi
 import { CodeMirrorNodeView, LineBlockNodeView, HashtagNodeView } from './node-view'
 import { schema } from './schema'
 import { arrowHandler, createLineblockOnEnter, backspace } from './keymaps'
-import { lineNumberPlugin, createSlashPlugin, createRefPlugin, hashtagPlugin, suggestionPlugin } from './plugins'
+import { lineBlockPlugin, hashtagPlugin, suggestionPlugin, focusBlock, isBlockHidden } from './plugins'
 import { LineBlockNode, ScriptBlockNode, TableBlockNode, HashtagInlineNode } from './nodes'
 import { nanoid } from 'nanoid'
 import { ChevronDown, ChevronRight, CircleDashedIcon, CircleDotIcon, DotIcon } from 'lucide-react'
@@ -171,7 +171,7 @@ function createEditorState(doc: string | null | undefined, plugins: ProseMirrorP
   return _editorState
 }
 
-function dispatchTransactionFactory(view: EditorView, onUpdate?: (state: EditorState) => void, setView: (view: EditorView) => void) {
+function dispatchTransactionFactory(view: EditorView, onUpdate: (state: EditorState) => void, setView: (view: EditorView) => void) {
   return (tr: Transaction) => {
     // update view state
     const newState = view.state.apply(tr);
@@ -181,27 +181,11 @@ function dispatchTransactionFactory(view: EditorView, onUpdate?: (state: EditorS
     }
   
     view.updateState(newState);
+
     setView(view)
   }
 
 }
-
-
-/**
- * <p data-block-id="1">line 1</p>
- * <p data-block-id="2">line 2</p>
- */
-
-const Lineblock = ProseMirrorReactNode.create({
-  component: LineBlockNode,
-  name: 'lineblock',
-  contentAs() {
-    const ele = document.createElement('div');
-    // https://stackoverflow.com/questions/25897883/edit-cursor-not-displayed-on-chrome-in-contenteditable
-    ele.className = 'flex';
-    return ele
-  },
-})
 
 export const TextEditor = React.memo(({
   renderId,
@@ -210,6 +194,17 @@ export const TextEditor = React.memo(({
 }: TextEditorProps) => {
   const editorViewRef = useRef<EditorView>(null)
   const [editorView, setEditorView] = useState<EditorView | null>(null)
+
+  const [_, setForce] = useState(() => 0)
+
+  const forceUpdate = () => {
+    setForce((n) => n + 1)
+  }
+
+  const setView = (view: EditorView) => {
+    setEditorView(editorView)
+    forceUpdate()
+  }
 
   const plugins = useMemo(() => [
     // createSlashPlugin(pluginViewFactory), 
@@ -236,7 +231,7 @@ export const TextEditor = React.memo(({
   useEffect(() => {
     if (onUpdate) {
       editorViewRef.current?.setProps({
-        dispatchTransaction: dispatchTransactionFactory(editorViewRef.current, onUpdate, setEditorView),
+        dispatchTransaction: dispatchTransactionFactory(editorViewRef.current, onUpdate, setView),
       })
     }
   }, [onUpdate])
@@ -246,8 +241,12 @@ export const TextEditor = React.memo(({
     
     // Todo: store in editor view context somewhere
     editorViewRef.current = new EditorView(element, {
-      state: createEditorState(docJson, [...factory.buildReactPlugins([hashtagPlugin, suggestionPlugin]), ...plugins]),
-      dispatchTransaction: dispatchTransactionFactory(editorViewRef.current!, onUpdate, setEditorView),
+      state: createEditorState(docJson, [...factory.buildReactPlugins([
+        lineBlockPlugin, 
+        hashtagPlugin, 
+        suggestionPlugin
+      ]), ...plugins]),
+      dispatchTransaction: dispatchTransactionFactory(editorViewRef.current!, onUpdate, setView),
       nodeViews: {
         lineblock: (node) => new LineBlockNodeView(node),
         hashtag: (node) => new HashtagNodeView(node),
@@ -326,7 +325,10 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
     view.state.doc.forEach((node, offset, i) => {
 
       if (node.type.name === 'lineblock') {
+
         const nodeElement = view.nodeDOM(offset) as HTMLDivElement
+
+        const hidden = isBlockHidden(view, offset, offset + node.nodeSize)
 
         const nodeHeight = nodeElement?.clientHeight || 0
 
@@ -352,7 +354,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
           const root = nextLines[groupIdx]
 
           if (root) {
-            if (!node.attrs.hidden) {
+            if (!hidden) {
               root.groupHeight += nodeHeight
             }
             root.groupEndPos = offset
@@ -362,6 +364,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
         previousNode = node
         nextLines.push({
           node,
+          hidden,
           isGroupNode: false,
           lineNumber: i + 1,
           groupStartPos: offset,
@@ -374,7 +377,9 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
 
     })
 
-    return nextLines.filter((line) => !line.node.attrs.hidden)
+    console.log(nextLines, 'lines')
+
+    return nextLines.filter((line) => !line.hidden)
   }
 
 
@@ -412,30 +417,34 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
   }
   
   onToggleGroup = (line: any) => {
+
+
     const view = this.props.view!
 
-    if (line.groupStartPos !== line.groupEndPos)  {
-      const positions: number[] = []
-      view?.state.doc.nodesBetween(line.groupStartPos, line.groupEndPos + 1, (node, pos) => {
-        positions.push(pos)
-        return false;
-      })
+    focusBlock(view, line.node.attrs.blockId)
 
-      const hidden = !line.node.attrs.groupHidden
+    // if (line.groupStartPos !== line.groupEndPos)  {
+    //   const positions: number[] = []
+    //   view?.state.doc.nodesBetween(line.groupStartPos, line.groupEndPos + 1, (node, pos) => {
+    //     positions.push(pos)
+    //     return false;
+    //   })
+
+    //   const hidden = !line.node.attrs.groupHidden
     
-      let tr = view.state.tr
+    //   let tr = view.state.tr
 
-      positions.forEach((pos) => {
-        if (pos !== line.groupStartPos) {
-          tr = tr.setNodeAttribute(pos, "hidden", hidden)
-          tr = tr.setNodeAttribute(pos, "groupHidden", hidden)
-        } else {
-          tr = tr.setNodeAttribute(pos, "groupHidden", hidden)
-        }
-      })
+    //   positions.forEach((pos) => {
+    //     if (pos !== line.groupStartPos) {
+    //       tr = tr.setNodeAttribute(pos, "hidden", hidden)
+    //       tr = tr.setNodeAttribute(pos, "groupHidden", hidden)
+    //     } else {
+    //       tr = tr.setNodeAttribute(pos, "groupHidden", hidden)
+    //     }
+    //   })
 
-      view.dispatch(tr)
-    }
+    //   view.dispatch(tr)
+    // }
   
   }
 
