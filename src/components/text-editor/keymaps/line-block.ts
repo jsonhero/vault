@@ -8,6 +8,7 @@ const nodeid = () => nanoid(5)
 
 export const createLineblockOnEnter = (state: EditorState, dispatch?: (tr: Transaction) => void): boolean => {
   const { $from, $to } = state.selection;
+  console.log('hit enter...')
 
   // Check if the cursor is at the end of a "paragraph" within a "lineblock"
   if (

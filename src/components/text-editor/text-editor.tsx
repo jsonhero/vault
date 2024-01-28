@@ -246,7 +246,7 @@ export const TextEditor = React.memo(({
     
     // Todo: store in editor view context somewhere
     editorViewRef.current = new EditorView(element, {
-      state: createEditorState(docJson, [...plugins, ...factory.buildReactPlugins([hashtagPlugin, suggestionPlugin])]),
+      state: createEditorState(docJson, [...factory.buildReactPlugins([hashtagPlugin, suggestionPlugin]), ...plugins]),
       dispatchTransaction: dispatchTransactionFactory(editorViewRef.current!, onUpdate, setEditorView),
       nodeViews: {
         lineblock: (node) => new LineBlockNodeView(node),

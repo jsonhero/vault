@@ -2,7 +2,7 @@ import { Menu } from "@ark-ui/react";
 import { sql } from "kysely";
 import { InputRule, inputRules, undoInputRule } from "prosemirror-inputrules";
 
-import { EditorState, Plugin, PluginKey, Selection, Transaction } from "prosemirror-state";
+import { EditorState, Plugin, PluginKey, Selection, TextSelection, Transaction } from "prosemirror-state";
 import { Decoration, DecorationSet, EditorView } from "prosemirror-view";
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 
@@ -56,12 +56,14 @@ const SuggestionComponent = forwardRef(({ view, active, query }: { view: EditorV
 
   const { data } = useDbQuery({
     keys: [query],
+    // will be terrible performance but yolo for now
     query: () => sql<{ tag: string }>`SELECT DISTINCT item.value as tag
       FROM document,
       json_each(manifest, '$.taggedBlocks' ) as block,
       json_each(json_extract(block.value, '$.tags')) as item
       WHERE item.value LIKE ${sql.val('%' + query + '%')}
       ORDER BY tag DESC
+      LIMIT 6
       `,
     enabled: query.length > 0,
   })
@@ -72,12 +74,18 @@ const SuggestionComponent = forwardRef(({ view, active, query }: { view: EditorV
 
   useEffect(() => {
     if (active && !isMounted) {
-      const c = view.coordsAtPos(view.state.selection.head)
+      setTimeout(() => {
+        const element = document.querySelector('.suggestion-query')
+        const c = element!.getBoundingClientRect()
 
-      setCoords({
-        y: c.top,
-        x: c.left,
+        setCoords({
+          y: c.top + c.height,
+          x: c.left,
+        })
       })
+
+
+      
       // temp hack till ark doesn't auto focus, this is stupid af, blocks input
       setTimeout(() => {
         view.focus()
@@ -87,7 +95,7 @@ const SuggestionComponent = forwardRef(({ view, active, query }: { view: EditorV
       setCoords(undefined)
     }
 
-  }, [active, view.state])
+  }, [active, isMounted])
 
   const upHandler = () => {
     setSelectedIndex((selectedIndex + data.length - 1) % data.length)
@@ -109,22 +117,51 @@ const SuggestionComponent = forwardRef(({ view, active, query }: { view: EditorV
         return true
       }
 
+      if (event.key === 'Enter') {
+
+        const node = view.state.selection.$anchor.parent
+        const anchor = view.state.selection.anchor
+
+
+        // test
+
+        // te |s| t
+        const diff = node.textContent.length - view.state.selection.$anchor.textOffset
+        const from = anchor - view.state.selection.$anchor.textOffset - 1
+        const to = anchor + diff - 1
+
+        const entry = data[selectedIndex]
+
+        const tr = view.state.tr.insertText(entry.tag, from, to)
+        view.dispatch(tr)
+
+        const offset = from + entry.tag.length
+        view.dispatch(view.state.tr.insertText(' ', offset + 1))
+        view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, offset + 2)))  
+
+        console.log('wee yoo!', entry.tag)
+
+
+        return true
+      }
+
       return false
     }
   }))
 
   return (
-    <Menu.Root open={isMounted} present={isMounted && coords !== undefined} anchorPoint={coords} positioning={{
+    <Menu.Root  open={isMounted} present={isMounted && coords !== undefined} anchorPoint={coords} positioning={{
       offset: {
-        mainAxis: 28,
+        mainAxis: 4,
       },
-      placement: 'top-start',
+
+      placement: 'bottom-start',
       strategy: 'absolute'
     }} closeOnSelect loop unmountOnExit={false} onFocusOutside={(event) => {
       event.preventDefault()
     }} onInteractOutside={(event) => event.preventDefault()}>
       <Menu.Positioner>
-        <Menu.Content className="bg-white shadow-md">
+        <Menu.Content className="bg-gray-800 shadow-md">
           {data.map((item, i) => {
             const extraProps: any = {}
 
@@ -132,7 +169,7 @@ const SuggestionComponent = forwardRef(({ view, active, query }: { view: EditorV
               extraProps['data-highlighted'] = true
             }
             return (
-              <Menu.Item key={i} className="text-black p-2 data-[highlighted]:text-red-500" {...extraProps}>{item.tag}</Menu.Item>
+              <Menu.Item key={i} className="text-white p-2 data-[highlighted]:text-slate-400" {...extraProps}>{item.tag}</Menu.Item>
             )
           })}
         </Menu.Content>
@@ -226,14 +263,14 @@ export const suggestionPlugin = ProseMirrorReactPlugin.create({
             const to = range?.to ?? tr.selection.from;
 
             const deco = Decoration.inline(from, to, {
-              class: 'autocomplete',
+              class: 'suggestion-query',
             }, {
               inclusiveStart: false,
               inclusiveEnd: true,
             })
 
             const query = tr.doc.textBetween(from, to).slice(trigger?.length)
-
+            
             component?.updateProps({
               active: true,
               query,

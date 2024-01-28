@@ -18,11 +18,6 @@ const nodePluginKey = new PluginKey('suggest-decor')
  * Or query doc info for existing tags
  */
 
-const manifest = {
-  taggedBlocks: [
-    { blockId: 'zippitydoo', tags: ['shit', 'bitch']}
-  ] 
-}
 
 function createHashtagRule() {
 
@@ -86,11 +81,10 @@ const nodePlugin: Plugin = new Plugin({
 
       const anchor = view.state.selection.anchor
     
-
       const diff = node.textContent.length - view.state.selection.$anchor.textOffset
 
       const to = diff + anchor
-      const from = anchor - diff
+      const from = anchor - view.state.selection.$anchor.textOffset
 
       openSuggestion(view.state, view.state.tr, '#', { to, from }, view.dispatch)
 
