@@ -1,7 +1,7 @@
 import { Menu } from "@ark-ui/react";
 import { InputRule, inputRules, undoInputRule } from "prosemirror-inputrules";
 
-import { Plugin, PluginKey, Selection } from "prosemirror-state";
+import { EditorState, Plugin, PluginKey, Selection, Transaction } from "prosemirror-state";
 import { Decoration, DecorationSet, EditorView } from "prosemirror-view";
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 
@@ -12,6 +12,16 @@ const suggestionKey = new PluginKey('suggestion')
 
 export function inDecoration(selection: Selection, decorations: DecorationSet) {
   return decorations.find(selection.from, selection.to).length > 0;
+}
+
+export function openSuggestion(state: EditorState, tr: Transaction, trigger: string, range: any, dispatch?: (trx: Transaction) => void) {
+  const plugin = suggestionKey.get(state) as Plugin;
+  const meta = { action: 'add', trigger, range };
+  const _tr = tr.setMeta(plugin, meta);
+  if (dispatch) {
+    dispatch(_tr);
+  }
+  return _tr
 }
 
 export function closeSuggestion(view: EditorView) {
@@ -50,7 +60,7 @@ const SuggestionComponent = forwardRef(({ view, active, ...rest }: { view: Edito
         y: c.top,
         x: c.left,
       })
-      // temp hack till ark doesn't auto focus
+      // temp hack till ark doesn't auto focus, this is stupid af, blocks input
       setTimeout(() => {
         view.focus()
       }, 100)
@@ -190,7 +200,7 @@ export const suggestionPlugin = ProseMirrorReactPlugin.create({
         apply(tr, state) {
           const meta = tr.getMeta(plugin)
 
-          if (meta?.action === 'add') {
+          if (meta?.action === 'add' && !state.active) {
             const { trigger, range } = meta
 
             // include range from params?
@@ -277,8 +287,8 @@ export const suggestionPlugin = ProseMirrorReactPlugin.create({
           if (text.length && event.key === ' ' || event.key === 'Spacebar') {
             closeSuggestion(view)
             // Take over the space creation so no other input rules are fired
-            view.dispatch(view.state.tr.insertText(' ').scrollIntoView())
-            return true
+            // view.dispatch(view.state.tr.insertText(' ').scrollIntoView())
+            return false
           }
 
           if (text.length === 0 && event.key === 'Backspace') {
@@ -297,10 +307,13 @@ export const suggestionPlugin = ProseMirrorReactPlugin.create({
       }
     })
 
-    return [plugin, inputRules({ 
-      rules: [createInputRule(plugin, {
-        trigger: '#'
-      })]
-  })]
+    return [
+      plugin, 
+      // inputRules({ 
+      //   rules: [createInputRule(plugin, {
+      //     trigger: '#'
+      //   })]
+      // })
+    ]
   },
 })
