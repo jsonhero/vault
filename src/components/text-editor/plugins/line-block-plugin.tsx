@@ -93,85 +93,95 @@ export const BreadcrumbComponent = ({
     </div>
   )
 }
+export const createLineBlockPlugin = (selectedBlockId?: string) => {
+  const lineBlockPlugin = ProseMirrorReactPlugin.create({
+    name: 'lbplugin',
+    buildPlugin(editor) {
+      let component: ReactRenderer | null;
+  
+      const plugin: Plugin = new Plugin({
+        key: lbPluginKey,
 
-export const lineBlockPlugin = ProseMirrorReactPlugin.create({
-  name: 'lbplugin',
-  buildPlugin(editor) {
-    let component: ReactRenderer | null;
-
-    const plugin: Plugin = new Plugin({
-      key: lbPluginKey,
-      view(view) {
-        component = new ReactRenderer(BreadcrumbComponent, {
-          editor,
-          as: document.getElementById('editor-breadcrumb')!,
-          props: {
-            view,
-            path: [],
-          }
-        })
-
-        return {
-          update(view) {
-            setTimeout(() => {
-              component?.updateProps({ view })
-            })
-          },
-          destroy() {
-            component?.destroy()
-          },
-        }
-      },
-      state: {
-        init(_, state) {
+        view(view) {
+          component = new ReactRenderer(BreadcrumbComponent, {
+            editor,
+            as: document.getElementById('editor-breadcrumb')!,
+            props: {
+              view,
+              path: [],
+            }
+          })
+  
           return {
-            path: [],
-            decorations: DecorationSet.empty
+            update(view) {
+              setTimeout(() => {
+                component?.updateProps({ view })
+              })
+            },
+            destroy() {
+              component?.destroy()
+            },
           }
         },
-        apply(tr, state) { 
-          const meta = tr.getMeta(plugin)
+        state: {
+          init(_, state) {
 
-          if (meta?.action === 'focus_block') {
-            const { blockId } = meta
-
-
-            const pathIndex = state.path.indexOf(blockId)
-
-            let path: string[] = []
-
-            if (pathIndex === -1) {
-              path = [...state.path, blockId];
-            } else {
-              path = state.path.slice(0, pathIndex + 1)
+            if (selectedBlockId) {
+              return {
+                path: [selectedBlockId],
+                decorations: DecorationSet.create(state.doc, getHiddenBlockDecorations(state.doc, selectedBlockId))
+              }
             }
-
-
-            component?.updateProps({
-              path,
-            })
-
-            return {
-              path,
-              decorations: DecorationSet.create(tr.doc, getHiddenBlockDecorations(tr.doc, blockId))
-            }
-          } else if (meta?.action === 'clear_focus') {
-            component?.updateProps({
-              path: [],
-            })
             return {
               path: [],
               decorations: DecorationSet.empty
             }
+          },
+          apply(tr, state) { 
+            const meta = tr.getMeta(plugin)
+  
+            if (meta?.action === 'focus_block') {
+              const { blockId } = meta
+  
+  
+              const pathIndex = state.path.indexOf(blockId)
+  
+              let path: string[] = []
+  
+              if (pathIndex === -1) {
+                path = [...state.path, blockId];
+              } else {
+                path = state.path.slice(0, pathIndex + 1)
+              }
+  
+  
+              component?.updateProps({
+                path,
+              })
+  
+              return {
+                path,
+                decorations: DecorationSet.create(tr.doc, getHiddenBlockDecorations(tr.doc, blockId))
+              }
+            } else if (meta?.action === 'clear_focus') {
+              component?.updateProps({
+                path: [],
+              })
+              return {
+                path: [],
+                decorations: DecorationSet.empty
+              }
+            }
+  
+            return state
           }
-
-          return state
+        },
+        props: {
+          decorations: (state) => plugin.getState(state)?.decorations,
         }
-      },
-      props: {
-        decorations: (state) => plugin.getState(state)?.decorations,
-      }
-    })
-    return plugin
-  },
-})
+      })
+      return plugin
+    },
+  })
+  return lineBlockPlugin
+}

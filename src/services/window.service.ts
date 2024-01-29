@@ -42,7 +42,11 @@ export class WindowService {
       activeTab: true,
     })
 
-    this.load()
+
+    // need to create root service after db loads..
+    setTimeout(() => {
+      this.load()
+    }, 1000);
 
     reaction(() => this.tabs, () => {
       this.save()

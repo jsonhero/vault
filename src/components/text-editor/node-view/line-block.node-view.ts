@@ -7,9 +7,14 @@ export class LineBlockNodeView {
   node;
   // https://stackoverflow.com/questions/25897883/edit-cursor-not-displayed-on-chrome-in-contenteditable
 
-  constructor(node: Node) {
+  constructor(
+    node: Node,
+    decorations: readonly Decoration[]
+  ) {
+    const isHidden = decorations.find((dec) => dec.spec.hidden)
+
     this.dom = this.contentDOM = document.createElement('div')
-    this.dom.className = "block"
+    this.dom.className = isHidden ? 'hidden' : "block"
     this.dom.setAttribute('data-block-id', node.attrs.blockId)
     if (node.attrs.blockGroupId) {
       this.dom.setAttribute('data-block-group-id', node.attrs.blockGroupId)

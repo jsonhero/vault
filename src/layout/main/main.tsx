@@ -3,6 +3,7 @@ import { observer } from "mobx-react-lite"
 import { useMemo } from "react"
 import { useAppStateService } from "~/features/app-state"
 import { EntityEditor } from "~/features/entity-editor"
+import { TagView } from "~/features/tag-view"
 import { useRootService } from "~/services/root.service"
 import { WindowTab } from "~/services/window.service"
 
@@ -38,12 +39,13 @@ export const Main = observer(() => {
       <div className="h-[40px] border-b-1 border-gray-700">
         <div className="flex items-center h-full">
           {root.windowService.tabs.map((t) => 
-            <WindowTabComponent tab={t} onCloseTab={onCloseTab} onClickTab={onClickTab} />)
+            <WindowTabComponent key={t.id} tab={t} onCloseTab={onCloseTab} onClickTab={onClickTab} />)
           }
         </div>
       </div>
       <div className="w-auto h-full p-10">
         {root.windowService.activeTab?.type === 'entity_view' && <EntityEditor entityId={root.windowService.activeTab.meta.entityId} />}
+        {root.windowService.activeTab?.type === 'hashtag_view' && <TagView tag={root.windowService.activeTab.meta.tag} />}
       </div>
     </div>
   )

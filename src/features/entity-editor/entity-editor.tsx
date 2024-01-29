@@ -3,7 +3,7 @@ import { TableEditor } from '~/features/table-editor';
 import { DocumentEditor } from '../document-editor';
 import { useTakeFirstDbQuery } from '~/query-manager';
 
-export const EntityEditor = ({ entityId }: { entityId: number }) => {
+export const EntityEditor = ({ entityId, selectedBlockId }: { entityId: number }) => {
 
   const { data: entity } = useTakeFirstDbQuery({
     keys: [entityId],
@@ -19,7 +19,7 @@ export const EntityEditor = ({ entityId }: { entityId: number }) => {
   return (
     <div>
       <TitleEditor entity={entity} />
-      {entity.type === 'document' && <DocumentEditor entity={entity} />}
+      {entity.type === 'document' && <DocumentEditor selectedBlockId={selectedBlockId} entity={entity} />}
       {entity.type === 'table' && <TableEditor entity={entity} />}
     </div>
   )

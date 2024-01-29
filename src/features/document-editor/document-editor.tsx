@@ -6,7 +6,7 @@ import { Entity } from '~/types/db-types'
 import { useTakeFirstDbQuery } from '~/query-manager';
 import { documentService } from '~/services/document.service';
 
-export const DocumentEditor = ({ entity }: { entity: Entity }) => {
+export const DocumentEditor = ({ entity, selectedBlockId }: { entity: Entity }) => {
 
   const { data: document } = useTakeFirstDbQuery({
     keys: [entity.id],
@@ -66,7 +66,12 @@ export const DocumentEditor = ({ entity }: { entity: Entity }) => {
   
   return (
     <div>
-      <TextEditor renderId={`${entity.id}:${document?.id}`} docJson={docJson} onUpdate={onEditorUpdate} />
+      <TextEditor 
+        selectedBlockId={selectedBlockId}
+        renderId={`${entity.id}:${document?.id}`} 
+        docJson={docJson} 
+        onUpdate={onEditorUpdate} 
+      />
     </div>
   )
 }

@@ -19,7 +19,7 @@ import { Editor, EditorFactoryProps, ProseMirrorReactNode, ProseMirrorReactPlugi
 import { CodeMirrorNodeView, LineBlockNodeView, HashtagNodeView } from './node-view'
 import { schema } from './schema'
 import { arrowHandler, createLineblockOnEnter, backspace } from './keymaps'
-import { lineBlockPlugin, hashtagPlugin, suggestionPlugin, focusBlock, isBlockHidden } from './plugins'
+import { createLineBlockPlugin, hashtagPlugin, suggestionPlugin, focusBlock, isBlockHidden } from './plugins'
 import { LineBlockNode, ScriptBlockNode, TableBlockNode, HashtagInlineNode } from './nodes'
 import { nanoid } from 'nanoid'
 import { ChevronDown, ChevronRight, CircleDashedIcon, CircleDotIcon, DotIcon } from 'lucide-react'
@@ -93,6 +93,7 @@ interface TextEditorProps {
   renderId: string | null | undefined;
   docJson: string | null | undefined;
   onUpdate: (state: EditorState) => void;
+  selectedBlockId?: string;
 }
 const boldRegex = /\*\*([^*]+)\*\*/
 export function boldRule () {
@@ -191,6 +192,7 @@ export const TextEditor = React.memo(({
   renderId,
   onUpdate,
   docJson,
+  selectedBlockId,
 }: TextEditorProps) => {
   const editorViewRef = useRef<EditorView>(null)
   const [editorView, setEditorView] = useState<EditorView | null>(null)
@@ -242,45 +244,14 @@ export const TextEditor = React.memo(({
     // Todo: store in editor view context somewhere
     editorViewRef.current = new EditorView(element, {
       state: createEditorState(docJson, [...factory.buildReactPlugins([
-        lineBlockPlugin, 
+        createLineBlockPlugin(selectedBlockId), 
         hashtagPlugin, 
         suggestionPlugin
       ]), ...plugins]),
       dispatchTransaction: dispatchTransactionFactory(editorViewRef.current!, onUpdate, setView),
       nodeViews: {
-        lineblock: (node) => new LineBlockNodeView(node),
+        lineblock: (node, view, getPos, decorations) => new LineBlockNodeView(node, decorations),
         hashtag: (node) => new HashtagNodeView(node),
-        // hashtag: nodeViewFactory({
-        //   component: HashtagInlineNode
-        // }),
-        // lineblock: nodeViewFactory({
-        //   component: LineBlockNode,
-        //   contentAs() {
-        //     const ele = document.createElement('div');
-        //     ele.className = 'flex';
-        //     return ele
-        //   },
-        // }),
-        // tableblock: nodeViewFactory({
-        //   component: TableBlockNode,
-        //   as() {
-        //     const ele = document.createElement('div');
-        //     ele.className = 'w-full';
-        //     return ele
-        //   },
-        //   stopEvent() {
-        //     return true
-        //   }
-        // }),
-        // scriptblock: nodeViewFactory({
-        //   component: ScriptBlockNode,
-        //   as() {
-        //     const ele = document.createElement('div')
-        //     ele.className = 'w-full'
-        //     return ele
-        //   },
-        // }),
-        // codemirror: (node, view, getPos) => new CodeMirrorNodeView(node, view, getPos)
       }
     })
     setEditorView(editorViewRef.current)
