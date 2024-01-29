@@ -287,10 +287,16 @@ export const TextEditor = React.memo(({
   }, [])
   
   return (
-    <div className="relative flex items-start">
-      <TextEditorGutter view={editorView} />
-      <Editor onInit={onInit} /> 
+    <div>
+      <div id="editor-breadcrumb">
+        
+      </div>
+      <div className="relative flex items-start">
+        <TextEditorGutter view={editorView} />
+        <Editor onInit={onInit} /> 
+      </div>
     </div>
+
   )
 }, (prevProps, nextProps) => prevProps.renderId === nextProps.renderId)
 
@@ -377,8 +383,6 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
 
     })
 
-    console.log(nextLines, 'lines')
-
     return nextLines.filter((line) => !line.hidden)
   }
 
@@ -449,6 +453,17 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
   }
 
   render() {
+    const view = this.props.view
+
+    let selectedBlockId = null
+    if (view) {
+      const linePos = view.state.selection.$anchor.before(1)
+      const node = view.state.doc.nodeAt(linePos)
+
+      selectedBlockId = node?.attrs.blockId
+    }
+
+
     return (
       <div className="sticky pr-3 z-50">
         <div className="flex flex-col flex-shrink-0 min-w-[38px]">
@@ -459,7 +474,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
                   <div className="absolute" style={{
                     left: 24 + (line.depth * 24) + 'px'
                   }}>
-                    {(line.depth > 0 || line.isGroupNode) && (
+                    {(line.depth > 0 || line.isGroupNode || (line.node.attrs.blockId === selectedBlockId)) && (
                       <button className="bg-tertiary flex justify-center items-center w-[24px]" onClick={() => this.onToggleGroup(line)}>
                         {line.node.attrs.groupHidden ? <CircleDotIcon size={16} /> : <DotIcon /> }
                       </button>
