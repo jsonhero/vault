@@ -251,7 +251,7 @@ class DbQueryObserver<Schema, Query, ResultWrap extends [] | null> {
         this.queryState.isQueued = false
         this.executeQuery()
       }
-    })
+    }).catch((err) => console.log(err))
     
   }
 

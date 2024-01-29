@@ -44,7 +44,7 @@ export interface DocumentTable {
 
 export interface AppStateTable {
   id: Generated<number>;
-  type: 'file_tree',
+  type: 'file_tree' | 'window_state',
   data: any
   updated_at: ColumnType<Date, string | undefined, never>;
   created_at: ColumnType<Date, string | undefined, never>;

@@ -54,8 +54,6 @@ function inHashtagNode(state: EditorState) {
   return state.selection.$anchor.parent.type.name === 'hashtag'
 }
 
-const decoClass = "text-blue-500 cursor-pointer hover:bg-secondary px-[4px] rounded-md"
-
 const nodePlugin: Plugin = new Plugin({
   key: nodePluginKey,
   props: {

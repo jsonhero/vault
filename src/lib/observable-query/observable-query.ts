@@ -115,7 +115,6 @@ abstract class ObservableBaseQuery<T, A extends any[], K, R = T> {
   }
 
   private internalFetch(...args: A) {
-    console.log(':: fetching')
     const { query, queryId, cacheId } = this.getQuery(...args)
 
     if (this.options.policy !== 'compute-only' && this.manager.queryCache.has(cacheId)) {

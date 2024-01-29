@@ -4,10 +4,10 @@ import _ from 'lodash'
 
 import { Entity } from "~/types/db-types";
 import { FolderTreeList } from './file-tree-list'
-import { useAppStateService } from "../app-state";
 import { useDbQuery, useTakeFirstDbQuery } from "~/query-manager";
 import { fileTreeService } from "~/services/file-tree.service";
 import { entityService } from "~/services/entity.service";
+import { useRootService } from "~/services/root.service";
 
 export interface FileTreeNode {
   id: string;
@@ -105,8 +105,8 @@ function flattenTree(node: FileTreeNode, entities: Entity[], currentDepth = 0): 
 }
 
 export const FileExplorer = () => {
-  const appState = useAppStateService()
   const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>(undefined)
+  const root = useRootService()
 
   const { data: fileTreeState } = useTakeFirstDbQuery({
     query: (db) => db.selectFrom('app_state')
@@ -164,7 +164,14 @@ export const FileExplorer = () => {
       cloned.children.push(file)
     }
     setSelectedNodeId(file.id)
-    appState.setSelectedEntityId(file.meta.entityId)
+
+    root.windowService.addTab({
+      type: 'entity_view',
+      meta: {
+        entityId: file.meta.entityId,
+      },
+      name: entity!.title,
+    })
 
 
     if (rootNode.children.length === 0) {
@@ -233,7 +240,16 @@ export const FileExplorer = () => {
       if (node && node.type === 'folder') {
         node.meta.expanded = !node.meta.expanded
       } else if (node && node.type === 'file') {
-        appState.setSelectedEntityId(node.meta.entityId)
+    
+
+        console.log(node, 'noame')
+        root.windowService.addTab({
+          type: 'entity_view',
+          meta: {
+            entityId: node.meta.entityId,
+          },
+          name: node.id,
+        })
       }
       setSelectedNodeId(nodeId)
     }

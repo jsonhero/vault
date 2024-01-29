@@ -2,6 +2,8 @@ import { QueryManager, queryManager } from '../query-manager'
 import { DocumentService, documentService } from './document.service'
 import { DataSchemaService, dataSchemaService } from './data-schema.service'
 
+import { rootService } from './root.service'
+
 export class EntityService {
   constructor(
     private readonly manager: QueryManager,
@@ -29,12 +31,15 @@ export class EntityService {
   }
 
   updateTitle(id: number, title: string) {
+  
     this.manager.db.updateTable('entity')
       .set({
         title,
       })
       .where('id', '=', id)
-      .execute()
+      .execute();
+    // also update tab
+    rootService.windowService.updateEntityTabName(id, title)
   }
 
   async insertDocument() {

@@ -5,10 +5,12 @@ import { Entity } from "~/types/db-types";
 import { FileExplorer } from '~/features/file-explorer'
 
 import { useDbQuery  } from "~/query-manager";
+import { useRootService } from "~/services/root.service";
 
 export const ExplorerBar = () => {
-  const appState = useAppStateService()
   const [active, setActive] = useState('file_tree')
+
+  const root = useRootService()
 
   const { data: entities } = useDbQuery(
     {
@@ -21,7 +23,13 @@ export const ExplorerBar = () => {
 
 
   const onSelectEntity = (entity: Entity) => {
-    appState.setSelectedEntityId(entity.id)
+    root.windowService.addTab({
+      type: 'entity_view',
+      name: entity.title,
+      meta: {
+        entityId: entity.id,
+      },
+    })
   } 
   
   return (

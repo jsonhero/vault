@@ -15,6 +15,8 @@ import { ReactRenderer } from "~/lib/prosemirror-react/react-renderer";
  * 
  */
 
+// tabs = multi windows 
+
 const lbPluginKey = new PluginKey('lb-plugin')
 
 export function isBlockHidden(view: EditorView, nodeStart: number, nodeEnd: number) {
@@ -74,8 +76,6 @@ export const BreadcrumbComponent = ({
   view
 }) => {
 
-  console.log(path, 'path')
-
   return (
     <div>
       {path.length ? (
@@ -85,7 +85,7 @@ export const BreadcrumbComponent = ({
           </button>
           {path.map((blockId) => {
             return (
-              <button onClick={() => focusBlock(view, blockId)}>{blockId}</button>
+              <button key={blockId} onClick={() => focusBlock(view, blockId)}>{blockId}</button>
             )
           })}
         </div>
@@ -112,7 +112,7 @@ export const lineBlockPlugin = ProseMirrorReactPlugin.create({
         })
 
         return {
-          update(view, prevState) {
+          update(view) {
             setTimeout(() => {
               component?.updateProps({ view })
             })
