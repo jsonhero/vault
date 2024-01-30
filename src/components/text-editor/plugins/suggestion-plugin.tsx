@@ -1,4 +1,4 @@
-import { Menu } from "@ark-ui/react";
+import { Menu, Tooltip } from "@ark-ui/react";
 import { sql } from "kysely";
 import { InputRule, inputRules, undoInputRule } from "prosemirror-inputrules";
 
@@ -84,13 +84,6 @@ const SuggestionComponent = forwardRef(({ view, active, query }: { view: EditorV
         })
       })
 
-
-      
-      // temp hack till ark doesn't auto focus, this is stupid af, blocks input
-      setTimeout(() => {
-        view.focus()
-      }, 100)
-
     } else if (!active && isMounted) {
       setCoords(undefined)
     }
@@ -109,22 +102,35 @@ const SuggestionComponent = forwardRef(({ view, active, query }: { view: EditorV
     onKeyDown: ({ event }) => {
       if (event.key === 'ArrowUp') {
         upHandler()
-        return true
+        return data.length > 0
       }
 
       if (event.key === 'ArrowDown') {
         downHandler()
-        return true
+        return data.length > 0
       }
 
       if (event.key === 'Enter') {
 
+        console.log(data, 'data')
+        if (data.length === 0) return false
+
         const node = view.state.selection.$anchor.parent
         const anchor = view.state.selection.anchor
+  
+        const textOffset = view.state.selection.$anchor.parentOffset
+      
+        const diff = node.textContent.length - textOffset
+  
+        const from = anchor - textOffset + 1
+        const to = diff + anchor
 
-        const diff = node.textContent.length - view.state.selection.$anchor.textOffset
-        const from = anchor - view.state.selection.$anchor.textOffset - 1
-        const to = anchor + diff - 1
+        // const node = view.state.selection.$anchor.parent
+        // const anchor = view.state.selection.anchor
+
+        // const diff = node.textContent.length - view.state.selection.$anchor.textOffset
+        // const from = anchor - view.state.selection.$anchor.textOffset - 1
+        // const to = anchor + diff - 1
 
         const entry = data[selectedIndex]
 
@@ -144,18 +150,21 @@ const SuggestionComponent = forwardRef(({ view, active, query }: { view: EditorV
   }))
 
   return (
-    <Menu.Root  open={isMounted} present={isMounted && coords !== undefined} anchorPoint={coords} positioning={{
+    <Tooltip.Root  open={isMounted} present={isMounted && coords !== undefined} positioning={{
       offset: {
         mainAxis: 4,
       },
-
+      getAnchorRect() {
+        return {
+          x: coords?.x,
+          y: coords?.y
+        }
+      },
       placement: 'bottom-start',
       strategy: 'absolute'
-    }} closeOnSelect loop unmountOnExit={false} onFocusOutside={(event) => {
-      event.preventDefault()
-    }} onInteractOutside={(event) => event.preventDefault()}>
-      <Menu.Positioner>
-        <Menu.Content className="bg-gray-800 shadow-md">
+    }} unmountOnExit={false}>
+      <Tooltip.Positioner>
+        <Tooltip.Content className="bg-gray-800 shadow-md">
           {data.map((item, i) => {
             const extraProps: any = {}
 
@@ -166,9 +175,9 @@ const SuggestionComponent = forwardRef(({ view, active, query }: { view: EditorV
               <Menu.Item key={i} className="text-white p-2 data-[highlighted]:text-slate-400" {...extraProps}>{item.tag}</Menu.Item>
             )
           })}
-        </Menu.Content>
-      </Menu.Positioner>
-    </Menu.Root>
+        </Tooltip.Content>
+      </Tooltip.Positioner>
+    </Tooltip.Root>
   )
 })
 
@@ -250,6 +259,7 @@ export const suggestionPlugin = ProseMirrorReactPlugin.create({
           const meta = tr.getMeta(plugin)
 
           if (meta?.action === 'add' && !state.active) {
+
             const { trigger, range } = meta
 
             // include range from params?
@@ -264,6 +274,8 @@ export const suggestionPlugin = ProseMirrorReactPlugin.create({
             })
 
             const query = tr.doc.textBetween(from, to).slice(trigger?.length)
+
+            console.log('opening!', query, from, to)
             
             component?.updateProps({
               active: true,
@@ -292,6 +304,7 @@ export const suggestionPlugin = ProseMirrorReactPlugin.create({
             !inDecoration(tr.selection, nextDecorations) ||
             !hasDecoration
           ) {
+            console.log('closing!')
             component?.updateProps({
               active: false,
               query: '',

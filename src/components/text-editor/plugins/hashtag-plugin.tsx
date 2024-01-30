@@ -1,9 +1,8 @@
 import { EditorState, Plugin, PluginKey, TextSelection } from "prosemirror-state";
-import { Decoration, DecorationSet, EditorView } from "prosemirror-view";
-import { createInputRule, inDecoration, openSuggestion } from './suggestion-plugin'
-import { ProseMirrorReactPlugin } from '~/lib/prosemirror-react'
-import { InputRule, inputRules, undoInputRule } from "prosemirror-inputrules";
+import { InputRule, inputRules } from "prosemirror-inputrules";
 import { NodeRange } from "prosemirror-model";
+import { ProseMirrorReactPlugin } from '~/lib/prosemirror-react'
+import { openSuggestion } from './suggestion-plugin'
 import { schema } from "../schema";
 
 const nodePluginKey = new PluginKey('suggest-decor')
@@ -36,6 +35,8 @@ function createHashtagRule() {
     const range = new NodeRange($start, $end, $start.depth)
 
     if (range) {
+      const meta = { action: 'add' }
+      tr.setMeta(nodePluginKey, meta)
       tr = tr.wrap(range, [{ type: schema.nodes.hashtag }])
       tr = tr.insertText(match[1][match[1].length - 1], tr.mapping.map(end) - 1).scrollIntoView()
       tr = tr.setSelection(TextSelection.create(tr.doc, tr.mapping.map(end) - 1))
@@ -56,7 +57,33 @@ function inHashtagNode(state: EditorState) {
 
 const nodePlugin: Plugin = new Plugin({
   key: nodePluginKey,
+
   props: {
+    handleTextInput(view, text) {
+      const meta =  view.state.tr.getMeta(nodePluginKey)
+      const aheadPos = view.state.selection.from
+      
+      const nodeAhead = view.state.doc.nodeAt(aheadPos)
+      if (nodeAhead?.type.name === 'hashtag' && meta?.action !== 'add') {
+        view.dispatch(view.state.tr.replace(aheadPos, aheadPos + nodeAhead.nodeSize, nodeAhead.slice(0)))
+        return false
+      }
+      
+      if (!inHashtagNode(view.state)) return false
+
+      const node = view.state.selection.$anchor.parent
+      const anchor = view.state.selection.anchor
+
+      const textOffset = view.state.selection.$anchor.parentOffset
+    
+      const diff = node.textContent.length - textOffset
+
+      const from = anchor - textOffset
+      const to = diff + anchor
+
+      openSuggestion(view.state, view.state.tr, '#', { to, from }, view.dispatch)
+
+    },
     handleKeyDown(view, event) {
       if (!inHashtagNode(view.state)) return false
       const node = view.state.selection.$anchor.parent
@@ -76,15 +103,6 @@ const nodePlugin: Plugin = new Plugin({
         view.dispatch(view.state.tr.insertText('#'))
         return true
       }
-
-      const anchor = view.state.selection.anchor
-    
-      const diff = node.textContent.length - view.state.selection.$anchor.textOffset
-
-      const to = diff + anchor
-      const from = anchor - view.state.selection.$anchor.textOffset
-
-      openSuggestion(view.state, view.state.tr, '#', { to, from }, view.dispatch)
 
       return false
     }

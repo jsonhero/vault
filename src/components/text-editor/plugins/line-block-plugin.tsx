@@ -21,8 +21,7 @@ const lbPluginKey = new PluginKey('lb-plugin')
 
 export function isBlockHidden(view: EditorView, nodeStart: number, nodeEnd: number) {
   const { decorations } = lbPluginKey.getState(view.state);
-
-  return decorations.find(nodeStart, nodeEnd).find((d) => d.from === nodeStart && d.to === nodeEnd) !== undefined;
+  return decorations.find(nodeStart, nodeEnd).find((d) => d.from === nodeStart && d.to === nodeEnd)?.spec.hidden;
 }
 
 export function focusBlock(view: EditorView, blockId: string) {
@@ -49,6 +48,9 @@ function getHiddenBlockDecorations(doc: Node, blockId: string) {
   doc.forEach((node, pos) => {
     if (node.type.name === 'lineblock' && node.attrs.blockId === blockId) {
       focusedBlockDepth = node.attrs.depth
+      decorations.push(Decoration.node(pos, pos + node.nodeSize, {}, {
+        focusDepth: focusedBlockDepth
+      }))
       return;
     }
     
@@ -65,7 +67,12 @@ function getHiddenBlockDecorations(doc: Node, blockId: string) {
       decorations.push(Decoration.node(pos, pos + node.nodeSize, {}, {
         hidden: true
       }))
+    } else {
+      decorations.push(Decoration.node(pos, pos + node.nodeSize, {}, {
+        focusDepth: focusedBlockDepth
+      }))
     }
+    
   })
 
   return decorations
@@ -173,7 +180,10 @@ export const createLineBlockPlugin = (selectedBlockId?: string) => {
               }
             }
   
-            return state
+            return {
+              ...state,
+              decorations: state.decorations.map(tr.mapping, tr.doc)
+            }
           }
         },
         props: {

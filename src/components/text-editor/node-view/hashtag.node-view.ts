@@ -1,12 +1,18 @@
 import { Node } from "prosemirror-model";
+import { TextSelection } from "prosemirror-state";
+import { EditorView } from "prosemirror-view";
 import { rootService } from "~/services/root.service";
 
 export class HashtagNodeView {
   dom;
   contentDOM;
   node;
+  view;
+  getPos;
 
-  constructor(node: Node) {
+  constructor(node: Node, view: EditorView, getPos: () => number | undefined) {
+    this.view = view;
+    this.getPos = getPos
     const button = document.createElement('button')
 
     button.onclick = () => {

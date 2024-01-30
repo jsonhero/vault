@@ -98,7 +98,6 @@ interface TextEditorProps {
 const boldRegex = /\*\*([^*]+)\*\*/
 export function boldRule () {
   return new InputRule(boldRegex, (state, match, start, end) => {
-    console.log(match, 'match??!?')
     const tr = state.tr
     tr.addMark(start, end, schema.marks.strong.create())
                 .insertText(match[1], start, end)
@@ -251,7 +250,7 @@ export const TextEditor = React.memo(({
       dispatchTransaction: dispatchTransactionFactory(editorViewRef.current!, onUpdate, setView),
       nodeViews: {
         lineblock: (node, view, getPos, decorations) => new LineBlockNodeView(node, decorations),
-        hashtag: (node) => new HashtagNodeView(node),
+        hashtag: (node, view, getPos) => new HashtagNodeView(node, view, getPos),
       }
     })
     setEditorView(editorViewRef.current)
@@ -435,6 +434,9 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
     }
 
 
+    const minDepth = this.state.lines.reduce((min, line) => (min === null || line.depth < min) ? line.depth : min, null)
+
+
     return (
       <div className="sticky pr-3 z-50">
         <div className="flex flex-col flex-shrink-0 min-w-[38px]">
@@ -443,7 +445,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
               <div className="group flex items-center justify-between relative">
                 <div className="text-gray-600" style={{ height: line.height }}>{line.lineNumber}</div>
                   <div className="absolute" style={{
-                    left: 24 + (line.depth * 24) + 'px'
+                    left: 24 + ((line.depth - minDepth) * 24) + 'px'
                   }}>
                     {(line.depth > 0 || line.isGroupNode || (line.node.attrs.blockId === selectedBlockId)) && (
                       <button className="bg-tertiary flex justify-center items-center w-[24px]" onClick={() => this.onToggleGroup(line)}>

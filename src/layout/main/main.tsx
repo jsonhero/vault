@@ -7,9 +7,11 @@ import { TagView } from "~/features/tag-view"
 import { useRootService } from "~/services/root.service"
 import { WindowTab } from "~/services/window.service"
 
-const WindowTabComponent = ({ tab, onClickTab, onCloseTab }: { tab: WindowTab }) => {
+const WindowTabComponent = ({ tab, onClickTab, onCloseTab, isActive }: { tab: WindowTab }) => {
   return (
-    <button onClick={() => onClickTab(tab)} className="flex items-center group p-3 gap-3 border-r-1 border-gray-700">
+    <button onClick={() => onClickTab(tab)} className="flex items-center group p-3 gap-3 border-r-1 border-gray-700" style={{
+      background: isActive && '#383838'
+    }}>
       <div className="text-sm">
         {tab.name}
       </div>
@@ -39,7 +41,7 @@ export const Main = observer(() => {
       <div className="h-[40px] border-b-1 border-gray-700">
         <div className="flex items-center h-full">
           {root.windowService.tabs.map((t) => 
-            <WindowTabComponent key={t.id} tab={t} onCloseTab={onCloseTab} onClickTab={onClickTab} />)
+            <WindowTabComponent key={t.id} isActive={t.id === root.windowService.activeTab?.id} tab={t} onCloseTab={onCloseTab} onClickTab={onClickTab} />)
           }
         </div>
       </div>

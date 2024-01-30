@@ -6,12 +6,17 @@ export class LineBlockNodeView {
   contentDOM;
   node;
   // https://stackoverflow.com/questions/25897883/edit-cursor-not-displayed-on-chrome-in-contenteditable
-
+  decorations;
   constructor(
     node: Node,
     decorations: readonly Decoration[]
   ) {
     const isHidden = decorations.find((dec) => dec.spec.hidden)
+    this.decorations = decorations
+
+
+    const focusDecor = decorations.find((dec) => dec.spec.focusDepth)
+    const focusDepth = focusDecor?.spec.focusDepth
 
     this.dom = this.contentDOM = document.createElement('div')
     this.dom.className = isHidden ? 'hidden' : "block"
@@ -21,7 +26,7 @@ export class LineBlockNodeView {
     }
 
     this.dom.setAttribute('data-depth', node.attrs.depth)
-    this.dom.style.left = 28 * node.attrs.depth + 'px'
+    this.dom.style.left = 28 * (node.attrs.depth - (focusDepth || 0)) + 'px'
 
 
 
@@ -38,9 +43,13 @@ export class LineBlockNodeView {
       this.dom.setAttribute('data-block-group-id', node.attrs.blockGroupId)
     }
 
-    if (node.attrs.depth !== this.node.attrs.depth) {
+    const focusDecor = decorations.find((dec) => dec.spec.focusDepth)
+    const focusDepth = focusDecor?.spec.focusDepth
+
+    if (node.attrs.depth !== this.node.attrs.depth || decorations !== this.decorations) {
       this.dom.setAttribute('data-depth', node.attrs.depth)
-      this.dom.style.left = 28 * node.attrs.depth + 'px'
+      // adjust to focus depth
+      this.dom.style.left = 28 * (node.attrs.depth - (focusDepth || 0)) + 'px'
     }
 
     const isHidden = decorations.find((dec) => dec.spec.hidden)
@@ -54,6 +63,8 @@ export class LineBlockNodeView {
     }
 
     this.node = node
+
+    this.decorations = decorations
 
     return true
   }
