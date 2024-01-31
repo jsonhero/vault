@@ -34,7 +34,7 @@ export const defaultDeserializer: Deserializer = (parameter) => {
     } else {
       try {
         // default deserializer from this plugin was super slow since it tried to JSON parse EVERY string, not just things that looked like objects.
-        // may need to handle array parsing here... but I think an array would should be on a nested object.
+        // may need to handle array parsing here... but I think an array would should be on anested object.
         if (parameter.startsWith('{') && parameter.endsWith('}')) {
           return JSON.parse(parameter)
         }

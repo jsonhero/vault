@@ -54,18 +54,18 @@ export class EntityService {
     return entity
   }
 
-  async insertTable() {
-    const dataSchema = await this.dataSchemaService.insert()
+  async insertTable(title?: string, extensionId?: string, schema?: any) {
+    const dataSchema = await this.dataSchemaService.insert(schema)
     
     return this.manager.db.insertInto('entity')
       .values({
-        title: 'Placeholder',
+        title: title || 'Placeholder',
         type: 'table',
-        data_schema_id: dataSchema.id
+        data_schema_id: dataSchema.id,
+        extension_id: extensionId
       })
       .returningAll()
       .executeTakeFirstOrThrow()
-
   }
 }
 

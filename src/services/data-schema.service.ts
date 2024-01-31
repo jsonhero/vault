@@ -24,7 +24,16 @@ export class DataSchemaService {
       .executeTakeFirstOrThrow()
   }
 
-  insert() {
+  insert(schema?: any) {
+    if (schema) {
+      schema.columns = schema.columns.map((col) => {
+        return {
+          id: nanoid(),
+          ...col,
+        }
+      })
+    }
+
     const defaultSchema = {
       columns: [
         {
@@ -37,7 +46,7 @@ export class DataSchemaService {
 
     return this.manager.db.insertInto('data_schema')
       .values({
-        schema: defaultSchema,
+        schema: schema || defaultSchema,
       })
       .returningAll()
       .executeTakeFirstOrThrow()

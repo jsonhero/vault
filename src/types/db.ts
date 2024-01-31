@@ -10,6 +10,7 @@ export interface EntityTable {
       [key: string]: string
     }
   } | null;
+  extension_id?: string
   updated_at: ColumnType<Date, string | undefined, never>;
   created_at: ColumnType<Date, string | undefined, never>;
 }
@@ -44,7 +45,7 @@ export interface DocumentTable {
 
 export interface AppStateTable {
   id: Generated<number>;
-  type: 'file_tree' | 'window_state',
+  type: 'file_tree' | 'window_state' | 'extension_state',
   data: any
   updated_at: ColumnType<Date, string | undefined, never>;
   created_at: ColumnType<Date, string | undefined, never>;

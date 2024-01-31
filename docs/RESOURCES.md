@@ -31,6 +31,8 @@ General:
 - https://www.youtube.com/watch?v=BmgL1SRfUyc&ab_channel=WorkerConf
 - https://engineering.fb.com/2020/03/02/data-infrastructure/messenger/
 - https://webkit.org/blog/12257/the-file-system-access-api-with-origin-private-file-system/
+- https://medium.engineering/why-contenteditable-is-terrible-122d8a40e480
+- https://marijnhaverbeke.nl/blog/prosemirror.html
 
 PouchDb: (No partial replication ever.)
 - https://news.ycombinator.com/item?id=28995268
@@ -48,4 +50,4 @@ SQLLite:
 
 ###### AI
 
-AI models that run in a web assembly and can be embedded into the browser?
+AI models that run in web assembly and can be embedded into the browser?

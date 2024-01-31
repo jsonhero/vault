@@ -8,8 +8,12 @@ import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react'
 import { SearchProvider } from "~/features/search";
 import { AppStateProvider } from "~/features/app-state";
 import { queryManager, loadWasmDatabase, QueryManagerProvider } from '~/query-manager.ts'
-import { RootServiceProvider } from "./services/root.service.tsx";
+import { RootServiceProvider, rootService } from "./services/root.service.tsx";
 
+
+// queryManager.onLoaded(() => {
+//   rootService.load()
+// })
 /**
  * Generates a random room name to sync with or pulls one from local storage.
  */
@@ -59,19 +63,22 @@ export default function Root() {
         name: "main2.sql",
         content: schemaContent,
       }}
-      Render={() => (
-        <QueryManagerProvider>
-          <RootServiceProvider>
-            <NextUIProvider>
-              <AppStateProvider>
-                <SearchProvider>
-                  <App dbname={theRoom} />
-                </SearchProvider>
-              </AppStateProvider>
-            </NextUIProvider>
-          </RootServiceProvider>
-        </QueryManagerProvider>
-      )}
+      Render={() => {
+        rootService.load()
+
+        return (
+          <QueryManagerProvider>
+            <RootServiceProvider>
+              <NextUIProvider>
+                <AppStateProvider>
+                  <SearchProvider>
+                    <App dbname={theRoom} />
+                  </SearchProvider>
+                </AppStateProvider>
+              </NextUIProvider>
+            </RootServiceProvider>
+          </QueryManagerProvider>
+      )}}
     />
   );
 }

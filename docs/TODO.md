@@ -1,8 +1,21 @@
-
-
-
 # TODO
 
+
+Adding todo system..
+- Create an extension
+- Extension defines table schema?
+- Add command for building row in schema, /todo
+- This command adds a node to the document
+  - This node is a custom renderer, this handles how it will edit properties of the todo
+    - checkbox left side, descrpition middle, due date right...
+- 
+
+
+Things to figure out:
+
+
+- Collaboration
+  - Partial document editing
 
 #### Phases
 

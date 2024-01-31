@@ -23,6 +23,7 @@ import { createLineBlockPlugin, hashtagPlugin, suggestionPlugin, focusBlock, isB
 import { LineBlockNode, ScriptBlockNode, TableBlockNode, HashtagInlineNode } from './nodes'
 import { nanoid } from 'nanoid'
 import { ChevronDown, ChevronRight, CircleDashedIcon, CircleDotIcon, DotIcon } from 'lucide-react'
+import { VaultExtension } from '~/extensions/todo'
 
 const blockId = () => nanoid(5)
 
@@ -64,7 +65,6 @@ const keymapPlugin = keymap({
         const nextLineblock = state.doc.nodeAt(pos)
 
         if (nextLineblock) {
-
           const nextDepth = nextLineblock.attrs.depth
           if (nextDepth > depth) {
             tr = tr.setNodeAttribute(pos, 'depth', nextDepth - 1)
@@ -94,6 +94,7 @@ interface TextEditorProps {
   docJson: string | null | undefined;
   onUpdate: (state: EditorState) => void;
   selectedBlockId?: string;
+  extensions: VaultExtension[]
 }
 const boldRegex = /\*\*([^*]+)\*\*/
 export function boldRule () {
@@ -147,11 +148,18 @@ function createEditorState(doc: string | null | undefined, plugins: ProseMirrorP
   // const htmlString = '<lineblock><p>Hello, its me!</p></lineblock><lineblock><scriptblock><codemirror></codemirror></scriptblock></lineblock>';
   const htmlString = '<lineblock><p>Hello, its me!</p></lineblock>'
 
-  const schemaDoc = schema.node('doc', null, schema.nodes.lineblock.create({
+  const schemaDoc = schema.node('doc', null, [
+    schema.nodes.lineblock.create({
       blockId: blockId(),
     }, 
       schema.nodes.paragraph.create(null, [schema.text("Hello, it's meee!")])
+    ),
+    schema.nodes.lineblock.create({
+      blockId: blockId(),
+    },
+      schema.nodes.todo.create(null, [schema.text("Some task")])
     )
+  ]
   )
   const docFromHtml = parser.parse(document.createRange().createContextualFragment(htmlString));
 
@@ -192,6 +200,7 @@ export const TextEditor = React.memo(({
   onUpdate,
   docJson,
   selectedBlockId,
+  extensions,
 }: TextEditorProps) => {
   const editorViewRef = useRef<EditorView>(null)
   const [editorView, setEditorView] = useState<EditorView | null>(null)
@@ -239,18 +248,23 @@ export const TextEditor = React.memo(({
 
 
   const onInit = useCallback((element: HTMLDivElement, factory: EditorFactoryProps) => {
-    
+
+    const extensionPlugins = extensions.flatMap((ext) => ext.props.prosemirror.plugins)
+    const extensionNodes = extensions.flatMap((ext) => ext.props.prosemirror.nodes)
+
     // Todo: store in editor view context somewhere
     editorViewRef.current = new EditorView(element, {
       state: createEditorState(docJson, [...factory.buildReactPlugins([
         createLineBlockPlugin(selectedBlockId), 
         hashtagPlugin, 
-        suggestionPlugin
+        suggestionPlugin,
+        ...extensionPlugins,
       ]), ...plugins]),
       dispatchTransaction: dispatchTransactionFactory(editorViewRef.current!, onUpdate, setView),
       nodeViews: {
         lineblock: (node, view, getPos, decorations) => new LineBlockNodeView(node, decorations),
         hashtag: (node, view, getPos) => new HashtagNodeView(node, view, getPos),
+        ...factory.buildReactNodes(extensionNodes)
       }
     })
     setEditorView(editorViewRef.current)

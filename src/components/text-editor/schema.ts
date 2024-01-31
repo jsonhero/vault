@@ -36,6 +36,13 @@ export const schema = new Schema({
         { tag: 'hashtag' }
       ],
     },
+    todo: {
+      group: 'block',
+      content: 'text*',
+      parseDOM: [
+        { tag: 'todo' }
+      ],
+    },
     lineblock: {
       group: 'block',
       content: "block*",

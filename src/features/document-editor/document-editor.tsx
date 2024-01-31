@@ -5,6 +5,7 @@ import { TextEditor } from '~/components/text-editor'
 import { Entity } from '~/types/db-types'
 import { useTakeFirstDbQuery } from '~/query-manager';
 import { documentService } from '~/services/document.service';
+import { useRootService } from '~/services/root.service';
 
 export const DocumentEditor = ({ entity, selectedBlockId }: { entity: Entity }) => {
 
@@ -14,6 +15,8 @@ export const DocumentEditor = ({ entity, selectedBlockId }: { entity: Entity }) 
       .where('entity_id', '=', entity.id)
       .selectAll(),
   })
+
+  const root = useRootService()
 
   const onEditorUpdate = useCallback(async (state: EditorState) => {
 
@@ -66,7 +69,8 @@ export const DocumentEditor = ({ entity, selectedBlockId }: { entity: Entity }) 
   
   return (
     <div>
-      <TextEditor 
+      <TextEditor
+        extensions={root.extensionService.extensions}
         selectedBlockId={selectedBlockId}
         renderId={`${entity.id}:${document?.id}`} 
         docJson={docJson} 

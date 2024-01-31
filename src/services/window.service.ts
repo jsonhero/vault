@@ -2,6 +2,7 @@ import { makeAutoObservable, reaction } from 'mobx'
 import { nanoid } from 'nanoid'
 import { createContext } from 'react';
 import { QueryManager, queryManager } from '~/query-manager'
+import { RootService } from './root.service';
 
 
 type BaseWindowTab = {
@@ -35,18 +36,12 @@ export class WindowService {
   activeTab?: WindowTab
   tabs: WindowTab[] = []
   constructor(
-    private readonly manager: QueryManager
+    private readonly root: RootService
   ) {
     makeAutoObservable(this, {
       tabs: true,
       activeTab: true,
     })
-
-
-    // need to create root service after db loads..
-    setTimeout(() => {
-      this.load()
-    }, 1000);
 
     reaction(() => this.tabs, () => {
       this.save()
@@ -56,8 +51,8 @@ export class WindowService {
     })
   }
 
-  private async load() {
-    const state = await this.manager.db.selectFrom('app_state')
+  async load() {
+    const state = await this.root.db.selectFrom('app_state')
       .where('type', '=', 'window_state')
       .selectAll()
       .executeTakeFirst()
@@ -71,7 +66,7 @@ export class WindowService {
   }
 
   private insertInitial() {
-    this.manager.db.insertInto('app_state').values({
+    this.root.db.insertInto('app_state').values({
       type: 'window_state',
       data: {
         tabs: [],
@@ -83,7 +78,7 @@ export class WindowService {
 
 
   private save() {
-    this.manager.db.updateTable('app_state')
+    this.root.db.updateTable('app_state')
       .where('type', '=', 'window_state')
       .set({
         data: {

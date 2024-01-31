@@ -10,14 +10,23 @@ import { getUsedTables, shallowEqualObjects, arraysShallowEqual } from './utils'
 export class DatabaseQueryManager<Schema> {
   private wasmDB?: DB;
   private kyselyBuilder?: (db: DB) => Kysely<Schema>; 
+  private loadedCb?: () => void
   private kyselyDb?: Kysely<Schema>
   queryCache = new InMemoryCache<any>()
   _rx?: TblRx
+
+  onLoaded(cb: () => void) {
+    this.loadedCb = cb
+  }
 
   applyDb(db: DB) {
     this.wasmDB = db
     if (this.kyselyBuilder) {
       this.kyselyDb = this.kyselyBuilder(this.wasmDB)
+    }
+
+    if (this.loadedCb) {
+      this.loadedCb()
     }
    }
 
