@@ -67,11 +67,31 @@ const TodoComponent = () => {
       .innerJoin('data_schema', 'data_schema.id', 'entity.data_schema_id')
       .selectAll('entity')
       .select('data_schema.schema'),
-    reactiveRowId: node.attrs.entityId,
-    reactiveTableName: 'entity'
+    // reactiveRowId: node.attrs.entityId,
+    // reactiveTableName: 'entity'
   })
 
   const descCol = useMemo(() => entity?.schema.columns.find((col) => col.name === 'Description'), [entity?.schema])
+  const completedCol = useMemo(() => entity?.schema.columns.find((col) => col.name === 'Completed'), [entity?.schema])
+
+  const onCheckboxChange = (isSelected: boolean) => {
+    if (completedCol && entity) {
+      tableEditorService.updateCell(
+        entity.data_schema_id!,
+        entity.id,
+        completedCol.id,
+        isSelected
+      )
+    }
+  }
+
+  const isSelected = useMemo(() => {
+    if (entity?.data && completedCol) {
+      return entity.data[completedCol?.id] === 'true'
+    }
+    return false
+  }, [completedCol, entity])
+
 
   useEffect(() => {
     if (descCol && entity && entity.data) {
@@ -84,7 +104,6 @@ const TodoComponent = () => {
           descCol.id,
           node.textContent
         )
-        console.log('updating cell')
       }
     }
   }, [node.textContent, entity?.data_schema_id, entity?.id, descCol])
@@ -95,15 +114,15 @@ const TodoComponent = () => {
     <div className="flex items-center justify-between">
       <div className="flex items-center">
         <div contentEditable={false}>
-          <Checkbox />
+          <Checkbox isSelected={isSelected} onValueChange={onCheckboxChange}/>
         </div>
         <div className="min-w-[2px]" ref={contentRef}>
 
         </div>
       </div>
-      <div contentEditable={false}>
+      {/* <div contentEditable={false}>
         due
-      </div>
+      </div> */}
     </div>
   )
 }
