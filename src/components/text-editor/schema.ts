@@ -38,10 +38,15 @@ export const schema = new Schema({
     },
     todo: {
       group: 'block',
-      content: 'text*',
+      content: 'paragraph',
       parseDOM: [
         { tag: 'todo' }
       ],
+      attrs: {
+        entityId: {
+          default: null,
+        }
+      }
     },
     lineblock: {
       group: 'block',

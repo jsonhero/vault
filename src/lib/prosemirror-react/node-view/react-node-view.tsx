@@ -185,6 +185,11 @@ export class ReactNodeView implements NodeView {
     });
   }
 
+  ignoreMutation() {
+    console.log('mutation')
+    return true
+  }
+
   destroy() {
     this.renderer.destroy()
   }

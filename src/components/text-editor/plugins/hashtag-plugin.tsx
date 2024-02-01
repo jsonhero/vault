@@ -2,10 +2,91 @@ import { EditorState, Plugin, PluginKey, TextSelection } from "prosemirror-state
 import { InputRule, inputRules } from "prosemirror-inputrules";
 import { NodeRange } from "prosemirror-model";
 import { ProseMirrorReactPlugin } from '~/lib/prosemirror-react'
-import { openSuggestion } from './suggestion-plugin'
+import { openSuggestion, SuggestionPopover, createSuggestionPlugin } from './suggestion-plugin'
 import { schema } from "../schema";
+import { forwardRef, useEffect, useState } from "react";
+import { useDbQuery } from "~/query-manager";
+import { sql } from "kysely";
+import { Menu } from "@ark-ui/react";
 
 const nodePluginKey = new PluginKey('suggest-decor')
+const nodeSuggestionKey = new PluginKey('hashtag-suggestion')
+
+
+const HashtagSuggestionComponent = forwardRef((props, ref) => {
+  const [selectedIndex, setSelectedIndex] = useState(0)
+
+  const { data } = useDbQuery({
+    keys: [props.query],
+    // will be terrible performance but yolo for now
+    query: () => sql<{ tag: string }>`SELECT DISTINCT item.value as tag
+      FROM document,
+      json_each(manifest, '$.taggedBlocks' ) as block,
+      json_each(json_extract(block.value, '$.tags')) as item
+      WHERE item.value LIKE ${sql.val('%' + props.query + '%')}
+      ORDER BY tag DESC
+      LIMIT 6
+      `,
+    enabled: props.query.length > 0,
+  })
+
+  useEffect(() => {
+    setSelectedIndex(0)
+  }, [data])
+
+  const upHandler = () => {
+    setSelectedIndex((selectedIndex + data.length - 1) % data.length)
+  }
+
+  const downHandler = () => {
+    setSelectedIndex((selectedIndex + 1) % data.length)
+  }
+
+  const enterHandler = () => {
+    const view = props.view
+
+    const node = view.state.selection.$anchor.parent
+    const anchor = view.state.selection.anchor
+
+    const textOffset = view.state.selection.$anchor.parentOffset
+  
+    const diff = node.textContent.length - textOffset
+
+    const from = anchor - textOffset + 1
+    const to = diff + anchor
+
+    const entry = data[selectedIndex]
+
+    const tr = view.state.tr.insertText(entry.tag, from, to)
+    view.dispatch(tr)
+
+    const offset = from + entry.tag.length
+    view.dispatch(view.state.tr.insertText(' ', offset + 1))
+    view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, offset + 2)))  
+  }
+
+  return (
+    <SuggestionPopover
+      ref={ref}
+      hasData={data.length > 0}
+      enterHandler={enterHandler}
+      upHandler={upHandler} 
+      downHandler={downHandler} 
+      {...props}
+    >
+      {data.map((item, i) => {
+        const extraProps: any = {}
+
+        if (i === selectedIndex) {
+          extraProps['data-highlighted'] = true
+        }
+        return (
+          <Menu.Item key={i} className="text-white p-2 data-[highlighted]:text-slate-400" {...extraProps}>{item.tag}</Menu.Item>
+        )
+      })}
+    </SuggestionPopover>
+  )
+})
 
 function createHashtagRule() {
 
@@ -31,7 +112,7 @@ function createHashtagRule() {
       tr = tr.setSelection(TextSelection.create(tr.doc, tr.mapping.map(end) - 1))
     }
 
-    tr = openSuggestion(state, tr, '#', {
+    tr = openSuggestion(nodeSuggestionKey, state, tr, '#', {
       from: tr.mapping.map(start),
       to: tr.mapping.map(end)
     })
@@ -70,7 +151,7 @@ const nodePlugin: Plugin = new Plugin({
       const from = anchor - textOffset
       const to = diff + anchor
 
-      openSuggestion(view.state, view.state.tr, '#', { to, from }, view.dispatch)
+      openSuggestion(nodeSuggestionKey, view.state, view.state.tr, '#', { to, from }, view.dispatch)
 
     },
     handleKeyDown(view, event) {
@@ -102,11 +183,18 @@ const nodePlugin: Plugin = new Plugin({
 export const hashtagPlugin = ProseMirrorReactPlugin.create({
   name: 'hashtagplugin',
   buildPlugin(editor) {
+
+    const suggestionPlugin = createSuggestionPlugin({
+      component: HashtagSuggestionComponent,
+      key: nodeSuggestionKey,
+      editor,
+    })
     return [
       nodePlugin,
       inputRules({
         rules: [createHashtagRule()]
-      })
+      }),
+      suggestionPlugin,
     ]
   },
 })

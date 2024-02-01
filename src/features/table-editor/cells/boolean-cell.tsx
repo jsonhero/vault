@@ -16,7 +16,7 @@ export const BooleanCell = ({
 }: BooleanCellProps) => {
   return (
     <BaseCell>
-      <Checkbox isSelected={value === 1 ? true : false}  onValueChange={(selected) => onUpdateRowColumn(row.id, column.id, selected)}/>
+      <Checkbox isSelected={value === 'true' ? true : false}  onValueChange={(selected) => onUpdateRowColumn(row.id, column.id, selected)}/>
     </BaseCell>
   )
 }

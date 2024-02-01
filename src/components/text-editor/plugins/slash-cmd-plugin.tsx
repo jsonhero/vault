@@ -1,222 +1,141 @@
+import { forwardRef, useMemo, useState } from "react";
+import { PluginKey } from "prosemirror-state";
 import { Menu } from "@ark-ui/react";
-import type { PluginViewSpec } from '@prosemirror-adapter/core';
-import { usePluginViewContext, ReactPluginViewUserOptions } from "@prosemirror-adapter/react";
-import { NodeSelection, Plugin, PluginKey, TextSelection } from "prosemirror-state";
-import { useRef, useState, useMemo, useEffect } from "react";
-import { schema } from "../schema";
+import { InputRule, inputRules } from "prosemirror-inputrules";
 import { nanoid } from 'nanoid'
-import { searchService } from "~/features/search";
 
-const SlashPluginKey = new PluginKey('SlashPlugin')
+import { ProseMirrorReactPlugin } from "~/lib/prosemirror-react";
+import { createSuggestionPlugin, openSuggestion, SuggestionPopover, closeSuggestion } from './suggestion-plugin'
+import { rootService } from "~/services/root.service";
+import { useDbQuery } from "~/query-manager";
+import { tableEditorService } from "~/services/table.service";
+import { EditorView } from "prosemirror-view";
+import { schema } from "../schema";
 
-interface Point {
-  x: number;
-  y: number;
-}
 
-const menuItems = [
-  {
-    id: 'table',
-    name: 'Table'
-  },
-  {
-    id: 'script',
-    name: 'Script',
-  }
-]
+const blockId = () => nanoid(5)
 
-const SlashComponent = () => {
-  const { view } = usePluginViewContext()
-  const ref = useRef<HTMLDivElement>(null)
+const SlashSuggestionPluginKey = new PluginKey('SlashSuggestionPlugin')
 
-  const [coords, setCoords] = useState<Point | undefined>(undefined)
-  const [isOpen, setOpen] = useState(false)
-
-  const pluginState = useMemo(() => {
-    return SlashPluginKey.getState(view.state)
-  }, [view.state])
-
-  const isActive = useMemo(() => coords !== undefined, [coords])
-
-  useEffect(() => {
-    if (pluginState?.mounted && !isActive) {
-      const coords = view.coordsAtPos(view.state.selection.head)
-
-      setCoords({
-        y: coords.top,
-        x: coords.left,
-      })
-      setOpen(true)
-      // temp hack till ark doesn't auto focus
-      setTimeout(() => {
-        view.focus()
-      }, 100)
-    } else if (isActive && !pluginState?.mounted) {
-      setCoords(undefined)
-      setOpen(false)
-    }
-  }, [pluginState, view.state, ref.current, isActive])
+const SlashSuggestionComponent = forwardRef((props: { view: EditorView }, ref) => {
+  const [selectedIndex, setSelectedIndex] = useState(0)
   
-  return (
-    <Menu.Root open={isOpen} present={isOpen && coords !== undefined} anchorPoint={coords} positioning={{
-      offset: {
-        mainAxis: 28,
-      },
-      placement: 'top-start',
-      strategy: 'absolute'
-    }} closeOnSelect loop unmountOnExit={false} onFocusOutside={(event) => {
-      event.preventDefault()
-    }} onInteractOutside={(event) => event.preventDefault()}>
-      <Menu.Positioner>
-        <Menu.Content className="bg-white shadow-md">
-          {menuItems.map((item, i) => {
-            const extraProps: any = {}
+  const extensions = useMemo(() => {
+    return rootService.extensionService.extensions
+  }, [])
 
-            if (i === pluginState?.selectedMenuItemIndex) {
-              extraProps['data-highlighted'] = true
-            }
-            return (
-              <Menu.Item key={i} className="text-black p-2 data-[highlighted]:text-red-500" {...extraProps}>{item.name}</Menu.Item>
-            )
-          })}
-        </Menu.Content>
-      </Menu.Positioner>
-    </Menu.Root>
-  )
-}
+  const extensionCommands = useMemo(() => {
+    return rootService.extensionService.extensions.map((ext) => ext.props.prosemirror.command)
+  }, [])
 
-
-export function createSlashPlugin(factory: (options: ReactPluginViewUserOptions) => PluginViewSpec) {
-  const defaultState = { mounted: false, pos: undefined, selectedMenuItemIndex: 0 }
-  const slashCmdPlugin = new Plugin({
-    key: SlashPluginKey,
-    view: factory({
-      component: SlashComponent,
-    }),
-
-    state: {
-      init() {
-        return { ...defaultState }
-      },
-      apply(tr, value, oldState, newState) {
-        const meta = tr.getMeta(SlashPluginKey)
-        if (meta !== undefined) return { ...value, ...tr.getMeta(SlashPluginKey) };
-        return value;
-      },
-    },
-    props: {
-      handleKeyDown(view, event) {
-        const pluginState = this.getState(view.state)
-
-        if (pluginState === undefined) {
-          return false
-        }
-
-        if (event.code === 'Slash') {
-          if (!pluginState.mounted) {
-            const tr = view.state.tr.setMeta(SlashPluginKey, {
-              mounted: true,
-              pos: view.state.selection.anchor,
-            })
-            view.dispatch(tr)
-          }
-        } else if (event.code === 'Space') {
-          const tr = view.state.tr.setMeta(SlashPluginKey, {
-            mounted: false,
-            pos: undefined,
-          })
-          view.dispatch(tr)
-        } else if (event.code === 'Backspace') {
-          if (pluginState.mounted && pluginState.pos === view.state.selection.anchor - 1) {
-            const tr = view.state.tr.setMeta(SlashPluginKey, {
-              mounted: false,
-              pos: undefined,
-            })
-            view.dispatch(tr)
-          }
-        } else if (pluginState.mounted && event.code === 'ArrowDown') {
-          const tr = view.state.tr.setMeta(SlashPluginKey, {
-            selectedMenuItemIndex: (pluginState.selectedMenuItemIndex + 1) % menuItems.length
-          })
-
-          view.dispatch(tr)
-          return true
-        } else if (pluginState.mounted && event.code === 'ArrowUp') {
-          const tr = view.state.tr.setMeta(SlashPluginKey, {
-            selectedMenuItemIndex: ((pluginState.selectedMenuItemIndex + menuItems.length) - 1) % menuItems.length
-          })
-
-          view.dispatch(tr)
-          return true
-        } else if (pluginState.mounted && event.code === 'Enter') {
-
-          // need some sort of relay system of keyboard input to the component, so react context and stores can be used 
-          // or use solid lul
-
-          const item = menuItems[pluginState.selectedMenuItemIndex]
-          
-          if (item.id === 'table') {
-            const tr = view.state.tr.setMeta(SlashPluginKey, { ...defaultState })
-
-            
-            view.dispatch(tr)
-
-            setTimeout(() => {
-              searchService.open({
-                entityTypeFilter: 'table',
-                onClickResult(entityId) {
-
-                  const {$from, to} = view.state.selection
-                  const same = $from.sharedDepth(to)
-                  if (same == 0) return false
-                  const pos = $from.before(same)
-                  const parentNode = NodeSelection.create(view.state.doc, pos)
-                  tr.setSelection(parentNode)
-                  
-                  const tableblock = schema.nodes.tableblock.create({
-                    entityId,
-                  })
-
-                  tr.replaceSelectionWith(tableblock)
-
-                  view.dispatch(tr)
-                  // view.state.
-                  // how to access current view state...
-                  // console.log(entityId, 'omg!')
-                },
-              })
-            }, 150)
-
-            return true
-          } else if (item.id === 'script') {
-            const tr = view.state.tr.setMeta(SlashPluginKey, { ...defaultState })
-            const {$from, to} = view.state.selection
-            const same = $from.sharedDepth(to)
-            if (same == 0) return false
-            const pos = $from.before(same)
-            const parentNode = NodeSelection.create(view.state.doc, pos)
-            tr.setSelection(parentNode)
-
-            const scriptId = nanoid()
-            const codemirrorblock = schema.nodes.codemirror.create({
-              scriptId
-            })
-            const scriptblock = schema.nodes.scriptblock.create({
-              id: scriptId
-            }, codemirrorblock)
-
-            tr.replaceSelectionWith(scriptblock)
-            // console.log(parentNode, 'node')
-            // goto inside of new code block
-            tr.setSelection(TextSelection.create(tr.doc, pos + 2))
-            view.dispatch(tr)
-            return true
-          }
-
-        }
-      },
-    }
+  const { data } = useDbQuery({
+    query: (db) => db.selectFrom('entity')
+      .where('type', '=', 'table')
+      .where('extension_id', 'in', extensions.map((ext) => ext.props.id))
+      // .innerJoin('data_schema', 'data_schema.id', 'entity.data_schema_id')
+      .selectAll('entity')
+      // .select('data_schema.schema')
   })
 
-  return slashCmdPlugin
+
+  const upHandler = () => {
+    setSelectedIndex((selectedIndex + extensionCommands.length - 1) % extensionCommands.length)
+  }
+
+  const downHandler = () => {
+    setSelectedIndex((selectedIndex + 1) % extensionCommands.length)
+  }
+  
+  const enterHandler = async () => {
+    const view = props.view
+    const extensionId = extensionCommands[selectedIndex]
+    const extension = extensions.find((ext) => ext.props.prosemirror.command === extensionId)
+
+    const table = data.find((d) => d.extension_id === extension?.props.id)
+    if (table?.data_schema_id) {
+      const entityRow = await tableEditorService.insertRow(table.data_schema_id)
+
+      const anchor = view.state.selection.anchor
+      const node = view.state.selection.$anchor.parent
+      const textOffset = view.state.selection.$anchor.parentOffset
+      const diff = node.textContent.length - textOffset
+
+      const pos = diff + anchor + 2
+
+      const newNode = schema.nodes.lineblock.create({
+        blockId: blockId(),
+      },
+        schema.nodes.todo.create({
+          entityId: entityRow?.id
+        }, schema.nodes.paragraph.create(null))
+      )
+
+      const tr = view.state.tr.insert(pos, newNode)
+      view.dispatch(tr)
+    }
+
+    closeSuggestion(SlashSuggestionPluginKey, view)
+
+
+
+  }
+
+  return (
+    <SuggestionPopover
+      ref={ref}
+      hasData={extensionCommands.length > 0}
+      upHandler={upHandler}
+      downHandler={downHandler}
+      enterHandler={enterHandler}
+      {...props}
+    >
+      {extensionCommands.map((cmd, i) => {
+        const extraProps: any = {}
+
+        if (i === selectedIndex) {
+          extraProps['data-highlighted'] = true
+        }
+        return (
+          <Menu.Item key={i} className="text-white p-2 data-[highlighted]:text-slate-400" {...extraProps}>{cmd}</Menu.Item>
+        )
+      })}
+    </SuggestionPopover>
+  )
+})
+
+function createSlashRule() {
+
+  // input rules might not be the move, they seem to block user input if typing too fast...
+  return new InputRule(/(?:^|\s)(\/)$/, (state, match, start, end) => {
+    let tr = state.tr
+    const _start = match[0].startsWith(' ') ? start + 1 : start
+    tr = state.tr.insertText('/')
+
+    tr.insert()
+
+    tr = openSuggestion(SlashSuggestionPluginKey, state, tr, '', {
+      from: _start,
+      to: tr.mapping.map(end)
+    })
+
+    return tr
+  })
 }
+
+export const slashPlugin = ProseMirrorReactPlugin.create({
+  name: 'slashplugin',
+  buildPlugin(editor) {
+    const suggestionPlugin = createSuggestionPlugin({
+      editor,
+      key: SlashSuggestionPluginKey,
+      component: SlashSuggestionComponent,
+    })
+
+    return [
+      inputRules({
+        rules: [createSlashRule()]
+      }),
+      suggestionPlugin
+    ]
+  },
+})

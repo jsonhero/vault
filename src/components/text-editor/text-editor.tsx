@@ -19,7 +19,7 @@ import { Editor, EditorFactoryProps, ProseMirrorReactNode, ProseMirrorReactPlugi
 import { CodeMirrorNodeView, LineBlockNodeView, HashtagNodeView } from './node-view'
 import { schema } from './schema'
 import { arrowHandler, createLineblockOnEnter, backspace } from './keymaps'
-import { createLineBlockPlugin, hashtagPlugin, suggestionPlugin, focusBlock, isBlockHidden } from './plugins'
+import { createLineBlockPlugin, hashtagPlugin, slashPlugin, focusBlock, isBlockHidden } from './plugins'
 import { LineBlockNode, ScriptBlockNode, TableBlockNode, HashtagInlineNode } from './nodes'
 import { nanoid } from 'nanoid'
 import { ChevronDown, ChevronRight, CircleDashedIcon, CircleDotIcon, DotIcon } from 'lucide-react'
@@ -153,11 +153,6 @@ function createEditorState(doc: string | null | undefined, plugins: ProseMirrorP
       blockId: blockId(),
     }, 
       schema.nodes.paragraph.create(null, [schema.text("Hello, it's meee!")])
-    ),
-    schema.nodes.lineblock.create({
-      blockId: blockId(),
-    },
-      schema.nodes.todo.create(null, [schema.text("Some task")])
     )
   ]
   )
@@ -256,8 +251,8 @@ export const TextEditor = React.memo(({
     editorViewRef.current = new EditorView(element, {
       state: createEditorState(docJson, [...factory.buildReactPlugins([
         createLineBlockPlugin(selectedBlockId), 
-        hashtagPlugin, 
-        suggestionPlugin,
+        hashtagPlugin,
+        slashPlugin,
         ...extensionPlugins,
       ]), ...plugins]),
       dispatchTransaction: dispatchTransactionFactory(editorViewRef.current!, onUpdate, setView),

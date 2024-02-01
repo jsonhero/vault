@@ -11,7 +11,7 @@ export class TableEditorService {
   ) {}
 
   insertRow = (dataSchemaId: number) => {
-    this.manager.db.insertInto('entity').values({
+    return this.manager.db.insertInto('entity').values({
       data_schema_id: dataSchemaId,
       title: '',
       type: 'document',
@@ -20,7 +20,7 @@ export class TableEditorService {
       }
     })
     .returningAll()
-    .execute()
+    .executeTakeFirst()
   }
 
   addColumn = async (dataSchemaId: number) => {

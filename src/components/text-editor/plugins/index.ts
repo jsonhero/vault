@@ -1,6 +1,5 @@
 export { hashtagPlugin } from './hashtag-plugin'
 export { lineNumberPlugin } from './line-number-plugin'
-export { createSlashPlugin } from './slash-cmd-plugin'
+export { slashPlugin } from './slash-cmd-plugin'
 export { createRefPlugin } from './ref-cmd-plugin'
-export { suggestionPlugin } from './suggestion-plugin'
 export { createLineBlockPlugin, focusBlock, isBlockHidden } from './line-block-plugin'
