@@ -22,7 +22,7 @@ export const schema = new Schema({
     doc: {content: "block+"},
     paragraph: {
       group: 'block',
-      content: "(text | hashtag)*",
+      content: "(text | hashtag | reference)*",
       toDOM(node) { return ["p", 0] },
     },
     bold: {
@@ -35,6 +35,18 @@ export const schema = new Schema({
       parseDOM: [
         { tag: 'hashtag' }
       ],
+    },
+    reference: {
+      inline: true,
+      atom: true,
+      parseDOM: [
+        { tag: 'reference' }
+      ],
+      attrs: {
+        entityId: {
+          default: null,
+        }
+      }
     },
     todo: {
       group: 'block',

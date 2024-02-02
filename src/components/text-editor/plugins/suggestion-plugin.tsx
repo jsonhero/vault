@@ -25,10 +25,14 @@ export function openSuggestion(key: PluginKey, state: EditorState, tr: Transacti
   return _tr
 }
 
-export function closeSuggestion(key: PluginKey, view: EditorView) {
+export function closeSuggestion(key: PluginKey, view: EditorView, removeQuery?: boolean) {
   const plugin = key.get(view.state) as Plugin;
   const meta = { action: 'remove' };
-  const tr = view.state.tr.setMeta(plugin, meta);
+  let tr = view.state.tr.setMeta(plugin, meta);
+  if (removeQuery) {
+    const { range } = key.getState(view.state)
+    tr = view.state.tr.deleteRange(range.from, range.to)
+  }
   view.dispatch(tr);
   return true;
 }
@@ -94,9 +98,11 @@ export const SuggestionPopover = forwardRef(({ children, active, upHandler, down
         }
       },
       placement: 'bottom-start',
-      strategy: 'absolute'
+      strategy: 'absolute',
     }} unmountOnExit={false}>
-      <Tooltip.Positioner>
+      <Tooltip.Positioner style={{
+        zIndex: 3000
+      }}>
         <Tooltip.Content className="bg-gray-800 shadow-md">
           {children}
         </Tooltip.Content>

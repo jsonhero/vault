@@ -25,7 +25,7 @@ type VaultExtensionProps = {
   }
 }
 
-
+// /recipe - /table:
 export class VaultExtension {
   props;
   constructor(props: VaultExtensionProps) {

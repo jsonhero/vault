@@ -16,11 +16,11 @@ import { keymap } from 'prosemirror-keymap';
 
 import { Editor, EditorFactoryProps, ProseMirrorReactNode, ProseMirrorReactPlugin } from '~/lib/prosemirror-react'
 
-import { CodeMirrorNodeView, LineBlockNodeView, HashtagNodeView } from './node-view'
+import { LineBlockNodeView, HashtagNodeView } from './node-view'
 import { schema } from './schema'
 import { arrowHandler, createLineblockOnEnter, backspace } from './keymaps'
 import { createLineBlockPlugin, hashtagPlugin, slashPlugin, focusBlock, isBlockHidden } from './plugins'
-import { LineBlockNode, ScriptBlockNode, TableBlockNode, HashtagInlineNode } from './nodes'
+import { ReferenceNode } from './nodes'
 import { nanoid } from 'nanoid'
 import { ChevronDown, ChevronRight, CircleDashedIcon, CircleDotIcon, DotIcon } from 'lucide-react'
 import { VaultExtension } from '~/extensions/todo'
@@ -247,6 +247,10 @@ export const TextEditor = React.memo(({
     const extensionPlugins = extensions.flatMap((ext) => ext.props.prosemirror.plugins)
     const extensionNodes = extensions.flatMap((ext) => ext.props.prosemirror.nodes)
 
+    const nodes = factory.buildReactNodes([...extensionNodes, ReferenceNode])
+
+    console.log(nodes, 'ndoes')
+
     // Todo: store in editor view context somewhere
     editorViewRef.current = new EditorView(element, {
       state: createEditorState(docJson, [...factory.buildReactPlugins([
@@ -259,7 +263,7 @@ export const TextEditor = React.memo(({
       nodeViews: {
         lineblock: (node, view, getPos, decorations) => new LineBlockNodeView(node, decorations),
         hashtag: (node, view, getPos) => new HashtagNodeView(node, view, getPos),
-        ...factory.buildReactNodes(extensionNodes)
+        ...nodes
       }
     })
     setEditorView(editorViewRef.current)
