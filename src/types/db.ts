@@ -55,7 +55,9 @@ export interface EntityGraphTable {
   id: Generated<number>;
   entity_id: number
   to_entity_id: number
-  category?: string
+  type?: string
+  match?: string
+  data?: any
 }
 
 export interface DB {

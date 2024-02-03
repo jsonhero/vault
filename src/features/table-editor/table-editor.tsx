@@ -85,7 +85,7 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
                         <TitleCell 
                           column={column} 
                           row={row} 
-                          onUpdateRowColumn={onUpdateRowColumn} 
+                          onUpdate={onUpdateRowColumn} 
                           setSelectedEntityId={appState.setSelectedEntityId} 
                         />
                       )
@@ -94,7 +94,7 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
                         <TextCell
                           column={column} 
                           row={row} 
-                          onUpdateRowColumn={onUpdateRowColumn}
+                          onUpdate={onUpdateRowColumn}
                           value={value}
                         />
                       )
@@ -103,7 +103,7 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
                         <NumberCell
                           column={column} 
                           row={row} 
-                          onUpdateRowColumn={onUpdateRowColumn}
+                          onUpdate={onUpdateRowColumn}
                           value={value}
                         />
                       )
@@ -112,7 +112,7 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
                         <BooleanCell
                           column={column} 
                           row={row} 
-                          onUpdateRowColumn={onUpdateRowColumn}
+                          onUpdate={onUpdateRowColumn}
                           value={value}
                         />
                       )

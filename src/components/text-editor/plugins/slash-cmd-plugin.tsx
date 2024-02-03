@@ -69,15 +69,29 @@ const SlashSuggestionComponent = forwardRef((props: { view: EditorView }, ref) =
     const cmd = commands[selectedIndex]
     closeSuggestion(SlashSuggestionPluginKey, view, true)
 
+    const anchor = view.state.selection.anchor
+    const node = view.state.selection.$anchor.parent
+    const textOffset = view.state.selection.$anchor.parentOffset
+    const diff = node.textContent.length - textOffset
+
+    const pos = diff + anchor + 2
+
+
     if (cmd.type === 'table-cmd') {
       const table = cmd.data
       const entityRow = await tableEditorService.insertRow(table.data_schema_id)
       
-      const ref = schema.nodes.reference.create({
+      const entityRecord = schema.nodes.entity_record.create({
         entityId: entityRow?.id,
       }, null)
 
-      const tr = view.state.tr.insert(view.state.selection.anchor, ref)
+      const newNode = schema.nodes.lineblock.create({
+        blockId: blockId(),
+      },
+        entityRecord
+      )
+
+      const tr = view.state.tr.insert(pos, newNode)
 
       view.dispatch(tr)
     }
@@ -88,13 +102,6 @@ const SlashSuggestionComponent = forwardRef((props: { view: EditorView }, ref) =
       const table = data.find((d) => d.extension_id === extension?.props.id)
       if (table?.data_schema_id) {
         const entityRow = await tableEditorService.insertRow(table.data_schema_id)
-  
-        const anchor = view.state.selection.anchor
-        const node = view.state.selection.$anchor.parent
-        const textOffset = view.state.selection.$anchor.parentOffset
-        const diff = node.textContent.length - textOffset
-  
-        const pos = diff + anchor + 2
   
         const newNode = schema.nodes.lineblock.create({
           blockId: blockId(),

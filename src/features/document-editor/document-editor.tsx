@@ -1,11 +1,13 @@
 import { EditorState } from 'prosemirror-state';
 import { useCallback, useMemo } from 'react';
+import _ from 'lodash'
 
 import { TextEditor } from '~/components/text-editor'
 import { Entity } from '~/types/db-types'
 import { useTakeFirstDbQuery } from '~/query-manager';
 import { documentService } from '~/services/document.service';
 import { useRootService } from '~/services/root.service';
+import { entityGraphService } from '~/services/entity-graph.service';
 
 export const DocumentEditor = ({ entity, selectedBlockId }: { entity: Entity }) => {
 
@@ -26,10 +28,24 @@ export const DocumentEditor = ({ entity, selectedBlockId }: { entity: Entity }) 
 
     let currentBlockTags: string[] = []
 
+    const referenceEdges: any[] = []
+
     state.doc.descendants((node) => {
       if (node.type.name === 'hashtag') {
         // remove # at start
         currentBlockTags.push(node.textContent.slice(1))
+      }
+
+      if (node.type.name === 'reference') {
+        referenceEdges.push({
+          type: 'reference',
+          toEntityId: node.attrs.entityId,
+          data: {
+            document: {
+              blockId: currentBlockId
+            }
+          }
+        })
       }
 
       if (node.type.name === 'lineblock') {
@@ -59,11 +75,22 @@ export const DocumentEditor = ({ entity, selectedBlockId }: { entity: Entity }) 
     const doc = state.toJSON()
     const docText = state.doc.textContent
     if (document?.id) {
-      documentService.update(document.id, doc, docText, manifest)
+      await documentService.update(document.id, doc, docText, manifest)
     } else {
-      documentService.insert(entity.id, doc, docText, manifest)
+      await documentService.insert(entity.id, doc, docText, manifest)
+    }
+
+    if (referenceEdges.length > 0) {
+      await entityGraphService.replaceEdges(entity.id, referenceEdges)
     }
   }, [entity.id, document?.id])
+
+  const throttleUpdate = useMemo(() => {
+    return _.throttle(onEditorUpdate, 300, {
+      leading: true,
+      trailing: true,
+    })
+  }, [onEditorUpdate])
 
   const docJson = useMemo(() => document?.doc, [document?.id])
   
@@ -74,7 +101,7 @@ export const DocumentEditor = ({ entity, selectedBlockId }: { entity: Entity }) 
         selectedBlockId={selectedBlockId}
         renderId={`${entity.id}:${document?.id}`} 
         docJson={docJson} 
-        onUpdate={onEditorUpdate} 
+        onUpdate={throttleUpdate} 
       />
     </div>
   )

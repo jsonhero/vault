@@ -6,17 +6,17 @@ interface BooleanCellProps {
   row: any;
   column: any;
   value: any;
-  onUpdateRowColumn: (rowId: number, columnId: string, value: any) => any;
+  onUpdate: (rowId: number, columnId: string, value: any) => any;
 }
 export const BooleanCell = ({
   row,
   column,
   value,
-  onUpdateRowColumn
+  onUpdate
 }: BooleanCellProps) => {
   return (
     <BaseCell>
-      <Checkbox isSelected={value === 'true' ? true : false}  onValueChange={(selected) => onUpdateRowColumn(row.id, column.id, selected)}/>
+      <Checkbox isSelected={value === 'true' ? true : false}  onValueChange={(selected) => onUpdate(row.id, column.id, selected)}/>
     </BaseCell>
   )
 }

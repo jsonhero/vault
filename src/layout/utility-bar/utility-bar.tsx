@@ -1,30 +1,38 @@
 import { useMemo } from 'react';
 
-import { useAppStateService } from '~/features/app-state';
 import { observer } from 'mobx-react-lite';
 import { useDbQuery } from '~/query-manager';
 import { sql } from 'kysely';
+import { useRootService } from '~/services/root.service';
 
 export const UtilityBar = observer(() => {
-  const appState = useAppStateService()
+  const root = useRootService()
+
+  const selectedEntityId = useMemo(() => {
+    const tab = root.windowService.activeTab
+    if (tab && tab?.type === 'entity_view') {
+      return tab.meta.entityId
+    }
+    return null
+  }, [root.windowService.activeTab])
 
   const { data: entityGraph } = useDbQuery({
-    keys: [appState.selectedEntityId],
+    keys: [selectedEntityId],
     query: (db) => {
       const toQuery = db.selectFrom('entity_graph')
         .innerJoin('entity', 'entity.id', 'entity_graph.to_entity_id')
-        .where('entity_graph.entity_id', '=', appState.selectedEntityId)
+        .where('entity_graph.entity_id', '=', selectedEntityId)
         .selectAll('entity')
-        .select(sql.val<string>`to`.as('direction'))
+        .select([sql<string>`'to'`.as('direction')])
       const fromQuery = db.selectFrom('entity_graph')
         .innerJoin('entity', 'entity.id', 'entity_graph.entity_id')
-        .where('entity_graph.to_entity_id', '=', appState.selectedEntityId)
+        .where('entity_graph.to_entity_id', '=', selectedEntityId)
         .selectAll('entity')
-        .select(sql.val<string>`from`.as('direction'))
+        .select([sql<string>`'from'`.as('direction')])
         
       return toQuery.unionAll(fromQuery)
     },
-    enabled: appState.selectedEntityId !== null
+    enabled: selectedEntityId !== null
   })
 
   const toGraph = useMemo(() => {
@@ -37,7 +45,18 @@ export const UtilityBar = observer(() => {
 
   const onClickEntityLink = (e: React.MouseEvent<HTMLButtonElement>) => {
     const entityId = parseInt(e.currentTarget.dataset.entityId || '', 10)
-    appState.setSelectedEntityId(entityId)
+    const entity = entityGraph.find((g) => g.id === entityId)
+
+    if (entity) {
+      root.windowService.addTab({
+        type: 'entity_view',
+        meta: {
+          entityId,
+        },
+        name: entity.title
+      })
+    }
+
   }
 
   return (

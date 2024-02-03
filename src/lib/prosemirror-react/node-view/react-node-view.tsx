@@ -190,6 +190,11 @@ export class ReactNodeView implements NodeView {
     return true
   }
 
+  stopEvent() {
+    console.log('stop!!')
+    return true
+  }
+
   destroy() {
     this.renderer.destroy()
   }

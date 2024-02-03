@@ -48,6 +48,18 @@ export const schema = new Schema({
         }
       }
     },
+    entity_record: {
+      group: 'block',
+      atom: true,
+      parseDOM: [
+        { tag: 'entity_record' }
+      ],
+      attrs: {
+        entityId: {
+          default: null,
+        }
+      }
+    },
     todo: {
       group: 'block',
       content: 'paragraph',

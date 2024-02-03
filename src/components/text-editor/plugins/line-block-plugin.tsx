@@ -1,9 +1,6 @@
 import { EditorState, Plugin, PluginKey, Transaction } from "prosemirror-state";
 import { Decoration, DecorationSet, EditorView } from "prosemirror-view";
 
-import { useNodeViewContext, useWidgetViewContext, ReactWidgetViewUserOptions, ReactWidgetViewSpec } from '@prosemirror-adapter/react'
-import { joinTextblockBackward } from 'prosemirror-commands'
-
 import { ProseMirrorReactPlugin } from "~/lib/prosemirror-react";
 import { Node } from "prosemirror-model";
 import { ReactRenderer } from "~/lib/prosemirror-react/react-renderer";

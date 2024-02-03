@@ -21,7 +21,9 @@ CREATE TABLE IF NOT EXISTS entity_graph (
     id INTEGER PRIMARY KEY NOT NULL,
     entity_id INTEGER,
     to_entity_id INTEGER,
-    category TEXT DEFAULT NULL
+    type TEXT DEFAULT NULL,
+    match TEXT DEFAULT NULL,
+    data TEXT DEFAULT NULL
 );
 SELECT crsql_as_crr('entity_graph');
 
