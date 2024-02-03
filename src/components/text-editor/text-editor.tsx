@@ -1,84 +1,26 @@
-import React, { useState } from 'react'
+import React from 'react'
 
 import { inputRules, InputRule } from "prosemirror-inputrules"
 import { EditorView } from 'prosemirror-view'
-import { DOMParser, NodeRange } from 'prosemirror-model'
+import { DOMParser } from 'prosemirror-model'
 import { EditorState, Plugin as ProseMirrorPlugin, Transaction } from 'prosemirror-state'
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { keymap } from 'prosemirror-keymap';
 
 import { Editor, EditorFactoryProps } from '~/lib/prosemirror-react'
 
 import { LineBlockNodeView, HashtagNodeView } from './node-view'
 import { schema } from './schema'
-import { arrowHandler, createLineblockOnEnter, backspace } from './keymaps'
-import { createLineBlockPlugin, hashtagPlugin, slashPlugin, gutterPlugin, referencePlugin } from './plugins'
+import { 
+  createLineBlockPlugin, 
+  hashtagPlugin, 
+  slashPlugin, 
+  gutterPlugin, 
+  referencePlugin,
+  keymapPlugin
+} from './plugins'
 import { EntityRecordNode, ReferenceNode } from './nodes'
-import { nanoid } from 'nanoid'
 import { VaultExtension } from '~/extensions/todo'
-
-const blockId = () => nanoid(5)
-
-
-const keymapPlugin = keymap({
-  Tab: (state, dispatch) => {
-    const before = state.selection.$anchor.before(1)
-    const lineblock = state.doc.nodeAt(before)
-
-    const previousLineblock = state.doc.childBefore(before)
-    const depth = lineblock?.attrs.depth
-
-    if (
-      previousLineblock.node &&
-      previousLineblock.node.attrs.depth === depth ||
-      previousLineblock.node?.attrs.depth > depth  
-    ) {
-
-      const tr = state.tr.setNodeAttribute(before, 'depth', depth + 1)
-
-      if (dispatch) {
-        dispatch(tr)
-      }
-    }
-
-    return true
-  },
-  "Shift-Tab": (state, dispatch) => {
-    const before = state.selection.$anchor.before(1)
-    const lineblock = state.doc.nodeAt(before)
-  
-    const depth = lineblock?.attrs.depth
-
-    if (depth > 0) {
-      let tr = state.tr.setNodeAttribute(before, 'depth', lineblock?.attrs.depth - 1)
-
-      // eslint-disable-next-line no-inner-declarations
-      function recurseChildren(pos: number) {
-        const nextLineblock = state.doc.nodeAt(pos)
-
-        if (nextLineblock) {
-          const nextDepth = nextLineblock.attrs.depth
-          if (nextDepth > depth) {
-            tr = tr.setNodeAttribute(pos, 'depth', nextDepth - 1)
-            recurseChildren(pos + nextLineblock.nodeSize)
-          }
-        }
-      }
-      recurseChildren(state.selection.$anchor.after(1))
-
-      if (dispatch) {
-        dispatch(tr)
-      }
-    }
-    return true
-  },
-  Enter: createLineblockOnEnter,
-  Backspace: backspace,
-  ArrowLeft: arrowHandler("left"),
-  ArrowRight: arrowHandler("right"),
-  ArrowUp: arrowHandler("up"),
-  ArrowDown: arrowHandler("down")
-});
+import { generateBlockId } from './utils'
 
 
 interface TextEditorProps {
@@ -104,36 +46,6 @@ export function boldRule () {
   })
 }
 
-const tagRegex = /#[a-zA-Z0-9]/
-export function tagRule () {
-  return new InputRule(tagRegex, (state, match, start, end) => {
-    let tr = state.tr
-
-    const before = state.selection.$anchor.before(1)
-
-    const lineblock = state.doc.nodeAt(before)
-
-    const $start = state.doc.resolve(start)
-    const $end = state.doc.resolve(end)
-    const range = new NodeRange($start, $end, $start.depth)
-
-    if (range) {
-      tr = tr.wrap(range, [{ type: schema.nodes.hashtag }])
-    }
-
-    const parentDepth = lineblock?.attrs.blockGroupDepth
-    
-    tr = tr.setNodeAttribute(before, 'blockGroupId', blockId())
-
-    if (parentDepth === null) {
-      tr = tr.setNodeAttribute(before, 'blockGroupDepth', 0)
-    } else {
-      tr = tr.setNodeAttribute(before, 'blockGroupDepth', parentDepth + 1)
-    }
-  
-    return tr
-  })
-}
 
 function createEditorState(doc: string | null | undefined, plugins: ProseMirrorPlugin[]): EditorState {
   const parser = DOMParser.fromSchema(schema);
@@ -142,7 +54,7 @@ function createEditorState(doc: string | null | undefined, plugins: ProseMirrorP
 
   const schemaDoc = schema.node('doc', null, [
     schema.nodes.lineblock.create({
-      blockId: blockId(),
+      blockId: generateBlockId(),
     }, 
       schema.nodes.paragraph.create(null, [schema.text("Hello, it's meee!")])
     )
@@ -190,13 +102,9 @@ export const TextEditor = React.memo(({
   const editorViewRef = useRef<EditorView>(null)
 
   const plugins = useMemo(() => [
-    // createSlashPlugin(pluginViewFactory), 
-    // createRefPlugin(pluginViewFactory), 
     keymapPlugin,
-    // createLineNumberPlugin(widgetViewFactory), 
     inputRules({ rules: [
       boldRule(), 
-      // tagRule()
     ]}),
   ], [])
 
