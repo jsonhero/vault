@@ -3,8 +3,8 @@ import React, {
 } from 'react'
 import ReactDOM, { flushSync } from 'react-dom'
 
-import type { EditorContent, ReactRenderer } from './react-renderer'
-import { buildReactNodes, buildReactPlugins } from './external'
+import { Editor } from '../editor'
+import type { ReactRenderer } from './react-renderer'
 
 const Portals: React.FC<{ renderers: Record<string, ReactRenderer> }> = ({ renderers }) => {
 
@@ -21,27 +21,20 @@ const Portals: React.FC<{ renderers: Record<string, ReactRenderer> }> = ({ rende
   )
 }
 
-export interface EditorState {
+export interface EditorContentState {
   renderers: Record<string, any>;
 }
 
-export type EditorFactoryProps = {
-  buildReactNodes: ReturnType<typeof buildReactNodes>
-  buildReactPlugins: ReturnType<typeof buildReactPlugins>
-}
-
-
-export interface EditorProps extends HTMLProps<HTMLDivElement> {
-  onInit: (element: HTMLDivElement, factory: EditorFactoryProps) => void
+export interface EditorContentProps extends HTMLProps<HTMLDivElement> {
+  editor: Editor | null
   innerRef?: ForwardedRef<HTMLDivElement | null>;
 }
 
-export class Editor extends React.Component<EditorProps, EditorState> {
-  editorRef: React.RefObject<any>
+export class EditorContent extends React.Component<EditorContentProps, EditorContentState> {
+  editorRef: React.RefObject<HTMLDivElement>
   initialized: boolean
-  editorElement?: HTMLDivElement
 
-  constructor(props: EditorProps) {
+  constructor(props: EditorContentProps) {
     super(props)
 
     this.editorRef = React.createRef()
@@ -61,7 +54,19 @@ export class Editor extends React.Component<EditorProps, EditorState> {
   }
 
   init() {
-    this.initialized = true
+
+    if (this.props.editor && !this.props.editor.editorElement) {
+      this.initialized = true
+  
+      if (this.editorRef.current) {
+        this.props.editor.mount(this.editorRef.current)
+        this.props.editor.setRenderer({
+          removeRenderer: this.removeRenderer,
+          setRenderer: this.setRenderer,
+        })
+      }
+    }
+
   }
 
   maybeFlushSync(fn: () => void) {
@@ -74,24 +79,6 @@ export class Editor extends React.Component<EditorProps, EditorState> {
     } else {
       fn()
     }
-  }
-
-  register = (element: HTMLDivElement) => {
-    if (!element || element.firstChild)
-      return
-    this.editorElement = element
-
-    const content: EditorContent = {
-      removeRenderer: this.removeRenderer,
-      setRenderer: this.setRenderer,
-    }
-
-    const factory: EditorFactoryProps = {
-      buildReactNodes: buildReactNodes(content),
-      buildReactPlugins: buildReactPlugins(content),
-    }
-
-    this.props.onInit(element, factory)
   }
 
   setRenderer = (id: string, renderer: ReactRenderer) => {
@@ -122,11 +109,11 @@ export class Editor extends React.Component<EditorProps, EditorState> {
   }
 
   render() {
-    const { innerRef, onInit, ...rest } = this.props
+    const { innerRef, editor, ...rest } = this.props
 
     return (
       <>
-        <div ref={this.register} {...rest} />
+        <div ref={this.editorRef} {...rest} />
         <Portals renderers={this.state.renderers} />
       </>
     )

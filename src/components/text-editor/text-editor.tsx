@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Editor, EditorFactoryProps } from '~/lib/prosemirror-react'
 
+import { EditorContent, useEditor } from '~/lib/vault-prosemirror/react'
 import { LineBlockNodeView, HashtagNodeView } from './node-view'
 import { schema } from './schema'
 import { 
@@ -21,7 +22,7 @@ import {
 import { EntityRecordNode, ReferenceNode } from './nodes'
 import { VaultExtension } from '~/extensions/todo'
 import { generateBlockId } from './utils'
-
+import { nanoid } from 'nanoid'
 
 interface TextEditorProps {
   renderId: string | null | undefined;
@@ -89,10 +90,17 @@ function dispatchTransactionFactory(view: EditorView, onUpdate: (state: EditorSt
   
     view.updateState(newState);
   }
-
 }
 
-export const TextEditor = React.memo(({
+export const TextEditor = () => {
+  const editor = useEditor({
+    
+  })
+
+  return <EditorContent editor={editor} />
+}
+
+export const _TextEditosr = React.memo(({
   renderId,
   onUpdate,
   docJson,
@@ -134,6 +142,9 @@ export const TextEditor = React.memo(({
     const extensionNodes = extensions.flatMap((ext) => ext.props.prosemirror.nodes)
 
     const nodes = factory.buildReactNodes([...extensionNodes, EntityRecordNode, ReferenceNode])
+
+    element.style.setProperty('--focus-depth', '0')
+    element.style.setProperty('--block-margin', '28px')
 
     // Todo: store in editor view context somewhere
     editorViewRef.current = new EditorView(element, {

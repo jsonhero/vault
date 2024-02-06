@@ -2,6 +2,7 @@ import { Schema, MarkSpec, DOMOutputSpec } from "prosemirror-model"
 const emDOM: DOMOutputSpec = ["em", 0], strongDOM: DOMOutputSpec = ["strong", 0], codeDOM: DOMOutputSpec = ["code", 0]
 
 export const schema = new Schema({
+
   marks: {
     /// A strong mark. Rendered as `<strong>`, parse rules also match
     /// `<b>` and `font-weight: bold`.
@@ -146,3 +147,5 @@ export const schema = new Schema({
     },
   }
 })
+
+

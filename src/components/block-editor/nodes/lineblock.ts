@@ -1,14 +1,16 @@
-import { Node } from "prosemirror-model";
+import { Node as ProseMirrorNode } from "prosemirror-model";
 import { Decoration, DecorationSource } from "prosemirror-view";
 
-export class LineBlockNodeView {
+import { Node } from '~/lib/vault-prosemirror'
+
+class LineBlockNodeView {
   dom;
   contentDOM;
   node;
   // https://stackoverflow.com/questions/25897883/edit-cursor-not-displayed-on-chrome-in-contenteditable
   decorations;
   constructor(
-    node: Node,
+    node: ProseMirrorNode,
     decorations: readonly Decoration[]
   ) {
     const isHidden = decorations.find((dec) => dec.spec.hidden)
@@ -21,9 +23,6 @@ export class LineBlockNodeView {
     this.dom = this.contentDOM = document.createElement('div')
     this.dom.className = isHidden ? 'hidden' : "block"
     this.dom.setAttribute('data-block-id', node.attrs.blockId)
-    if (node.attrs.blockGroupId) {
-      this.dom.setAttribute('data-block-group-id', node.attrs.blockGroupId)
-    }
 
     this.dom.setAttribute('data-depth', node.attrs.depth)
     this.dom.style.left = `calc(var(--block-margin) * (${node.attrs.depth} - var(--focus-depth)))`
@@ -39,11 +38,7 @@ export class LineBlockNodeView {
     this.node = node;
   }
 
-  update(node: Node, decorations: readonly Decoration[], innerDecorations: DecorationSource) {
-    if (!this.node.attrs.blockGroupId !== node.attrs.blockGroupId) {
-      this.dom.setAttribute('data-block-group-id', node.attrs.blockGroupId)
-    }
-
+  update(node: ProseMirrorNode, decorations: readonly Decoration[], innerDecorations: DecorationSource) {
     const focusDecor = decorations.find((dec) => dec.spec.focusDepth)
     const focusDepth = focusDecor?.spec.focusDepth
 
@@ -70,3 +65,33 @@ export class LineBlockNodeView {
     return true
   }
 }
+
+export const LineblockNode = Node.create({
+  name: 'lineblock',
+  spec() {
+    return {
+      group: 'block',
+      content: "block*",
+      parseDOM: [
+        { tag: 'lineblock' }
+      ],
+      attrs: {
+        blockId: {
+          default: null,
+        },
+        depth: {
+          default: 0
+        },
+        hidden: {
+          default: false
+        },
+        groupHidden: {
+          default: false,
+        },
+      }
+    }
+  },
+  nodeView(props) {
+    return new LineBlockNodeView(props.node, props.decorations)
+  },
+})

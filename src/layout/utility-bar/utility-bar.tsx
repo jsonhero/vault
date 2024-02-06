@@ -4,6 +4,7 @@ import { observer } from 'mobx-react-lite';
 import { useDbQuery } from '~/query-manager';
 import { sql } from 'kysely';
 import { useRootService } from '~/services/root.service';
+import { EntityEditor } from '~/features/entity-editor';
 
 export const UtilityBar = observer(() => {
   const root = useRootService()
@@ -23,12 +24,22 @@ export const UtilityBar = observer(() => {
         .innerJoin('entity', 'entity.id', 'entity_graph.to_entity_id')
         .where('entity_graph.entity_id', '=', selectedEntityId)
         .selectAll('entity')
-        .select([sql<string>`'to'`.as('direction')])
+        .select([
+          sql<string>`'to'`.as('direction'), 
+          'entity_graph.data as graph_data', 
+          'entity_graph.to_entity_id as to_entity_id',
+          'entity_graph.entity_id as from_entity_id'
+        ])
       const fromQuery = db.selectFrom('entity_graph')
         .innerJoin('entity', 'entity.id', 'entity_graph.entity_id')
         .where('entity_graph.to_entity_id', '=', selectedEntityId)
         .selectAll('entity')
-        .select([sql<string>`'from'`.as('direction')])
+        .select([
+          sql<string>`'from'`.as('direction'), 
+          'entity_graph.data as graph_data', 
+          'entity_graph.to_entity_id as to_entity_id',
+          'entity_graph.entity_id as from_entity_id'
+        ])
         
       return toQuery.unionAll(fromQuery)
     },
@@ -56,8 +67,9 @@ export const UtilityBar = observer(() => {
         name: entity.title
       })
     }
-
   }
+
+  console.log(entityGraph, ':: graph')
 
   return (
     <div className="w-full h-full p-5">
@@ -67,6 +79,7 @@ export const UtilityBar = observer(() => {
           <div className="mt-2 flex flex-col gap-2">
             {fromGraph.map((e) => (
               <button onClick={onClickEntityLink} className="text-left bg-tertiary py-1 px-2 rounded-md" data-entity-id={e.id}>
+
                 <div>{e.type}: {e.title}</div>
               </button>
             ))}
@@ -78,6 +91,7 @@ export const UtilityBar = observer(() => {
             {toGraph.map((e) => (
               <button onClick={onClickEntityLink} className="text-left bg-tertiary py-1 px-2 rounded-md" data-entity-id={e.id}>
                 <div>{e.type}: {e.title}</div>
+                {/* <EntityEditor entityId={e.from_entity_id} selectedBlockId={e.graph_data.document.blockId} /> */}
               </button>
             ))}
           </div>

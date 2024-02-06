@@ -8,6 +8,7 @@ import { useTakeFirstDbQuery } from '~/query-manager';
 import { documentService } from '~/services/document.service';
 import { useRootService } from '~/services/root.service';
 import { entityGraphService } from '~/services/entity-graph.service';
+import { BlockEditor } from '~/components/block-editor/block-editor';
 
 export const DocumentEditor = ({ entity, selectedBlockId }: { entity: Entity }) => {
 
@@ -96,11 +97,11 @@ export const DocumentEditor = ({ entity, selectedBlockId }: { entity: Entity }) 
   
   return (
     <div>
-      <TextEditor
+      <BlockEditor
         extensions={root.extensionService.extensions}
         selectedBlockId={selectedBlockId}
         renderId={`${entity.id}:${document?.id}`} 
-        docJson={docJson} 
+        documentJson={docJson} 
         onUpdate={throttleUpdate} 
       />
     </div>
