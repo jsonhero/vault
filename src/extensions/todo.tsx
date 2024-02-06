@@ -2,10 +2,10 @@ import { Plugin } from "prosemirror-state"
 // import { Checkbox } from '@ark-ui/react'
 
 import { 
-  ProseMirrorReactPlugin,
-  ProseMirrorReactNode,
-  useNodeView,
-} from "~/lib/prosemirror-react"
+  Extension,
+  Node,
+} from "~/lib/vault-prosemirror"
+import { useNodeView, ReactNodeView } from '~/lib/vault-prosemirror/react'
 import { useDbQuery, useTakeFirstDbQuery } from "~/query-manager";
 import { CheckCheckIcon } from "lucide-react";
 import { Checkbox } from "@nextui-org/react";
@@ -19,8 +19,8 @@ type VaultExtensionProps = {
     schema: any,
   };
   prosemirror: {
-    plugins: ProseMirrorReactPlugin[],
-    nodes: ProseMirrorReactNode[],
+    extensions: Extension[],
+    nodes: Node[],
     command: string
   }
 }
@@ -36,18 +36,6 @@ export class VaultExtension {
     return new VaultExtension(props)
   }
 }
-
-
-
-const TodoBlockPlugin = ProseMirrorReactPlugin.create({
-  name: 'todoplugin',
-  buildPlugin(editor) {
-    return new Plugin({
-
-    })
-  },
-})
-
 
 // when typing /todo
 // create entity in table
@@ -127,9 +115,29 @@ const TodoComponent = () => {
   )
 }
 
-const TodoBlockNode = ProseMirrorReactNode.create({
+const TodoBlockNode = Node.create({
   name: 'todo',
-  component: TodoComponent,
+  spec() {
+    return {
+      group: 'block',
+      content: 'paragraph',
+      parseDOM: [
+        { tag: 'todo' }
+      ],
+      attrs: {
+        entityId: {
+          default: null,
+        }
+      }
+    }
+  },
+  nodeView(props) {
+    return new ReactNodeView({
+      ...props,
+      editor: this.editor,
+      component: TodoComponent
+    })
+  },
 })
 
 export const todoExtension = VaultExtension.create({
@@ -150,7 +158,7 @@ export const todoExtension = VaultExtension.create({
     }
   },
   prosemirror: {
-    plugins: [TodoBlockPlugin],
+    extensions: [],
     nodes: [TodoBlockNode],
     command: 'todo',
   }

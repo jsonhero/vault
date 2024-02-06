@@ -33,7 +33,10 @@ export const BlockEditor = React.memo((props: BlockEditorProps) => {
     }) {
       props.onUpdate(state)
     },
-    nodes,
+    nodes: [
+      ...nodes,
+      ...props.extensions.flatMap((ext) => ext.props.prosemirror.nodes)
+    ],
     extensions: [
       GutterExtension,
       LineblockExtension.configure({
