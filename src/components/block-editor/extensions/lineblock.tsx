@@ -1,7 +1,7 @@
 import { EditorState, Plugin, PluginKey, Transaction } from "prosemirror-state";
 import { Decoration, DecorationSet, EditorView } from "prosemirror-view";
 
-import { Extension } from "~/lib/vault-prosemirror";
+import { Editor, Extension } from "~/lib/vault-prosemirror";
 import { Node } from "prosemirror-model";
 import { ReactRenderer } from "~/lib/vault-prosemirror/react";
 
@@ -45,9 +45,6 @@ function getHiddenBlockDecorations(doc: Node, blockId: string) {
   doc.forEach((node, pos) => {
     if (node.type.name === 'lineblock' && node.attrs.blockId === blockId) {
       focusedBlockDepth = node.attrs.depth
-      decorations.push(Decoration.node(pos, pos + node.nodeSize, {}, {
-        focusDepth: focusedBlockDepth
-      }))
       return;
     }
     
@@ -64,15 +61,37 @@ function getHiddenBlockDecorations(doc: Node, blockId: string) {
       decorations.push(Decoration.node(pos, pos + node.nodeSize, {}, {
         hidden: true
       }))
-    } else {
-      decorations.push(Decoration.node(pos, pos + node.nodeSize, {}, {
-        focusDepth: focusedBlockDepth
-      }))
     }
     
   })
 
   return decorations
+}
+
+function getBlockNode(doc: Node, blockId: string): Node | null {
+  let blockNode: Node | null = null
+
+  doc.forEach((node) => {
+    if (node.type.name === 'lineblock' && node.attrs.blockId === blockId) {
+      blockNode = node
+    }
+  })
+
+  return blockNode
+}
+
+function setFocusDepthOfBlock(editor: Editor, doc: Node, blockId: string) {
+  const blockNode = getBlockNode(doc, blockId)
+
+  if (blockNode) {
+    setFocusDepth(editor, blockNode.attrs.depth)
+  }
+}
+
+function setFocusDepth(editor: Editor, depth: number) {
+  const editorContainer = document.querySelector(`[data-editor-id='${editor.id}']`) as HTMLDivElement
+
+  editorContainer?.style.setProperty('--focus-depth', depth.toString())
 }
 
 export const BreadcrumbComponent = ({
@@ -115,12 +134,23 @@ export const LineblockExtension = Extension.create<LineblockExtensionOptions>({
     breadcrumbEl.className = 'editor-breadcrumb'
     editorContainer?.prepend(breadcrumbEl)
 
-    editorContainer?.style.setProperty('--focus-depth', '0')
     editorContainer?.style.setProperty('--block-margin', '28px')
+    setFocusDepth(editor, 0)
+
+
     const plugin: Plugin = new Plugin({
       key: lbPluginKey,
 
       view(view) {
+        if (options.selectedBlockId) {
+          const blockNode = getBlockNode(view.state.doc, options.selectedBlockId)
+    
+          if (blockNode) {
+            setFocusDepth(editor, blockNode.attrs.depth)
+          }
+        }
+
+        
         component = new ReactRenderer(BreadcrumbComponent, {
           editor,
           as: breadcrumbEl,
@@ -175,6 +205,11 @@ export const LineblockExtension = Extension.create<LineblockExtensionOptions>({
               path = state.path.slice(0, pathIndex + 1)
             }
 
+            const blockNode = getBlockNode(tr.doc, blockId)
+
+            if (blockNode) {
+              setFocusDepth(editor, blockNode.attrs.depth)
+            }
 
             component?.updateProps({
               path,
@@ -185,6 +220,8 @@ export const LineblockExtension = Extension.create<LineblockExtensionOptions>({
               decorations: DecorationSet.create(tr.doc, getHiddenBlockDecorations(tr.doc, blockId))
             }
           } else if (meta?.action === 'clear_focus') {
+            setFocusDepth(editor, 0)
+
             component?.updateProps({
               path: [],
             })

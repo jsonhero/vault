@@ -23,7 +23,6 @@ interface BlockEditorProps {
   extensions: VaultExtension[]
 }
 
-
 export const BlockEditor = React.memo((props: BlockEditorProps) => {
 
   const editor = useEditor({
@@ -52,7 +51,7 @@ export const BlockEditor = React.memo((props: BlockEditorProps) => {
   return (
     <div className="block-editor" data-editor-id={editor?.id}>
       <div className="relative flex items-start editor-row">
-        <EditorContent editor={editor} />
+        <EditorContent className="min-w-[220px]" editor={editor} />
       </div>
     </div>
   )
