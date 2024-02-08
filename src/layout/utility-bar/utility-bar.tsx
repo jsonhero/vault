@@ -78,10 +78,7 @@ export const UtilityBar = observer(() => {
           <div className="font-bold">Incoming Links {`(${fromGraph.length})`}</div>
           <div className="mt-2 flex flex-col gap-2">
             {fromGraph.map((e) => (
-              <button onClick={onClickEntityLink} className="text-left bg-tertiary py-1 px-2 rounded-md" data-entity-id={e.id}>
-
-                <div>{e.type}: {e.title}</div>
-              </button>
+              <EntityEditor entityId={e.from_entity_id} selectedBlockId={e.graph_data.document.blockId} />
             ))}
           </div>
         </div>
@@ -89,10 +86,10 @@ export const UtilityBar = observer(() => {
           <div className="font-bold">Outgoing Links {`(${toGraph.length})`}</div>
           <div className="mt-2 flex flex-col gap-2">
             {toGraph.map((e) => (
-              <button onClick={onClickEntityLink} className="text-left bg-tertiary py-1 px-2 rounded-md" data-entity-id={e.id}>
-                <div>{e.type}: {e.title}</div>
-                {/* <EntityEditor entityId={e.from_entity_id} selectedBlockId={e.graph_data.document.blockId} /> */}
-              </button>
+                <EntityEditor entityId={e.from_entity_id} selectedBlockId={e.graph_data.document.blockId} simple={true} />
+              // <button onClick={onClickEntityLink} className="text-left bg-tertiary py-1 px-2 rounded-md" data-entity-id={e.id}>
+              //   <div>{e.type}: {e.title}</div>
+              // </button>
             ))}
           </div>
         </div>
@@ -100,3 +97,12 @@ export const UtilityBar = observer(() => {
     </div>
   )
 })
+
+/**
+ * incoming:
+ * 
+ * outgoing:
+ * 
+ * unlinked incoming:
+ *  
+ */

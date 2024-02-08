@@ -21,9 +21,30 @@ export function isBlockHidden(view: EditorView, nodeStart: number, nodeEnd: numb
   return decorations.find(nodeStart, nodeEnd).find((d) => d.from === nodeStart && d.to === nodeEnd)?.spec.hidden;
 }
 
+export function isBlockGroupHidden(view: EditorView, nodeStart: number, nodeEnd: number) {
+  const { decorations } = lbPluginKey.getState(view.state);
+  return decorations.find(nodeStart, nodeEnd).find((d) => d.from === nodeStart && d.to === nodeEnd)?.spec.groupHidden;
+}
+
 export function focusBlock(view: EditorView, blockId: string) {
   const plugin = lbPluginKey.get(view.state) as Plugin;
   const meta = { action: 'focus_block', blockId }
+
+  const tr = view.state.tr.setMeta(plugin, meta)
+  view.dispatch(tr)
+}
+
+export function hideBlockList(view: EditorView, blockId: string) {
+  const plugin = lbPluginKey.get(view.state) as Plugin;
+  const meta = { action: 'hide_block_list', blockId }
+
+  const tr = view.state.tr.setMeta(plugin, meta)
+  view.dispatch(tr)
+}
+
+export function showBlockList(view: EditorView, blockId: string) {
+  const plugin = lbPluginKey.get(view.state) as Plugin;
+  const meta = { action: 'show_block_list', blockId }
 
   const tr = view.state.tr.setMeta(plugin, meta)
   view.dispatch(tr)
@@ -60,6 +81,36 @@ function getHiddenBlockDecorations(doc: Node, blockId: string) {
 
       decorations.push(Decoration.node(pos, pos + node.nodeSize, {}, {
         hidden: true
+      }))
+    }
+    
+  })
+
+  return decorations
+}
+
+function getBlockListDecorations(doc: Node, blockId: string, isHidden: boolean) {
+  const decorations: Decoration[] = []
+  let focusedBlockDepth: number | null = null
+
+  doc.forEach((node, pos) => {
+    if (node.type.name === 'lineblock' && node.attrs.blockId === blockId) {
+      focusedBlockDepth = node.attrs.depth
+      decorations.push(Decoration.node(pos, pos + node.nodeSize, {}, {
+        groupHidden: isHidden,
+        listBlockId: blockId,
+      }))
+      return;
+    }
+
+    if (node.type.name === 'lineblock' && focusedBlockDepth === node.attrs.depth) {
+      focusedBlockDepth = null
+    }
+    
+    if (node.type.name === 'lineblock' && (focusedBlockDepth !== null && node.attrs.depth > focusedBlockDepth)) {
+      decorations.push(Decoration.node(pos, pos + node.nodeSize, {}, {
+        hidden: isHidden,
+        listBlockId: blockId,
       }))
     }
     
@@ -218,6 +269,30 @@ export const LineblockExtension = Extension.create<LineblockExtensionOptions>({
             return {
               path,
               decorations: DecorationSet.create(tr.doc, getHiddenBlockDecorations(tr.doc, blockId))
+            }
+          } else if (meta?.action === 'hide_block_list') {
+            const { blockId } = meta
+
+            const blockNode = getBlockNode(tr.doc, blockId)
+
+            if (blockNode) {
+              return {
+                path: state.path,
+                decorations: state.decorations.add(tr.doc, getBlockListDecorations(tr.doc, blockId, true)) 
+              }
+            }
+
+          } else if (meta?.action === 'show_block_list') {
+            const { blockId } = meta
+
+            const blockNode = getBlockNode(tr.doc, blockId)
+
+            if (blockNode) {
+              const decors = state.decorations.find(undefined, undefined, (spec) => spec.listBlockId === blockId)
+              return {
+                path: state.path,
+                decorations: state.decorations.remove(decors) 
+              }
             }
           } else if (meta?.action === 'clear_focus') {
             setFocusDepth(editor, 0)

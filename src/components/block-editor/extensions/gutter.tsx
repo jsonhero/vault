@@ -3,9 +3,9 @@ import { EditorView } from "prosemirror-view";
 import { Component } from "react";
 import { Extension, Editor } from "~/lib/vault-prosemirror";
 import { ReactRenderer } from "~/lib/vault-prosemirror/react";
-import { focusBlock, isBlockHidden } from "./lineblock";
+import { focusBlock, isBlockHidden, isBlockGroupHidden, hideBlockList, showBlockList } from "./lineblock";
 import { Node } from "prosemirror-model";
-import { CircleDotIcon, DotIcon } from "lucide-react";
+import { CircleDotIcon, DotIcon, ChevronRight, ChevronDown } from "lucide-react";
 
 
 const GutterPluginKey = new PluginKey("gutter-plugin-key")
@@ -15,6 +15,7 @@ const GutterPluginKey = new PluginKey("gutter-plugin-key")
 interface TextEditorGutterProps {
   view: EditorView | null
   editor: Editor
+  hideLineNumbers?: boolean
 }
 
 interface TextEditorGutterState {
@@ -48,6 +49,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
         const nodeElement = view.nodeDOM(offset) as HTMLDivElement
 
         const hidden = isBlockHidden(view, offset, offset + node.nodeSize)
+        const groupHidden = isBlockGroupHidden(view, offset, offset + node.nodeSize)
 
         const nodeHeight = nodeElement?.clientHeight || 0
 
@@ -84,6 +86,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
         nextLines.push({
           node,
           hidden,
+          groupHidden: groupHidden,
           isGroupNode: false,
           lineNumber: i + 1,
           groupStartPos: offset,
@@ -133,7 +136,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
     this.observer?.disconnect()
   }
   
-  onToggleGroup = (line: any) => {
+  onFocusList = (line: any) => {
 
 
     const view = this.props.view!
@@ -165,6 +168,17 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
   
   }
 
+  onToggleList = (line: any) => {
+    const view = this.props.view!
+
+    if (line.groupHidden) {
+      console.log('show list?')
+      showBlockList(view, line.node.attrs.blockId)
+    } else {
+      hideBlockList(view, line.node.attrs.blockId)
+    }
+  }
+
   render() {
     const view = this.props.view
 
@@ -186,25 +200,44 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
           {this.state.lines.map((line: any, i: number) => {
             return (
               <div className="group flex items-center justify-between relative">
-                <div className="text-gray-600" style={{ height: line.height }}>{line.lineNumber}</div>
-                  <div className="absolute" style={{
-                    left: 24 + ((line.depth - minDepth) * 24) + 'px'
-                  }}>
-                    {(line.depth > 0 || line.isGroupNode || (line.node.attrs.blockId === selectedBlockId)) && (
-                      <button className="bg-tertiary flex justify-center items-center w-[24px]" onClick={() => this.onToggleGroup(line)}>
-                        {line.node.attrs.groupHidden ? <CircleDotIcon size={16} /> : <DotIcon /> }
+                <div className="text-gray-600" style={{ height: line.height }}>
+                  {this.props.hideLineNumbers ? '' : line.lineNumber }
+                </div>
+                <div className="absolute flex items-center" style={{
+                  left: 24 + ((line.depth - minDepth) * 24) + 'px',
+                  height: line.height
+                }}>
+                  <div className="w-[16px] h-[16px]">
+                    {line.isGroupNode && line.node.attrs.blockId === selectedBlockId && (
+                      <button className="flex items-center justify-center" onClick={() => this.onToggleList(line)}>
+                        {line.groupHidden ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
                       </button>
                     )}
-                    {line.groupHeight > 0 && (
-                      <div className="absolute left-[12px] w-[1px] bg-gray-700 group-hover:bg-gray-400 group-hover:z-10" style={{
-                        top: (line.height - 4)  + 'px',
-                        height: line.groupHeight + 'px'
-                      }}>
-                        
-                      </div>
-                    )}
-                    
                   </div>
+                  {(line.depth > 0 || line.isGroupNode || (line.node.attrs.blockId === selectedBlockId)) && (
+                    <button 
+                      style={{
+                        background: line.groupHidden && 'rgba(255, 255, 255, 0.15)'
+                      }}
+                      className="flex justify-center items-center w-[16px] h-[16px] rounded-medium" onClick={() => this.onFocusList(line)}>
+                      <div style={{
+                        width: 4,
+                        height: 4,
+                        background: 'white',
+                        borderRadius: '50%'
+                      }}></div>
+                    </button>
+                  )}
+                  {line.groupHeight > 0 && (
+                    <div className="absolute left-[22px] w-[1px] bg-gray-700 group-hover:bg-gray-400 group-hover:z-10" style={{
+                      top: (line.height - 4)  + 'px',
+                      height: line.groupHeight + 'px'
+                    }}>
+                      
+                    </div>
+                  )}
+                  
+                </div>
   
               </div>
             )
@@ -216,16 +249,21 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
 
 }
 
-export const GutterExtension = Extension.create({
+interface GutterExtensionOptions {
+  hideLineNumbers?: boolean
+}
+
+export const GutterExtension = Extension.create<GutterExtensionOptions>({
   name: 'gutter',
   proseMirrorPlugins() {
     let component: ReactRenderer | null;
     const editor = this.editor
+    const options = this.options
 
-    const editorContainer = document.querySelector(`[data-editor-id='${this.editor.id}'] .editor-row`)
-    const gutterEl = document.createElement('div')
-    gutterEl.className = 'editor-gutter';
-    editorContainer?.prepend(gutterEl);
+    const gutterEl = document.querySelector(`[data-editor-id='${this.editor.id}'] .editor-row .editor-gutter`)
+    // const gutterEl = document.createElement('div')
+    // gutterEl.className = 'editor-gutter';
+    // editorContainer?.prepend(gutterEl);
 
     const plugin: Plugin = new Plugin({
       key: GutterPluginKey,
@@ -234,8 +272,9 @@ export const GutterExtension = Extension.create({
          editor,
          as: gutterEl,
          props: {
-           view,
-           editor,
+          hideLineNumbers: options.hideLineNumbers,
+          view,
+          editor,
          }
        })
 
@@ -250,7 +289,7 @@ export const GutterExtension = Extension.create({
           setTimeout(() => {
             component?.destroy()
           })
-           gutterEl.remove()
+          //  gutterEl.remove()
          },
        }
       },

@@ -17,9 +17,6 @@ class LineBlockNodeView {
     this.decorations = decorations
 
 
-    const focusDecor = decorations.find((dec) => dec.spec.focusDepth)
-    const focusDepth = focusDecor?.spec.focusDepth
-
     this.dom = this.contentDOM = document.createElement('div')
     this.dom.className = isHidden ? 'hidden' : "block"
     this.dom.setAttribute('data-block-id', node.attrs.blockId)
@@ -39,16 +36,15 @@ class LineBlockNodeView {
   }
 
   update(node: ProseMirrorNode, decorations: readonly Decoration[], innerDecorations: DecorationSource) {
-    const focusDecor = decorations.find((dec) => dec.spec.focusDepth)
-    const focusDepth = focusDecor?.spec.focusDepth
 
-    if (node.attrs.depth !== this.node.attrs.depth || decorations !== this.decorations) {
+    if (node.attrs.depth !== this.node.attrs.depth) {
       this.dom.setAttribute('data-depth', node.attrs.depth)
       // adjust to focus depth
       this.dom.style.left = `calc(var(--block-margin) * (${node.attrs.depth} - var(--focus-depth)))`
     }
 
     const isHidden = decorations.find((dec) => dec.spec.hidden)
+    console.log(decorations, 'decor')
     
 
     // shouldn't do this every update
@@ -81,12 +77,6 @@ export const LineblockNode = Node.create({
         },
         depth: {
           default: 0
-        },
-        hidden: {
-          default: false
-        },
-        groupHidden: {
-          default: false,
         },
       }
     }
