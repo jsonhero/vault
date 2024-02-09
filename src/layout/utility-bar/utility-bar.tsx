@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
+import { Accordion } from '@ark-ui/react'
 
 import { observer } from 'mobx-react-lite';
 import { useDbQuery } from '~/query-manager';
 import { sql } from 'kysely';
 import { useRootService } from '~/services/root.service';
 import { EntityEditor } from '~/features/entity-editor';
+import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 
 export const UtilityBar = observer(() => {
   const root = useRootService()
@@ -69,22 +71,35 @@ export const UtilityBar = observer(() => {
     }
   }
 
-  console.log(entityGraph, ':: graph')
-
   return (
-    <div className="w-full h-full p-5">
-      <div className="flex flex-col gap-3">
-        <div>
-          <div className="font-bold">Incoming Links {`(${fromGraph.length})`}</div>
-          <div className="mt-2 flex flex-col gap-2">
-            {fromGraph.map((e) => (
-              <EntityEditor entityId={e.from_entity_id} selectedBlockId={e.graph_data.document.blockId} />
-            ))}
-          </div>
-        </div>
-        <div>
-          <div className="font-bold">Outgoing Links {`(${toGraph.length})`}</div>
-          <div className="mt-2 flex flex-col gap-2">
+    <div className="w-full">
+
+      <Accordion.Root collapsible>
+        <Accordion.Item value="incoming">
+          {(api) => (
+            <>
+              <Accordion.ItemTrigger className='pl-3 py-1 font-bold flex items-center'>
+                References {`(${fromGraph.length})`}
+                <Accordion.ItemIndicator>
+                  {api.isOpen ? <ChevronUpIcon size={20} /> : <ChevronDownIcon size={20} />}
+                </Accordion.ItemIndicator>
+              </Accordion.ItemTrigger>
+              <Accordion.ItemContent className='h-[300px] bg-tertiary overflow-y-auto'>
+                <div className="flex flex-col">
+                  {fromGraph.map((e) => (
+                    <div className="px-[50px] py-10">
+                      <EntityEditor entityId={e.from_entity_id} selectedBlockId={e.graph_data.document.blockId} />
+                    </div>
+                  ))}
+                </div>
+              </Accordion.ItemContent>
+            </>
+          )}
+        </Accordion.Item>
+      </Accordion.Root>
+        {/* <div>
+          <div className="font-bold pl-3 py-1">Outgoing Links {`(${toGraph.length})`}</div>
+          <div className="flex flex-col gap-2">
             {toGraph.map((e) => (
                 <EntityEditor entityId={e.from_entity_id} selectedBlockId={e.graph_data.document.blockId} simple={true} />
               // <button onClick={onClickEntityLink} className="text-left bg-tertiary py-1 px-2 rounded-md" data-entity-id={e.id}>
@@ -92,8 +107,7 @@ export const UtilityBar = observer(() => {
               // </button>
             ))}
           </div>
-        </div>
-      </div>
+        </div> */}
     </div>
   )
 })

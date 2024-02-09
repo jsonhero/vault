@@ -7,6 +7,8 @@ import { TagView } from "~/features/tag-view"
 import { useRootService } from "~/services/root.service"
 import { WindowTab } from "~/services/window.service"
 
+import { UtilityBar } from '../utility-bar'
+
 const WindowTabComponent = ({ tab, onClickTab, onCloseTab, isActive }: { tab: WindowTab }) => {
   return (
     <button onClick={() => onClickTab(tab)} className="flex items-center group p-3 gap-3 border-r-1 border-gray-700" style={{
@@ -37,17 +39,22 @@ export const Main = observer(() => {
   }
 
   return (
-    <div>
+    <div className="relative main-grid">
       <div className="h-[40px] border-b-1 border-gray-700">
-        <div className="flex items-center h-full">
+        <div className="flex items-center">
           {root.windowService.tabs.map((t) => 
             <WindowTabComponent key={t.id} isActive={t.id === root.windowService.activeTab?.id} tab={t} onCloseTab={onCloseTab} onClickTab={onClickTab} />)
           }
         </div>
       </div>
-      <div className="w-auto h-full p-10">
-        {root.windowService.activeTab?.type === 'entity_view' && <EntityEditor entityId={root.windowService.activeTab.meta.entityId} />}
-        {root.windowService.activeTab?.type === 'hashtag_view' && <TagView tag={root.windowService.activeTab.meta.tag} />}
+      <div className="w-auto overflow-y-auto ">
+        <div className='px-[50px] py-10'>
+          {root.windowService.activeTab?.type === 'entity_view' && <EntityEditor entityId={root.windowService.activeTab.meta.entityId} />}
+          {root.windowService.activeTab?.type === 'hashtag_view' && <TagView tag={root.windowService.activeTab.meta.tag} />}
+        </div>
+      </div>
+      <div className="w-full bg-secondary">
+        <UtilityBar />
       </div>
     </div>
   )

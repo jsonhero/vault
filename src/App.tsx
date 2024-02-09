@@ -46,14 +46,14 @@ const App = observer(({ dbname }: { dbname: string }) => {
       }}>
         <ExplorerBar />
       </div>
-      <div className="main-gi bg-tertiary">
+      <div className="main-gi bg-tertiary overflow-hidden">
         <Main />
       </div>
-      <div className="utility-gi bg-secondary overflow-x-hidden transition-[width] duration-300" style={{
+      {/* <div className="utility-gi bg-secondary overflow-x-hidden transition-[width] duration-300" style={{
         width: appState.isRightBarExpanded ? '370px' : '0px'
       }}>
         <UtilityBar />
-      </div>
+      </div> */}
     </div>
   )
 })

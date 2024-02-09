@@ -91,14 +91,20 @@ body {
 }
 
 
+.main-grid {
+  display: grid;
+  grid-template-rows: auto 1fr auto; /* Header and footer take auto height, main takes remaining space */
+  height: 100%; /* Occupy full height of the parent container */
+}
+
 .primary-grid {
   display: grid;
   grid-template-areas: 
-    "header header header header"
-    "icon-bar explorer-bar main utility-bar"
+    "header header header"
+    "icon-bar explorer-bar main"
   ;
-  grid-template-columns: 40px min-content 1fr min-content;
-  grid-template-rows: 48px auto;
+  grid-template-columns: 40px min-content 1fr;
+  grid-template-rows: 48px 1fr;
 }
 
 .header-gi {

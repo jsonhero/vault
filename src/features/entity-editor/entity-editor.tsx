@@ -18,7 +18,7 @@ export const EntityEditor = ({ entityId, selectedBlockId, simple }: { entityId: 
 
   return (
     <div>
-      {!selectedBlockId && <TitleEditor entity={entity} />}
+      <TitleEditor entity={entity} />
       {entity.type === 'document' && <DocumentEditor selectedBlockId={selectedBlockId} entity={entity} simple={simple} />}
       {entity.type === 'table' && <TableEditor entity={entity} />}
     </div>
