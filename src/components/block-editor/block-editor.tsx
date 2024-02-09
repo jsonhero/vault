@@ -54,7 +54,7 @@ export const BlockEditor = React.memo((props: BlockEditorProps) => {
   return (
     <div className="block-editor" data-editor-id={editor?.id}>
       <div className="relative flex items-start editor-row">
-        <div className='editor-gutter min-w-[64px]'>
+        <div className='editor-gutter min-w-[34px]'>
           
         </div>
         <EditorContent className="min-w-[220px]" editor={editor} />

@@ -56,6 +56,9 @@ export const Main = observer(() => {
       <div className="w-full bg-secondary">
         <UtilityBar />
       </div>
+      {/* <div className="absolute top-0 w-full h-[200px] bg-red-500">
+        test
+      </div> */}
     </div>
   )
 })

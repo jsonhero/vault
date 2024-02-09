@@ -101,10 +101,9 @@ export const UtilityBar = observer(() => {
           <div className="font-bold pl-3 py-1">Outgoing Links {`(${toGraph.length})`}</div>
           <div className="flex flex-col gap-2">
             {toGraph.map((e) => (
+              <div className="bg-tertiary px-1 py-1">
                 <EntityEditor entityId={e.from_entity_id} selectedBlockId={e.graph_data.document.blockId} simple={true} />
-              // <button onClick={onClickEntityLink} className="text-left bg-tertiary py-1 px-2 rounded-md" data-entity-id={e.id}>
-              //   <div>{e.type}: {e.title}</div>
-              // </button>
+              </div>
             ))}
           </div>
         </div> */}

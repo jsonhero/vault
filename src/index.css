@@ -93,8 +93,8 @@ body {
 
 .main-grid {
   display: grid;
-  grid-template-rows: auto 1fr auto; /* Header and footer take auto height, main takes remaining space */
-  height: 100%; /* Occupy full height of the parent container */
+  grid-template-rows: auto 1fr auto;
+  height: 100%;
 }
 
 .primary-grid {

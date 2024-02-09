@@ -195,7 +195,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
 
 
     return (
-      <div className="sticky pr-3 z-50">
+      <div className="sticky z-50">
         <div className="flex flex-col flex-shrink-0 min-w-[38px]">
           {this.state.lines.map((line: any, i: number) => {
             return (
@@ -204,7 +204,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
                   {this.props.hideLineNumbers ? '' : line.lineNumber }
                 </div>
                 <div className="absolute flex items-center" style={{
-                  left: 24 + ((line.depth - minDepth) * 24) + 'px',
+                  left: ((line.depth - minDepth) * 24) + 'px',
                   height: line.height
                 }}>
                   <div className="w-[16px] h-[16px]">
