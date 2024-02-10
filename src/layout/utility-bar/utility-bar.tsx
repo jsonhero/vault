@@ -7,6 +7,7 @@ import { sql } from 'kysely';
 import { useRootService } from '~/services/root.service';
 import { EntityEditor } from '~/features/entity-editor';
 import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
+import { Entity } from '~/types/db-types';
 
 export const UtilityBar = observer(() => {
   const root = useRootService()
@@ -56,6 +57,26 @@ export const UtilityBar = observer(() => {
     return entityGraph.filter((e) => e.direction === 'from')
   }, [entityGraph])
 
+  const fromGraphGroups: {
+    title: string,
+    children: any[]
+  }[] = useMemo(() => {
+    const group = fromGraph.reduce((map, e) => {
+      if (map[e.from_entity_id]) {
+        map[e.from_entity_id].children.push(e)
+      } else {
+        map[e.from_entity_id] = {
+          title: e.title,
+          children: [e]
+        }
+      }
+
+      return map
+    }, {})
+
+    return Object.values(group)
+  }, [fromGraph])
+
   const onClickEntityLink = (e: React.MouseEvent<HTMLButtonElement>) => {
     const entityId = parseInt(e.currentTarget.dataset.entityId || '', 10)
     const entity = entityGraph.find((g) => g.id === entityId)
@@ -85,13 +106,33 @@ export const UtilityBar = observer(() => {
                 </Accordion.ItemIndicator>
               </Accordion.ItemTrigger>
               <Accordion.ItemContent className='h-[300px] bg-tertiary overflow-y-auto'>
-                <div className="flex flex-col">
+                <div className='flex flex-col px-[30px] py-5 gap-8'>
+                  {fromGraphGroups.map((group) => {
+                    return (
+                      <div className='border-1 border-gray-700 p-4 rounded-sm'>
+                        <div className='mb-1'>
+                          <button className="font-bold text-blue-500">
+                            {group.title}
+                          </button>
+                        </div>
+                        <div className='flex flex-col gap-4'>
+                          {group.children.map((e) => (
+                            <div className="border-b-1 border-gray-700 pb-3 last:border-none">
+                              <EntityEditor entityId={e.from_entity_id} selectedBlockId={e.graph_data.document.blockId} /> 
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                {/* <div className="flex flex-col">
                   {fromGraph.map((e) => (
                     <div className="px-[50px] py-10">
                       <EntityEditor entityId={e.from_entity_id} selectedBlockId={e.graph_data.document.blockId} />
                     </div>
                   ))}
-                </div>
+                </div> */}
               </Accordion.ItemContent>
             </>
           )}

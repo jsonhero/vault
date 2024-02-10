@@ -169,7 +169,8 @@ export const BreadcrumbComponent = ({
 }
 
 interface LineblockExtensionOptions {
-  selectedBlockId?: string
+  selectedBlockId?: string;
+  onSelectBlockId?: (blockId: string) => void;
 }
 
 export const LineblockExtension = Extension.create<LineblockExtensionOptions>({
@@ -231,12 +232,14 @@ export const LineblockExtension = Extension.create<LineblockExtensionOptions>({
           if (options.selectedBlockId) {
             return {
               path: [options.selectedBlockId],
-              decorations: DecorationSet.create(state.doc, getHiddenBlockDecorations(state.doc, options.selectedBlockId))
+              decorations: DecorationSet.create(state.doc, getHiddenBlockDecorations(state.doc, options.selectedBlockId)),
+              selectedBlockId: options.selectedBlockId,
             }
           }
           return {
             path: [],
-            decorations: DecorationSet.empty
+            decorations: DecorationSet.empty,
+            selectedBlockId: options.selectedBlockId,
           }
         },
         apply(tr, state) { 
@@ -264,11 +267,17 @@ export const LineblockExtension = Extension.create<LineblockExtensionOptions>({
 
             component?.updateProps({
               path,
+              selectedBlockId: blockId,
             })
+
+            if (options.onSelectBlockId) {
+              options.onSelectBlockId(blockId)
+            }
 
             return {
               path,
-              decorations: DecorationSet.create(tr.doc, getHiddenBlockDecorations(tr.doc, blockId))
+              decorations: DecorationSet.create(tr.doc, getHiddenBlockDecorations(tr.doc, blockId)),
+              selectedBlockId: blockId,
             }
           } else if (meta?.action === 'hide_block_list') {
             const { blockId } = meta
@@ -277,8 +286,8 @@ export const LineblockExtension = Extension.create<LineblockExtensionOptions>({
 
             if (blockNode) {
               return {
-                path: state.path,
-                decorations: state.decorations.add(tr.doc, getBlockListDecorations(tr.doc, blockId, true)) 
+                ...state,
+                decorations: state.decorations.add(tr.doc, getBlockListDecorations(tr.doc, blockId, true)),
               }
             }
 
@@ -290,8 +299,8 @@ export const LineblockExtension = Extension.create<LineblockExtensionOptions>({
             if (blockNode) {
               const decors = state.decorations.find(undefined, undefined, (spec) => spec.listBlockId === blockId)
               return {
-                path: state.path,
-                decorations: state.decorations.remove(decors) 
+                ...state,
+                decorations: state.decorations.remove(decors),
               }
             }
           } else if (meta?.action === 'clear_focus') {
@@ -299,8 +308,10 @@ export const LineblockExtension = Extension.create<LineblockExtensionOptions>({
 
             component?.updateProps({
               path: [],
+              selectedBlockId: null,
             })
             return {
+              selectedBlockId: null,
               path: [],
               decorations: DecorationSet.empty
             }
@@ -320,3 +331,10 @@ export const LineblockExtension = Extension.create<LineblockExtensionOptions>({
     return [plugin]
   },
 })
+
+
+
+/**
+ * 
+ * How to do path + extra context expander?
+ */

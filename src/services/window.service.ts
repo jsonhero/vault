@@ -20,7 +20,8 @@ type HashtagViewWindowTab = BaseWindowTab & {
 type EntityViewWindowTab = BaseWindowTab & {
   type: 'entity_view';
   meta: {
-    entityId: number
+    entityId: number;
+    selectedBlockId?: string
   }
 }
 

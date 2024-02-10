@@ -204,7 +204,7 @@ class TextEditorGutter extends Component<TextEditorGutterProps, TextEditorGutter
                   {this.props.hideLineNumbers ? '' : line.lineNumber }
                 </div>
                 <div className="absolute flex items-center" style={{
-                  left: ((line.depth - minDepth) * 24) + 'px',
+                  left: 24 + ((line.depth - minDepth) * 24) + 'px',
                   height: line.height
                 }}>
                   <div className="w-[16px] h-[16px]">
