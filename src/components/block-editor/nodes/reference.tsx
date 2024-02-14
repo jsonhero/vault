@@ -41,6 +41,7 @@ export const ReferenceNode = Node.create({
     return {
       inline: true,
       atom: true,
+      group: 'inline',
       parseDOM: [
         { tag: 'reference' }
       ],

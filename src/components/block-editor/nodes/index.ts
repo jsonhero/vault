@@ -1,10 +1,8 @@
 import { Node } from '~/lib/vault-prosemirror'
 
-import {
-  DocumentNode,
-  TextNode,
-  ParagraphNode,
-} from './base'
+import { DocumentNode } from './doc'
+import { TextNode } from './text'
+import { ParagraphNode } from './paragraph'
 import { HashtagNode } from './hashtag'
 import { LineblockNode } from './lineblock'
 import { ReferenceNode } from './reference'

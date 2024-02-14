@@ -41,6 +41,7 @@ export const HashtagNode = Node.create({
   spec() {
     return {
       inline: true,
+      group: 'inline',
       content: 'text*',
       parseDOM: [
         { tag: 'hashtag' }
