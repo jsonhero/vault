@@ -1,6 +1,11 @@
 import { Mark } from '~/lib/vault-prosemirror'
-import { StrongMark } from './strong'
+
+import { BoldMark } from './bold'
+import { ItalicMark } from './italic'
+import { StrikethroughMark } from './strikethrough'
 
 export const marks: Mark[] = [
-  StrongMark
+  BoldMark,
+  ItalicMark,
+  StrikethroughMark
 ]

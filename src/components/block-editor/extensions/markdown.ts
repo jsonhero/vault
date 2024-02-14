@@ -57,13 +57,13 @@ const markdownPlugin: Plugin = new Plugin({
 export const MarkdownExtension = Extension.create({
   proseMirrorPlugins() {
     return [
-      keymap({
-        'Mod-b': (state, dispatch) => toggleMark(state.schema.marks.strong)(state, dispatch),
-        'Mod-B': (state, dispatch) => toggleMark(state.schema.marks.strong)(state, dispatch),
-      }),
-      markdownPlugin,
+      // keymap({
+      //   'Mod-b': (state, dispatch) => toggleMark(state.schema.marks.strong)(state, dispatch),
+      //   'Mod-B': (state, dispatch) => toggleMark(state.schema.marks.strong)(state, dispatch),
+      // }),
+      // markdownPlugin,
       inputRules({
-        rules: [headerRule, boldRule]
+        rules: [headerRule]
       })
     ]
   }

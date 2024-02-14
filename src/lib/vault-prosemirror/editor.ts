@@ -1,5 +1,5 @@
 import { Decoration, DecorationSource, EditorView, NodeViewConstructor } from "prosemirror-view";
-import { Node as ProseMirrorNode } from "prosemirror-model";
+import { Node as ProseMirrorNode, Schema } from "prosemirror-model";
 import { Command, EditorState, Transaction } from 'prosemirror-state'
 import { nanoid } from 'nanoid'
 
@@ -78,35 +78,72 @@ export class Editor {
     }
   }
 
-  buildPlugins() {
-    const flattenedExtensions = flattenExtensions(this.options.extensions)
+  buildPlugins(schema: Schema) {
+    const flattenedExtensions = flattenExtensions(this.options.extensions);
 
     const proseMirrorPlugins = flattenedExtensions.flatMap((ext) => {
       if (ext.config.proseMirrorPlugins) {
         const pmPlugins = ext.config.proseMirrorPlugins?.call({
           editor: this,
           options: ext.options,
-        })
+        });
 
-
-        return pmPlugins
+        if (pmPlugins) {
+          return pmPlugins;
+        }
       }
-      return []
+      return [];
+    });
+
+    const nodeInputRules = this.options.nodes.flatMap((node) => {
+      return node.config.inputRules?.({
+        schema,
+        type: schema.nodes[node.config.name],
+      }) || []
     })
+
+    const nodeKeymapRecord: Record<string, Command> = this.options.marks.reduce(
+      (keymap, node) => {
+        return {
+          ...keymap,
+          ...node.config.keymap?.({
+            schema,
+            type: schema.marks[node.config.name],
+          }),
+        };
+      },
+      {}
+    );
 
     const markInputRules = this.options.marks.flatMap((mark) => {
-      return mark.config.inputRules || []
-    })
+      return (
+        mark.config.inputRules?.({
+          schema,
+          type: schema.marks[mark.config.name],
+        }) || []
+      );
+    });
 
-    const markKeymapRecord: Record<string, Command> = this.options.marks.reduce((keymap, mark) => {
-      return {
-        ...keymap,
-        ...mark.config.keymap,
-      }
-    }, {})
+    const markKeymapRecord: Record<string, Command> = this.options.marks.reduce(
+      (keymap, mark) => {
+        return {
+          ...keymap,
+          ...mark.config.keymap?.({
+            schema,
+            type: schema.marks[mark.config.name],
+          }),
+        };
+      },
+      {}
+    );
 
-    return [keymap(markKeymapRecord), inputRules({ rules: markInputRules }), ...proseMirrorPlugins]
+    return [
+      keymap({ ...markKeymapRecord, ...nodeKeymapRecord }),
+      inputRules({ rules: [...markInputRules, ...nodeInputRules] }),
+      ...proseMirrorPlugins,
+    ];
   }
+
 
   buildNodeViews() {
     const flattenedExtensions = flattenExtensions(this.options.extensions)
@@ -165,14 +202,13 @@ export class Editor {
   }
 
   createState() {
-    const proseMirrorPlugins = this.buildPlugins()
-
     const schema = getSchema({
       extensions: this.options.extensions,
       marks: this.options.marks,
       nodes: this.options.nodes,
     })
 
+    const proseMirrorPlugins = this.buildPlugins(schema)
     let state: EditorState
 
     if (this.options.doc instanceof ProseMirrorNode) {

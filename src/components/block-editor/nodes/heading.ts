@@ -1,3 +1,4 @@
+import { InputRule } from 'prosemirror-inputrules'
 import { Node } from '~/lib/vault-prosemirror'
 
 
@@ -18,4 +19,30 @@ export const HeadingNode = Node.create({
       toDOM(node) { return ["h" + node.attrs.level, 0] }
     }
   },
+  inputRules({ type }) {
+    return [new InputRule(/^(#+)(\s+)/, (state, match, start, end) => {
+
+      const $start = state.doc.resolve(start)
+      
+      if ($start.parent.type.name === 'paragraph') {
+        const { tr, selection } = state;
+        const { $from, $to } = selection;
+        const block = $from.blockRange($to);
+        
+        const headingLevel = match[1].length
+        const heading = type.create({
+          level: headingLevel,
+        }, $start.parent.content)
+    
+        // return state.tr.replaceWith(block!.start, block!.end, header)
+    
+        
+        return state.tr.setBlockType(start, end, type, {
+          level: headingLevel
+        }).deleteRange(start, end)
+      }
+    
+      return null
+    })]
+  }, 
 })

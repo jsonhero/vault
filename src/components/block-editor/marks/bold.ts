@@ -1,13 +1,14 @@
+import { toggleMark } from 'prosemirror-commands'
 import { DOMOutputSpec, MarkSpec } from 'prosemirror-model'
 import { Mark } from '~/lib/vault-prosemirror'
+import { markInputRule } from '../utils/mark-input-rule'
 
 const strongDOM: DOMOutputSpec = ["strong", 0]
 
-export const StrongMark = Mark.create({
+export const BoldMark = Mark.create({
   name: 'strong',
   spec() {
     return {
-      // inclusive: false,
       parseDOM: [
         {tag: "strong"},
         // This works around a Google Docs misbehavior where
@@ -19,5 +20,14 @@ export const StrongMark = Mark.create({
       ],
       toDOM() { return strongDOM }
     } as MarkSpec
-  }
+  },
+  inputRules({ type }) {
+    return [markInputRule(/\*\*([^*]+)\*\*/, type)]
+  },
+  keymap({ type }) {
+    return {
+      'Mod-b': toggleMark(type),
+      'Mod-B': toggleMark(type)
+    }
+  },
 })

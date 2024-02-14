@@ -1,6 +1,8 @@
-import { Node as ProsemirrorNode, NodeSpec } from "prosemirror-model";
+import { Node as ProsemirrorNode, NodeSpec, NodeType, Schema } from "prosemirror-model";
 import { Editor } from "./editor";
 import { Decoration, DecorationSource, EditorView, NodeView } from "prosemirror-view";
+import { InputRule } from "prosemirror-inputrules";
+import { Command } from "prosemirror-state";
 
 interface NodeViewProps {
   node: ProsemirrorNode
@@ -19,6 +21,8 @@ interface NodeConfig {
     },
     props: NodeViewProps
   ): NodeView
+  inputRules?: (options: { type: NodeType, schema: Schema }) => InputRule[]
+  keymap?: (options: { type: NodeType, schema: Schema }) => Record<string, Command>
 }
 
 export class Node {
