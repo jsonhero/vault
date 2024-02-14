@@ -38,6 +38,16 @@ export const Main = observer(() => {
     root.windowService.removeTab(tab.id)
   }
 
+  const onSelectBlockId = (blockId: string | null) => {
+    console.log(blockId, ':: blocky')
+    const activeTab = root.windowService.activeTab
+    if (activeTab) {
+      root.windowService.updateTabSelectedBlock(activeTab.id, blockId)
+    }
+  }
+
+  console.log(root.windowService.activeTab?.meta, 'active')
+
   return (
     <div className="relative main-grid">
       <div className="h-[40px] border-b-1 border-gray-700">
@@ -49,12 +59,21 @@ export const Main = observer(() => {
       </div>
       <div className="w-auto overflow-y-auto ">
         <div className='px-[50px] py-10'>
-          {root.windowService.activeTab?.type === 'entity_view' && <EntityEditor entityId={root.windowService.activeTab.meta.entityId} />}
+          {root.windowService.activeTab?.type === 'entity_view' && (
+            <EntityEditor 
+              entityId={root.windowService.activeTab.meta.entityId} 
+              onSelectBlockId={onSelectBlockId}
+              selectedBlockId={root.windowService.activeTab.meta.selectedBlockId}
+            />
+          )}
           {root.windowService.activeTab?.type === 'hashtag_view' && <TagView tag={root.windowService.activeTab.meta.tag} />}
         </div>
       </div>
       <div className="w-full bg-secondary">
         <UtilityBar />
+      </div>
+      <div className="block">
+        <p>Hello, it's mee f<span contentEditable="false" className="ProseMirror-widget">**</span> <strong>est</strong></p>
       </div>
       {/* <div className="absolute top-0 w-full h-[200px] bg-red-500">
         test

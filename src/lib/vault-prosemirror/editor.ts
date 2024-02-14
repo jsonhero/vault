@@ -1,6 +1,6 @@
 import { Decoration, DecorationSource, EditorView, NodeViewConstructor } from "prosemirror-view";
 import { Node as ProseMirrorNode } from "prosemirror-model";
-import { EditorState, Transaction } from 'prosemirror-state'
+import { Command, EditorState, Transaction } from 'prosemirror-state'
 import { nanoid } from 'nanoid'
 
 import { Extension } from './extension'
@@ -8,6 +8,8 @@ import type { ReactRenderer } from "./react/react-renderer";
 import { Mark } from "./mark";
 import { Node } from "./node";
 import { flattenExtensions, getSchema } from "./helpers";
+import { keymap } from "prosemirror-keymap";
+import { inputRules } from "prosemirror-inputrules";
 
 export interface EditorOptions {
   doc: string | ProseMirrorNode
@@ -92,7 +94,18 @@ export class Editor {
       return []
     })
 
-    return proseMirrorPlugins
+    const markInputRules = this.options.marks.flatMap((mark) => {
+      return mark.config.inputRules || []
+    })
+
+    const markKeymapRecord: Record<string, Command> = this.options.marks.reduce((keymap, mark) => {
+      return {
+        ...keymap,
+        ...mark.config.keymap,
+      }
+    }, {})
+
+    return [keymap(markKeymapRecord), inputRules({ rules: markInputRules }), ...proseMirrorPlugins]
   }
 
   buildNodeViews() {

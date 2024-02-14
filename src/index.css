@@ -151,3 +151,18 @@ body {
 .ProseMirror:focus {
   outline: none;
 }
+
+
+.block-editor h2 {
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.editing-bold::before {
+  pointer-events: none;
+  content: '**';
+}
+.editing-bold::after {
+  pointer-events: none;
+  content: '**';
+}

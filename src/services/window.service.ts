@@ -7,6 +7,7 @@ import { RootService } from './root.service';
 
 type BaseWindowTab = {
   id: string;
+  isActive: boolean;
   name: string;
 }
 
@@ -21,7 +22,7 @@ type EntityViewWindowTab = BaseWindowTab & {
   type: 'entity_view';
   meta: {
     entityId: number;
-    selectedBlockId?: string
+    selectedBlockId?: string | null
   }
 }
 
@@ -34,7 +35,7 @@ type Window = {
 
 
 export class WindowService {
-  activeTab?: WindowTab
+  // activeTab?: WindowTab
   tabs: WindowTab[] = []
   constructor(
     private readonly root: RootService
@@ -47,9 +48,9 @@ export class WindowService {
     reaction(() => this.tabs, () => {
       this.save()
     })
-    reaction(() => this.activeTab, () => {
-      this.save()
-    })
+    // reaction(() => this.activeTab, () => {
+    //   this.save()
+    // })
   }
 
   async load() {
@@ -62,7 +63,7 @@ export class WindowService {
       await this.insertInitial()
     } else {
       this.tabs = state.data.tabs
-      this.activeTab = state.data.activeTab
+      // this.activeTab = state.data.activeTab
     }
   }
 
@@ -71,7 +72,7 @@ export class WindowService {
       type: 'window_state',
       data: {
         tabs: [],
-        activeTab: undefined,
+        // activeTab: undefined,
       }
     })
     .execute()
@@ -84,16 +85,34 @@ export class WindowService {
       .set({
         data: {
           tabs: this.tabs,
-          activeTab: this.activeTab,
+          // activeTab: this.activeTab,
         }
       })
       .execute()
   }
 
-
   setActiveTab(tabId: string) {
-    this.activeTab = this.tabs.find((t) => t.id === tabId)
+    this.tabs = this.tabs.map((t) => {
+      if (t.id === tabId) {
+        return {
+          ...t,
+          isActive: true
+        }
+      } else if (t.isActive) {
+        return {
+          ...t,
+          isActive: false,
+        }
+      }
+      return t
+    })
   }
+
+  get activeTab() {
+    return this.tabs.find((t) => t.isActive)
+  }
+
+
 
   addTab(tab: Omit<WindowTab, 'id'>) {
     const id = nanoid()
@@ -113,17 +132,31 @@ export class WindowService {
     })
   }
 
-  removeTab(tabId: string) {
-    this.tabs = this.tabs.filter((t) => t.id !== tabId)
+  updateTabSelectedBlock(tabId: string, selectedBlockId: string | null) {
+    this.tabs = this.tabs.map((t) => {
+      if (t.type === 'entity_view' && t.id === tabId) {
+        return {
+          ...t,
+          meta: {
+            ...t.meta,
+            selectedBlockId,
+          },
+        }
+      }
+      return t
+    })
+  }
 
+  removeTab(tabId: string) {
     if (this.activeTab?.id === tabId) {
       const tab = this.tabs.find((t) => t.id !== tabId)
 
       if (tab) {
         this.setActiveTab(tab.id)
-      } else {
-        this.activeTab = undefined
       }
     }
+    
+    this.tabs = this.tabs.filter((t) => t.id !== tabId)
+
   }
 }

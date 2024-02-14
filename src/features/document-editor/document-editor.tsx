@@ -10,7 +10,7 @@ import { useRootService } from '~/services/root.service';
 import { entityGraphService } from '~/services/entity-graph.service';
 import { BlockEditor } from '~/components/block-editor/block-editor';
 
-export const DocumentEditor = ({ entity, selectedBlockId, simple }: { entity: Entity }) => {
+export const DocumentEditor = ({ entity, selectedBlockId, simple, onSelectBlockId }: { entity: Entity }) => {
 
   const { data: document } = useTakeFirstDbQuery({
     keys: [entity.id],
@@ -104,6 +104,7 @@ export const DocumentEditor = ({ entity, selectedBlockId, simple }: { entity: En
         documentJson={docJson} 
         onUpdate={throttleUpdate} 
         simple={simple}
+        onSelectBlockId={onSelectBlockId}
       />
     </div>
   )

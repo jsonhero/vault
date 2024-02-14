@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { EditorState } from 'prosemirror-state';
 
 import { VaultExtension } from '~/extensions/todo';
@@ -11,9 +11,12 @@ import {
   HashtagExtension,
   ReferenceExtension,
   SlashCmdExtension,
+  MarkdownExtension,
 } from './extensions'
 import { nodes } from './nodes'
+import { marks } from './marks'
 import { generateDefaultDoc } from './utils'
+
 
 interface BlockEditorProps {
   renderId: string | null | undefined;
@@ -22,6 +25,7 @@ interface BlockEditorProps {
   selectedBlockId?: string;
   extensions: VaultExtension[]
   simple?: boolean
+  onSelectBlockId?: (blockId: string | null) => void
 }
 
 export const BlockEditor = React.memo((props: BlockEditorProps) => {
@@ -33,6 +37,7 @@ export const BlockEditor = React.memo((props: BlockEditorProps) => {
     }) {
       props.onUpdate(state)
     },
+    marks,
     nodes: [
       ...nodes,
       ...props.extensions.flatMap((ext) => ext.props.prosemirror.nodes)
@@ -42,8 +47,14 @@ export const BlockEditor = React.memo((props: BlockEditorProps) => {
         hideLineNumbers: props.simple
       }),
       LineblockExtension.configure({
-        selectedBlockId: props.selectedBlockId
+        selectedBlockId: props.selectedBlockId,
+        onSelectBlockId(blockId) {
+          if (props.onSelectBlockId) {
+            props.onSelectBlockId(blockId)
+          }
+        },
       }),
+      MarkdownExtension,
       KeymapExtension,
       HashtagExtension,
       ReferenceExtension,

@@ -149,7 +149,6 @@ export const BreadcrumbComponent = ({
   path,
   view
 }) => {
-
   return (
     <div>
       {path.length ? (
@@ -170,7 +169,7 @@ export const BreadcrumbComponent = ({
 
 interface LineblockExtensionOptions {
   selectedBlockId?: string;
-  onSelectBlockId?: (blockId: string) => void;
+  onSelectBlockId?: (blockId: string | null) => void;
 }
 
 export const LineblockExtension = Extension.create<LineblockExtensionOptions>({
@@ -208,7 +207,7 @@ export const LineblockExtension = Extension.create<LineblockExtensionOptions>({
           as: breadcrumbEl,
           props: {
             view,
-            path: [],
+            path: options.selectedBlockId ? [options.selectedBlockId] : [],
           }
         })
 
@@ -310,6 +309,11 @@ export const LineblockExtension = Extension.create<LineblockExtensionOptions>({
               path: [],
               selectedBlockId: null,
             })
+
+            if (options.onSelectBlockId) {
+              options.onSelectBlockId(null)
+            }
+
             return {
               selectedBlockId: null,
               path: [],

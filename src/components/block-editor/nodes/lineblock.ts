@@ -43,9 +43,7 @@ class LineBlockNodeView {
       this.dom.style.left = `calc(var(--block-margin) * (${node.attrs.depth} - var(--focus-depth)))`
     }
 
-    const isHidden = decorations.find((dec) => dec.spec.hidden)
-    console.log(decorations, 'decor')
-    
+    const isHidden = decorations.find((dec) => dec.spec.hidden)    
 
     // shouldn't do this every update
     if (isHidden) {
