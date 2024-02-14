@@ -39,14 +39,11 @@ export const Main = observer(() => {
   }
 
   const onSelectBlockId = (blockId: string | null) => {
-    console.log(blockId, ':: blocky')
     const activeTab = root.windowService.activeTab
     if (activeTab) {
       root.windowService.updateTabSelectedBlock(activeTab.id, blockId)
     }
   }
-
-  console.log(root.windowService.activeTab?.meta, 'active')
 
   return (
     <div className="relative main-grid">
@@ -72,12 +69,6 @@ export const Main = observer(() => {
       <div className="w-full bg-secondary">
         <UtilityBar />
       </div>
-      <div className="block">
-        <p>Hello, it's mee f<span contentEditable="false" className="ProseMirror-widget">**</span> <strong>est</strong></p>
-      </div>
-      {/* <div className="absolute top-0 w-full h-[200px] bg-red-500">
-        test
-      </div> */}
     </div>
   )
 })
