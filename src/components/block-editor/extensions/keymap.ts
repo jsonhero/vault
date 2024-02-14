@@ -2,6 +2,7 @@ import { keymap } from "prosemirror-keymap";
 import { EditorState, TextSelection, Transaction } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { joinTextblockBackward } from "prosemirror-commands";
+import {undo, redo, history} from "prosemirror-history"
 
 import { Extension } from "~/lib/vault-prosemirror";
 
@@ -33,7 +34,7 @@ const createLineblockOnEnter = (state: EditorState, dispatch?: (tr: Transaction)
 
   // Check if the cursor is at the end of a "paragraph" within a "lineblock"
   if (
-    paragraphNode?.type.name === 'paragraph' &&
+    paragraphNode?.type.spec.group === 'block' &&
     $from.pos === $to.pos
   ) {
     const lineblockPos = $from.before(1)
@@ -48,7 +49,7 @@ const createLineblockOnEnter = (state: EditorState, dispatch?: (tr: Transaction)
             blockId: generateBlockId(),
             depth: lineblock.attrs.depth
           },
-        }])
+        }, { type: state.schema.nodes.paragraph }])
         dispatch?.(tr);
         return false;
     }
@@ -74,7 +75,7 @@ const createLineblockOnEnter = (state: EditorState, dispatch?: (tr: Transaction)
 export const backspace = (state: EditorState, dispatch?: (tr: Transaction) => void): boolean => {
   const { $from, $to } = state.selection;
   if (
-    $from.parent.type.name === "paragraph" &&
+    $from.parent.type.spec.group === "block" &&
     $from.node($from.depth - 1).type.name === "lineblock" &&
     $from.pos === $to.pos
   ) {
@@ -151,12 +152,14 @@ export const keymapPlugin = keymap({
   ArrowLeft: arrowHandler("left"),
   ArrowRight: arrowHandler("right"),
   ArrowUp: arrowHandler("up"),
-  ArrowDown: arrowHandler("down")
+  ArrowDown: arrowHandler("down"),
+  'Mod-z': undo,
+  'Mod-y': redo,
 });
 
 export const KeymapExtension = Extension.create({
   name: 'keymap',
   proseMirrorPlugins() {
-    return [keymapPlugin]
+    return [history(), keymapPlugin]
   },
 })

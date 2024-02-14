@@ -153,7 +153,22 @@ body {
 }
 
 
+.block-editor h1 {
+  font-weight: bold;
+  font-size: 32px;
+}
+
 .block-editor h2 {
+  font-weight: bold;
+  font-size: 28px;
+}
+
+.block-editor h3 {
+  font-weight: bold;
+  font-size: 24px;
+}
+
+.block-editor h4 {
   font-weight: bold;
   font-size: 20px;
 }
