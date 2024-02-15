@@ -102,13 +102,13 @@ export class Editor {
       }) || []
     })
 
-    const nodeKeymapRecord: Record<string, Command> = this.options.marks.reduce(
+    const nodeKeymapRecord: Record<string, Command> = this.options.nodes.reduce(
       (keymap, node) => {
         return {
           ...keymap,
           ...node.config.keymap?.({
             schema,
-            type: schema.marks[node.config.name],
+            type: schema.nodes[node.config.name],
           }),
         };
       },
@@ -136,6 +136,8 @@ export class Editor {
       },
       {}
     );
+
+    console.log(nodeKeymapRecord, 'record')
 
     return [
       keymap({ ...markKeymapRecord, ...nodeKeymapRecord }),

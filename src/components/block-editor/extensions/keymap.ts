@@ -43,13 +43,14 @@ const createLineblockOnEnter = (state: EditorState, dispatch?: (tr: Transaction)
     if (lineblock && lineblock.type.name === 'lineblock') {
       const to = $to.pos;
       const tr = state.tr
-        .split(to, 2, [{
+        .split(to, $from.depth, [{
           type: lineblock.type,
           attrs: {
             blockId: generateBlockId(),
             depth: lineblock.attrs.depth
           },
         }, { type: state.schema.nodes.paragraph }])
+        
         dispatch?.(tr);
         return false;
     }

@@ -54,7 +54,6 @@ export const BlockEditor = React.memo((props: BlockEditorProps) => {
           }
         },
       }),
-      // MarkdownExtension,
       KeymapExtension,
       HashtagExtension,
       ReferenceExtension,
