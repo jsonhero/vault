@@ -137,11 +137,29 @@ export class Editor {
       {}
     );
 
+    const markPlugins = this.options.marks.flatMap((mark) => {
+      if (mark.config.proseMirrorPlugins) {
+        const pmPlugins = mark.config.proseMirrorPlugins?.call({
+          editor: this,
+          // options: mark.options,
+        }, {
+          schema,
+          type: schema.marks[mark.config.name],
+        });
+
+        if (pmPlugins) {
+          return pmPlugins;
+        }
+      }
+      return [];
+    })
+
     console.log(nodeKeymapRecord, 'record')
 
     return [
       keymap({ ...markKeymapRecord, ...nodeKeymapRecord }),
       inputRules({ rules: [...markInputRules, ...nodeInputRules] }),
+      ...markPlugins,
       ...proseMirrorPlugins,
     ];
   }

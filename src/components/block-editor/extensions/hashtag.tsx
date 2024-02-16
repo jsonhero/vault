@@ -7,6 +7,7 @@ import { forwardRef, useEffect, useState } from "react";
 import { useDbQuery } from "~/query-manager";
 import { sql } from "kysely";
 import { Menu } from "@ark-ui/react";
+import { Decoration, DecorationSet } from "prosemirror-view";
 
 const nodePluginKey = new PluginKey('suggest-decor')
 const nodeSuggestionKey = new PluginKey('hashtag-suggestion')
@@ -104,11 +105,10 @@ function createHashtagRule() {
     const range = new NodeRange($start, $end, $start.depth)
 
     if (range) {
-      const meta = { action: 'add' }
+      tr.addMark(start, end, state.schema.marks.hashtag.create())
+      tr = tr.insertText(match[1][match[1].length - 1], end).scrollIntoView()
+      const meta = { action: 'add', range: { start, end: tr.mapping.map(end) } }
       tr.setMeta(nodePluginKey, meta)
-      tr = tr.wrap(range, [{ type: state.schema.nodes.hashtag }])
-      tr = tr.insertText(match[1][match[1].length - 1], tr.mapping.map(end) - 1).scrollIntoView()
-      tr = tr.setSelection(TextSelection.create(tr.doc, tr.mapping.map(end) - 1))
     }
 
     tr = openSuggestion(nodeSuggestionKey, state, tr, '#', {
@@ -126,9 +126,42 @@ function inHashtagNode(state: EditorState) {
 
 const nodePlugin: Plugin = new Plugin({
   key: nodePluginKey,
+  // state: {
+  //   init() {
+  //     return {
+  //       decorations: DecorationSet.empty
+  //     }
+  //   },
+  //   apply(tr, state) {
+  //     const meta = tr.getMeta(nodePlugin)
 
+  //     if (meta?.action === 'add') {
+  //       const { range } = meta
+
+  //       console.log('add', meta, tr.selection.from)
+
+  //       const deco = Decoration.inline(range.start, range.end, {
+  //         class: 'hashy'
+  //       }, {
+  //         inclusiveEnd: true,
+  //       })
+
+  //       return {
+  //         decorations: state.decorations.add(tr.doc, [deco])
+  //       }
+  //     }
+
+
+  //     return {
+  //       decorations: state.decorations.map(tr.mapping, tr.doc)
+  //     }
+  //   },
+  // },
   props: {
-    handleTextInput(view, text) {
+    // decorations(state) {
+    //   return nodePlugin.getState(state)?.decorations
+    // },
+    handleTextInput(view, _from, _to, text) {
       const meta =  view.state.tr.getMeta(nodePluginKey)
       const aheadPos = view.state.selection.from
       
@@ -182,9 +215,9 @@ export const HashtagExtension = Extension.create({
   proseMirrorPlugins() {
     return [
       nodePlugin,
-      inputRules({
-        rules: [createHashtagRule()]
-      }),
+      // inputRules({
+      //   rules: [createHashtagRule()]
+      // }),
     ]
   },
   extensions() {

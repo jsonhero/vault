@@ -181,3 +181,35 @@ body {
   pointer-events: none;
   content: '**';
 }
+
+.empty::before {
+  pointer-events: none;
+  float: left;
+  height: 0;
+  width: 100%;
+  color: #696e77;
+}
+
+h1.empty::before {
+  content: 'Heading 1';
+}
+
+h2.empty::before {
+  content: 'Heading 2';
+}
+
+h3.empty::before {
+  content: 'Heading 3';
+}
+
+h4.empty::before {
+  content: 'Heading 4';
+}
+
+p.empty::before {
+  content: 'Start typing...'
+}
+
+.hashy {
+  color: blue;
+}

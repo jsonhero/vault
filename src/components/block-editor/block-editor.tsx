@@ -11,7 +11,7 @@ import {
   HashtagExtension,
   ReferenceExtension,
   SlashCmdExtension,
-  MarkdownExtension,
+  PlaceholderExtension
 } from './extensions'
 import { nodes } from './nodes'
 import { marks } from './marks'
@@ -57,7 +57,8 @@ export const BlockEditor = React.memo((props: BlockEditorProps) => {
       KeymapExtension,
       HashtagExtension,
       ReferenceExtension,
-      SlashCmdExtension
+      SlashCmdExtension,
+      PlaceholderExtension
     ]
   })
  

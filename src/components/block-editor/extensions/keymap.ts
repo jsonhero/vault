@@ -80,16 +80,7 @@ export const backspace = (state: EditorState, dispatch?: (tr: Transaction) => vo
     $from.node($from.depth - 1).type.name === "lineblock" &&
     $from.pos === $to.pos
   ) {
-    if ($from.parent.content.size === 0) {
-      joinTextblockBackward(state, dispatch)
-      // const tr = state.tr
-      //   .delete($from.pos - 2, $from.pos + 1)
-      // dispatch?.(tr);
-      return true;
-    } else if (joinTextblockBackward(state, dispatch)) {
-      return true;
-    }
-
+    return joinTextblockBackward(state, dispatch)
   }
 
   return false;
@@ -152,8 +143,8 @@ export const keymapPlugin = keymap({
   Backspace: backspace,
   ArrowLeft: arrowHandler("left"),
   ArrowRight: arrowHandler("right"),
-  ArrowUp: arrowHandler("up"),
-  ArrowDown: arrowHandler("down"),
+  // ArrowUp: arrowHandler("up"),
+  // ArrowDown: arrowHandler("down"),
   'Mod-z': undo,
   'Mod-y': redo,
 });
