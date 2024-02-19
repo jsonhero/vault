@@ -107,6 +107,47 @@ export const HashtagMark = Mark.create({
   proseMirrorPlugins({ type }) {
 
     const plugin = new Plugin({
+      appendTransaction(transactions, oldState, newState) {
+        const [tr] = transactions
+
+        let nearbyTagRange: ReturnType<typeof getMarkRange> = false;
+
+        tr.mapping.maps.forEach((stepMap, index) => {
+          
+          stepMap.forEach((from, to) => {
+            const newStart = tr.mapping.slice(index).map(from, -1)
+            const newEnd = tr.mapping.slice(index).map(to)
+            // const oldStart = tr.mapping.invert().map(newStart, -1)
+            // const oldEnd = tr.mapping.invert().map(newEnd)
+            const posBefore = newState.doc.resolve(newStart - 1)
+
+            nearbyTagRange = getMarkRange(posBefore, type)
+          })
+        })
+
+        if (nearbyTagRange) {
+          const range = nearbyTagRange as { to: number, from: number }
+
+          const $from = newState.doc.resolve(range.from)
+          const parent = $from.parent
+
+          const endPos = $from.parentOffset + (parent.textContent.length - $from.parentOffset)
+          const textAfter = parent.textBetween($from.parentOffset, endPos);
+
+          const match = /(#[a-zA-Z0-9]+)/.exec(textAfter)
+
+          if (match) {
+            const textMatch = match[1]
+
+            return newState.tr.addMark(range.from, range.from + textMatch.length, type.create())
+          }
+
+
+
+        }
+
+        return null
+      },
       props: {
         handleTextInput(view, from, to, text) {
           const { state } = view
