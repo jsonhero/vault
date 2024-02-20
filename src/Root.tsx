@@ -9,7 +9,7 @@ import { SearchProvider } from "~/features/search";
 import { AppStateProvider } from "~/features/app-state";
 import { queryManager, loadWasmDatabase, QueryManagerProvider } from '~/query-manager.ts'
 import { RootServiceProvider, rootService } from "./services/root.service.tsx";
-
+import { nanoid } from 'nanoid'
 
 // queryManager.onLoaded(() => {
 //   rootService.load()
@@ -108,5 +108,5 @@ function writeHash(hash: HashBag) {
 }
 
 function newRoom() {
-  return crypto.randomUUID().replaceAll("-", "");
+  return nanoid()
 }
