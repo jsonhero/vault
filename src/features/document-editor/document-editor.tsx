@@ -9,6 +9,7 @@ import { documentService } from '~/services/document.service';
 import { useRootService } from '~/services/root.service';
 import { entityGraphService } from '~/services/entity-graph.service';
 import { BlockEditor } from '~/components/block-editor/block-editor';
+import { MetadataEditor } from './metadata-editor';
 
 export const DocumentEditor = ({ entity, selectedBlockId, simple, onSelectBlockId }: { entity: Entity }) => {
 
@@ -97,6 +98,7 @@ export const DocumentEditor = ({ entity, selectedBlockId, simple, onSelectBlockI
   
   return (
     <div>
+      <MetadataEditor entityId={entity.id} />
       <BlockEditor
         extensions={root.extensionService.extensions}
         selectedBlockId={selectedBlockId}

@@ -88,6 +88,8 @@ function isInHashtag(
   return false
 }
 
+
+const regexp = /(?:^|\s)(#[a-zA-Z0-9]+)$/
 export const HashtagMark = Mark.create({
   name: 'hashtag',
   spec() {
@@ -125,6 +127,8 @@ export const HashtagMark = Mark.create({
           })
         })
 
+
+        // Extend hashtag mark if new text is set nearby
         if (nearbyTagRange) {
           const range = nearbyTagRange as { to: number, from: number }
 
@@ -141,9 +145,6 @@ export const HashtagMark = Mark.create({
 
             return newState.tr.addMark(range.from, range.from + textMatch.length, type.create())
           }
-
-
-
         }
 
         return null
@@ -189,10 +190,12 @@ export const HashtagMark = Mark.create({
   },
   inputRules({ type }) {
     return [
-      new InputRule(/(?:^|\s)(#[a-zA-Z0-9])$/, (state, match, start, end) => {
+      new InputRule(regexp, (state, match, start, end) => {
+        console.log(match, 'mtach')
         if (state.tr.storedMarks?.find((mark) => mark.type === type)) {
           return null
         }
+
       
         let tr = state.tr
         const markStart = match[0].startsWith(' ') ? start + 1 : start
@@ -216,13 +219,11 @@ export const HashtagMark = Mark.create({
         }
 
         const { selection } = state
-        const offset = selection.$from.nodeAfter?.nodeSize
+        const range = getMarkRange(selection.$from, type)
 
-        console.log(offset, 'offset?!')
-
-        if (offset) {
+        if (range) {
           if (dispatch) {
-            dispatch(state.tr.removeMark(selection.from, selection.from + offset))
+            dispatch(state.tr.removeMark(selection.from, range.to))
             return false
           }
         }

@@ -90,7 +90,6 @@ body {
   --tw-prose-quotes: var(--sand-11);
 }
 
-
 .main-grid {
   display: grid;
   grid-template-rows: auto 1fr auto;
