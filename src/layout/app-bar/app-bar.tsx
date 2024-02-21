@@ -8,7 +8,7 @@ import { observer } from 'mobx-react-lite'
 
 const WindowTabComponent = ({ tab, onClickTab, onCloseTab, isActive }: { tab: WindowTab }) => {
   return (
-    <Button data-active={isActive} onClick={() => onClickTab(tab)} className="flex justify-between items-center group p-3 w-[160px] h-full border-r border-backgroundBorder first:border-l data-[active=true]:bg-primary">
+    <Button data-active={isActive} isActive={isActive} onClick={() => onClickTab(tab)} className="flex justify-between items-center group p-3 w-[160px] h-full border-r border-backgroundBorder first:border-l data-[active=true]:bg-primary">
       <div className="text-sm">
         {tab.name}
       </div>
@@ -16,7 +16,7 @@ const WindowTabComponent = ({ tab, onClickTab, onCloseTab, isActive }: { tab: Wi
           e.stopPropagation();
           onCloseTab(tab);
       }} className="w-[14px]">
-        <XIcon  className="hidden group-hover:block" size={14} />
+        <XIcon  className="hidden group-hover:block group-data-[active=true]:block" size={14} />
       </div>
     </Button>
   )
