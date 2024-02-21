@@ -2,7 +2,7 @@ import { forwardRef, ComponentProps } from 'react';
 import { tv, type VariantProps } from 'tailwind-variants';
  
 const button = tv({
-  base: 'text-muted hover:text-normal',
+  base: 'text-muted hover:text-normal hover:bg-interactiveHover p-1 rounded-sm',
   variants: {
     size: {
       sm: 'text-sm',
@@ -21,7 +21,7 @@ const button = tv({
 type ButtonVariants = VariantProps<typeof button> & ComponentProps<'button'>;
  
 interface ButtonProps extends ButtonVariants {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ size, isActive, className, ...rest }, ref) => {
@@ -30,8 +30,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ size, isActi
       ref={ref}
       className={button({ size, isActive, className })}
       {...rest}
-    >
-      {rest.children}
-    </button>
+    />
   );
 });

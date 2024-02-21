@@ -11,4 +11,7 @@
   --text-muted: #888;
   --text-accent: #61afef;
   --background-border: #424958;
+
+  --interactive-normal: #20242b;
+  --interactive-hover: hsla(var(--accent-h), calc(var(--accent-s) - 35%), var(--accent-l), 0.07);
 }

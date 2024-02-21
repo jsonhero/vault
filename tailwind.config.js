@@ -38,6 +38,7 @@ module.exports = {
       backgroundColor: {
         primary: 'var(--background-primary)',
         secondary: 'var(--background-secondary)',
+        interactiveHover: 'var(--interactive-hover)'
       },
       borderRadius: {
         lg: "var(--radius)",
