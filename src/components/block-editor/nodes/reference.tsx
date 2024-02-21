@@ -29,7 +29,7 @@ const ReferenceComponent = () => {
 
   return (
     <button onClick={onOpen} className='inline-block text-red-500'>
-      @{entity?.title}
+      @{entity?.title || 'Untitled'}
     </button>
   )
 

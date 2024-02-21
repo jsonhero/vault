@@ -1,3 +1,5 @@
+@import "colors.scss";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -34,6 +36,7 @@
  
     --radius: 0.5rem;
   }
+
  
   .dark {
     --background: 222.2 84% 4.9%;
@@ -65,7 +68,7 @@
     --ring: 212.7 26.8% 83.9%;
   }
 }
- 
+
 body {
   --slate-1: #111113;
   --slate-2: #18191b;
@@ -81,6 +84,11 @@ body {
   --slate-12: #edeef0;
 }
 
+.lucide {
+  width: 1em;
+  height: 1em;
+}
+
 .prose {
   --tw-prose-body: var(--sand-12);
   --tw-prose-bold: var(--sand-12);
@@ -92,38 +100,8 @@ body {
 
 .main-grid {
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: 1fr auto;
   height: 100%;
-}
-
-.primary-grid {
-  display: grid;
-  grid-template-areas: 
-    "header header header"
-    "icon-bar explorer-bar main"
-  ;
-  grid-template-columns: 40px min-content 1fr;
-  grid-template-rows: 48px 1fr;
-}
-
-.header-gi {
-  grid-area: header;
-}
-
-.icon-bar-gi {
-  grid-area: icon-bar;
-}
-
-.explorer-bar-gi {
-  grid-area: explorer-bar;
-}
-
-.main-gi {
-  grid-area: main;
-}
-
-.utility-gi {
-  grid-area: utility-bar;
 }
 
 

@@ -10,6 +10,8 @@ import { UtilityBar } from "./layout/utility-bar";
 import { useAppStateService } from "./features/app-state";
 import { observer } from "mobx-react-lite";
 
+import classes from './styles/main.module.scss'
+
 function getEndpoint() {
   let proto = "ws:";
   const host = window.location.host;
@@ -34,26 +36,27 @@ const App = observer(({ dbname }: { dbname: string }) => {
   });
 
   return (
-    <div className="primary-grid h-screen text-secondary">
-      <div className="header-gi bg-primary">
-        <AppBar />
+    <div className="themeDark text-normal">
+      <div className={classes.primaryGrid}>
+        <div className={classes.header}>
+          <AppBar />
+        </div>
+        <div className={classes.iconBar}>
+          <IconBar />
+        </div>
+        <div data-expanded={appState.isLeftBarExpanded} className={classes.explorerBar}>
+          <ExplorerBar />
+        </div>
+        <div className={classes.editor}>
+          <Main />
+        </div>
+        {/* <div className="utility-gi bg-secondary overflow-x-hidden transition-[width] duration-300" style={{
+          width: appState.isRightBarExpanded ? '370px' : '0px'
+        }}>
+          <UtilityBar />
+        </div> */}
       </div>
-      <div className="icon-bar-gi bg-tertiary">
-        <IconBar />
-      </div>
-      <div className="explorer-bar-gi bg-secondary overflow-x-hidden transition-[width] duration-300" style={{
-        width: appState.isLeftBarExpanded ? '275px' : '0px'
-      }}>
-        <ExplorerBar />
-      </div>
-      <div className="main-gi bg-tertiary overflow-hidden">
-        <Main />
-      </div>
-      {/* <div className="utility-gi bg-secondary overflow-x-hidden transition-[width] duration-300" style={{
-        width: appState.isRightBarExpanded ? '370px' : '0px'
-      }}>
-        <UtilityBar />
-      </div> */}
+
     </div>
   )
 })

@@ -7,6 +7,8 @@ import { FileExplorer } from '~/features/file-explorer'
 import { useDbQuery  } from "~/query-manager";
 import { useRootService } from "~/services/root.service";
 
+import { Button } from '~/components/ui/button'
+
 export const ExplorerBar = () => {
   const [active, setActive] = useState('file_tree')
 
@@ -35,16 +37,12 @@ export const ExplorerBar = () => {
   return (
     <div className="w-full h-full">
       <div className="flex w-full justify-center py-3 gap-2">
-        <button onClick={() => setActive('file_tree')} style={{
-          color: active !== 'file_tree' ? 'rgba(255, 255, 255, 0.3)' : 'inherit'
-        }}>
-          <FolderTreeIcon size={18} />
-        </button>
-        <button onClick={() => setActive('file_list')} style={{
-          color: active !== 'file_list' ? 'rgba(255, 255, 255, 0.3)' : 'inherit'
-        }}>
-          <ListIcon size={18} />
-        </button>
+        <Button onClick={() => setActive('file_tree')} isActive={active === 'file_tree'}>
+          <FolderTreeIcon />
+        </Button>
+        <Button onClick={() => setActive('file_list')} isActive={active === 'file_list'}>
+          <ListIcon />
+        </Button>
       </div>
 
       {active === 'file_tree' && (

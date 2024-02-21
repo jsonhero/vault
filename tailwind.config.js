@@ -28,19 +28,16 @@ module.exports = {
         layout: '48px auto'
       },
       colors: {
-        primary: 'var(--slate-12)',
-        secondary: 'var(--slate-11)',
-        tertiary: 'var(--slate-10)'
+        backgroundBorder: 'var(--background-border)',
       },
       textColor: {
-        primary: 'var(--slate-12)',
-        secondary: 'var(--slate-11)',
-        tertiary: 'var(--slate-10)'
+        normal: 'var(--text-normal)',
+        muted: 'var(--text-muted)',
+        accent: 'var(--text-accent)',
       },
       backgroundColor: {
-        primary: 'var(--slate-1)',
-        secondary: 'var(--slate-2)',
-        tertiary: 'var(--slate-3)'
+        primary: 'var(--background-primary)',
+        secondary: 'var(--background-secondary)',
       },
       borderRadius: {
         lg: "var(--radius)",

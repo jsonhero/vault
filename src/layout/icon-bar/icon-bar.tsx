@@ -1,7 +1,9 @@
-import { FilePlus, Table } from "lucide-react"
+import { FilePlusIcon, TableIcon } from "lucide-react"
 
 import { useAppStateService } from "~/features/app-state"
 import { entityService } from "~/services/entity.service"
+
+import { Button } from '~/components/ui/button'
 
 export const IconBar = () => {
   const appState = useAppStateService()
@@ -17,13 +19,13 @@ export const IconBar = () => {
   }
 
   return (
-    <div className="w-full h-full flex flex-col py-2 items-center text-secondary gap-3">
-      <button className="w-auto" onClick={onClickAddDocument}>
-        <FilePlus size={20} />
-      </button>
-      <button className="w-auto" onClick={onClickAddTable}>
-        <Table size={20} />
-      </button>
+    <div className="w-full h-full flex flex-col py-2 items-center text-muted gap-3">
+      <Button size="lg" className="w-auto" onClick={onClickAddDocument}>
+        <FilePlusIcon />
+      </Button>
+      <Button size="lg" className="w-auto" onClick={onClickAddTable}>
+        <TableIcon />
+      </Button>
     </div>
   )
 }

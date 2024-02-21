@@ -80,20 +80,35 @@ const SlashSuggestionComponent = forwardRef((props: { view: EditorView }, ref) =
     if (cmd.type === 'table-cmd') {
       const table = cmd.data
       const entityRow = await tableEditorService.insertRow(table.data_schema_id)
+
+      if (entityRow) {
+        const ref = props.view.state.schema.nodes.reference.create({
+          entityId: entityRow?.id,
+        }, null)
+    
+        const tr = view.state.tr.insert(view.state.selection.anchor, ref).insertText(' ')
+  
+        rootService.modalService.open({
+          entityId: entityRow?.id
+        })
+        view.dispatch(tr)
+
+      }
+
+
       
-      const entityRecord = schema.nodes.entity_record.create({
-        entityId: entityRow?.id,
-      }, null)
+      // const entityRecord = schema.nodes.entity_record.create({
+      //   entityId: entityRow?.id,
+      // }, null)
 
-      const newNode = schema.nodes.lineblock.create({
-        blockId: blockId(),
-      },
-        entityRecord
-      )
+      // const newNode = schema.nodes.lineblock.create({
+      //   blockId: blockId(),
+      // },
+      //   entityRecord
+      // )
 
-      const tr = view.state.tr.insert(pos, newNode)
+      // const tr = view.state.tr.insert(pos, newNode)
 
-      view.dispatch(tr)
     }
 
     if (cmd.type === 'ext-cmd') {

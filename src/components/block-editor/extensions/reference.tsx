@@ -50,8 +50,6 @@ const ReferenceSuggestionComponent = forwardRef((props: { view: EditorView }, re
       entityId: entity.id,
     }, null)
 
-    console.log(ref, 'ref')
-
     const tr = view.state.tr.insert(view.state.selection.anchor, ref).insertText(' ')
 
     view.dispatch(tr)

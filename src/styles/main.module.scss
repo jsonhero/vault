@@ -1,0 +1,39 @@
+@use 'colors.scss';
+
+.primaryGrid {
+  display: grid;
+  grid-template-areas: 
+    "header header header"
+    "icon-bar explorer-bar editor"
+  ;
+  grid-template-columns: 40px min-content 1fr;
+  grid-template-rows: 40px 1fr;
+  height: 100vh;
+
+  .header {
+    grid-area: header;
+    background-color: var(--background-secondary-alt);
+  }
+
+  .iconBar {
+    grid-area: icon-bar;
+    background-color: var(--background-primary);
+  }
+
+  .explorerBar {
+    grid-area: explorer-bar;
+    overflow-x: hidden;
+    transition: width 300ms;
+    background-color: var(--background-secondary);
+    width: 0px;
+    &[data-expanded=true] {
+      width: 275px;
+    }
+  }
+
+  .editor {
+    grid-area: editor;
+    overflow: hidden;
+    background-color: var(--background-primary);
+  }
+}
