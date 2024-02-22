@@ -1,56 +1,120 @@
 import { makeAutoObservable, reaction } from 'mobx'
 import { nanoid } from 'nanoid'
-import { createContext } from 'react';
-import { QueryManager, queryManager } from '~/query-manager'
+
 import { RootService } from './root.service';
+import { entityService } from './entity.service';
 
-
-type BaseWindowTab = {
+class Page {
   id: string;
-  isActive: boolean;
-  name: string;
-}
-
-type HashtagViewWindowTab = BaseWindowTab & {
-  type: 'hashtag_view';
-  meta: {
-    tag: string
+  constructor() {
+    makeAutoObservable(this)
+    this.id = nanoid()
   }
 }
 
-type EntityViewWindowTab = BaseWindowTab & {
-  type: 'entity_view';
-  meta: {
-    entityId: number;
-    selectedBlockId?: string | null
+export class HashtagPage extends Page {
+  tag: string;
+  constructor(tag: string) {
+    super()
+    makeAutoObservable(this)
+    this.tag = tag
   }
 }
 
-export type WindowTab = HashtagViewWindowTab | EntityViewWindowTab
-
-type Window = {
-  id: string;
-  tabs: WindowTab[];
+export class EntityPage extends Page {
+  entityId: number;
+  selectedBlockId?: string | null;
+  constructor(entityId: number, selectedBlockId?: string | null) {
+    super()
+    makeAutoObservable(this)
+    this.entityId = entityId
+    this.selectedBlockId = selectedBlockId
+  }
 }
 
+export class Tab {
+  id: string;
+  title: string;
+  pages: Page[];
+  currentPageIndex = -1;
+
+  constructor() {
+    makeAutoObservable(this)
+    this.id = nanoid()
+    this.title = 'Untitled'
+    this.pages = []
+  }
+
+  addHashtagPage(tag: string) {
+    const page = new HashtagPage(tag)
+    this.addPage(page)
+  }
+
+  addEntityPage(entityId: number, selectedBlockId?: string | null) {
+    const page = new EntityPage(entityId, selectedBlockId)
+    this.addPage(page)
+  }
+
+  private addPage(page: Page) {
+    this.pages.push(page);
+    this.goToPage(this.pages.length - 1);
+  }
+
+  get currentPage(): Page | undefined {
+    return this.getPage(this.currentPageIndex);
+  }
+
+  async goToPage(index: number) {
+    if (index >= 0 && index < this.pages.length) {
+
+      const page = this.getPage(index)
+
+      if (page instanceof EntityPage) {
+        this.title = (await entityService.findById(page.entityId)).title
+      } else if (page instanceof HashtagPage) {
+        this.title = page.tag
+      }
+      this.currentPageIndex = index;
+    }
+  }
+
+  getPage(index: number) {
+    return this.pages[index]
+  }
+
+  goBack() {
+    if (this.currentPageIndex > 0) {
+      this.goToPage(this.currentPageIndex--)
+    }
+  }
+
+  goForward() {
+    if (this.currentPageIndex < this.pages.length - 1) {
+      this.goToPage(this.currentPageIndex++)
+    }
+  }
+
+}
 
 export class WindowService {
   // activeTab?: WindowTab
-  tabs: WindowTab[] = []
+  tabs: Tab[] = []
+  currentTabId?: string = undefined;
+
   constructor(
     private readonly root: RootService
   ) {
     makeAutoObservable(this, {
       tabs: true,
-      activeTab: true,
+      currentTabId: true,
     })
 
     reaction(() => this.tabs, () => {
       this.save()
     })
-    // reaction(() => this.activeTab, () => {
-    //   this.save()
-    // })
+    reaction(() => this.currentTabId, () => {
+      this.save()
+    })
   }
 
   async load() {
@@ -63,7 +127,7 @@ export class WindowService {
       await this.insertInitial()
     } else {
       this.tabs = state.data.tabs
-      // this.activeTab = state.data.activeTab
+      this.currentTabId = state.data.currentTabId
     }
   }
 
@@ -72,7 +136,7 @@ export class WindowService {
       type: 'window_state',
       data: {
         tabs: [],
-        // activeTab: undefined,
+        currentTabId: undefined,
       }
     })
     .execute()
@@ -85,78 +149,43 @@ export class WindowService {
       .set({
         data: {
           tabs: this.tabs,
-          // activeTab: this.activeTab,
+          currentTabId: this.currentTabId,
         }
       })
       .execute()
   }
 
-  setActiveTab(tabId: string) {
-    this.tabs = this.tabs.map((t) => {
-      if (t.id === tabId) {
-        return {
-          ...t,
-          isActive: true
-        }
-      } else if (t.isActive) {
-        return {
-          ...t,
-          isActive: false,
-        }
-      }
-      return t
-    })
+  get currentTab(): Tab | undefined {
+    return this.tabs.find((tab) => tab.id === this.currentTabId);
   }
 
-  get activeTab() {
-    return this.tabs.find((t) => t.isActive)
+  getOrCreateCurrentTab() {
+    const tab = this.currentTab
+    if (!tab) {
+      return this.addTab()
+    }
+    return tab
   }
 
-
-
-  addTab(tab: Omit<WindowTab, 'id'>) {
-    const id = nanoid()
-    this.tabs = [...this.tabs, { id, ...tab, }]
-    this.setActiveTab(id)
+  goToTab(tabId: string) {
+    this.currentTabId = tabId
   }
 
-  updateEntityTabName(entityId: number, name: string) {
-    this.tabs = this.tabs.map((t) => {
-      if (t.type === 'entity_view' && t.meta.entityId === entityId) {
-        return {
-          ...t,
-          name,
-        }
-      }
-      return t
-    })
-  }
-
-  updateTabSelectedBlock(tabId: string, selectedBlockId: string | null) {
-    this.tabs = this.tabs.map((t) => {
-      if (t.type === 'entity_view' && t.id === tabId) {
-        return {
-          ...t,
-          meta: {
-            ...t.meta,
-            selectedBlockId,
-          },
-        }
-      }
-      return t
-    })
+  addTab() {
+    const tab = new Tab()
+    this.tabs.push(tab);
+    this.currentTabId = tab.id;
+    return tab;
   }
 
   removeTab(tabId: string) {
-    if (this.activeTab?.id === tabId) {
-      const tab = this.tabs.find((t) => t.id !== tabId)
-
-      if (tab) {
-        this.setActiveTab(tab.id)
-      }
+    this.tabs = this.tabs.filter((tab) => tabId !== tab.id)
+    if (this.tabs.length) {
+      this.currentTabId = this.tabs[0].id
+    } else {
+      this.currentTabId = undefined
     }
-    
-    this.tabs = this.tabs.filter((t) => t.id !== tabId)
-
   }
+
+
 }

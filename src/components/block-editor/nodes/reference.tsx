@@ -17,13 +17,8 @@ const ReferenceComponent = () => {
 
   const onOpen = () => {
     if (entity) {
-      root.windowService.addTab({
-        type: 'entity_view',
-        meta: {
-          entityId: entity.id,
-        },
-        name: entity.title,
-      })
+      const tab = root.windowService.addTab();
+      tab.addEntityPage(entity.id);
     }
   }
 

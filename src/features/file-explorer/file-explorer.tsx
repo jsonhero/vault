@@ -165,14 +165,8 @@ export const FileExplorer = () => {
     }
     setSelectedNodeId(file.id)
 
-    root.windowService.addTab({
-      type: 'entity_view',
-      meta: {
-        entityId: file.meta.entityId,
-      },
-      name: entity!.title,
-    })
-
+    const tab = root.windowService.getOrCreateCurrentTab();
+    tab.addEntityPage(file.meta.entityId)
 
     if (rootNode.children.length === 0) {
       fileTreeService.insert(cloned)
@@ -240,16 +234,8 @@ export const FileExplorer = () => {
       if (node && node.type === 'folder') {
         node.meta.expanded = !node.meta.expanded
       } else if (node && node.type === 'file') {
-    
-
-        console.log(node, 'noame')
-        root.windowService.addTab({
-          type: 'entity_view',
-          meta: {
-            entityId: node.meta.entityId,
-          },
-          name: node.id,
-        })
+        const tab = root.windowService.getOrCreateCurrentTab();
+        tab.addEntityPage(node.meta.entityId)
       }
       setSelectedNodeId(nodeId)
     }

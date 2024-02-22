@@ -25,13 +25,8 @@ export const ExplorerBar = () => {
 
 
   const onSelectEntity = (entity: Entity) => {
-    root.windowService.addTab({
-      type: 'entity_view',
-      name: entity.title,
-      meta: {
-        entityId: entity.id,
-      },
-    })
+    const tab = root.windowService.getOrCreateCurrentTab()
+    tab.addEntityPage(entity.id)
   } 
   
   return (

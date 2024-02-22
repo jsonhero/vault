@@ -13,7 +13,6 @@ export class ExtensionService {
   }  
 
   private async loadExtensions() {
-    console.log("loading extensions")
     const state = await this.getState()
     const newLoadedExtensionIds: string[] = []
     const promises = this.extensions.map(async (ext) => {

@@ -1,16 +1,16 @@
-import { PanelLeftIcon, PanelRightIcon, SearchIcon, XIcon, ArrowLeftIcon, ArrowRightIcon } from 'lucide-react'
+import { PanelLeftIcon, PanelRightIcon, SearchIcon, XIcon, ArrowLeftIcon, ArrowRightIcon, PlusIcon } from 'lucide-react'
 import { Button } from '~/components/ui/button'
 import { useAppStateService } from '~/features/app-state'
 import { useSearchService } from '~/features/search'
-import { WindowTab } from "~/services/window.service"
+import { Tab } from "~/services/window.service"
 import { useRootService } from "~/services/root.service"
 import { observer } from 'mobx-react-lite'
 
-const WindowTabComponent = ({ tab, onClickTab, onCloseTab, isActive }: { tab: WindowTab }) => {
+const WindowTabComponent = ({ tab, onClickTab, onCloseTab, isActive }: { tab: Tab }) => {
   return (
     <Button data-active={isActive} isActive={isActive} onClick={() => onClickTab(tab)} className="flex justify-between items-center group p-3 w-[160px] h-full border-r border-backgroundBorder data-[active=true]:bg-primary rounded-none">
       <div className="flex-grow text-left text-sm overflow-hidden text-nowrap text-ellipsis">
-        {tab.name}
+        {tab.title}
       </div>
       <div onClick={(e) => {
           e.stopPropagation();
@@ -43,12 +43,16 @@ export const AppBar = observer(() => {
     appState.toggleRightBar()
   }
 
-  const onClickTab = (tab: WindowTab) => {
-    root.windowService.setActiveTab(tab.id)
+  const onClickTab = (tab: Tab) => {
+    root.windowService.goToTab(tab.id)
   }
 
-  const onCloseTab = (tab: WindowTab) => {
+  const onCloseTab = (tab: Tab) => {
     root.windowService.removeTab(tab.id)
+  }
+
+  const onAddTab = () => {
+    root.windowService.addTab()
   }
 
   return (
@@ -74,8 +78,13 @@ export const AppBar = observer(() => {
         </div>
         <div className="h-full flex flex-1 items-end overflow-x-hidden">
             {root.windowService.tabs.map((t) => 
-              <WindowTabComponent key={t.id} isActive={t.id === root.windowService.activeTab?.id} tab={t} onCloseTab={onCloseTab} onClickTab={onClickTab} />)
+              <WindowTabComponent key={t.id} isActive={t.id === root.windowService.currentTab?.id} tab={t} onCloseTab={onCloseTab} onClickTab={onClickTab} />)
             }
+            <div className='ml-2 h-full flex justify-center items-center'>
+              <Button onClick={onAddTab}>
+                <PlusIcon />
+              </Button>
+            </div>
         </div>
       </div>
       <div className="w-[170px] flex items-center justify-end pr-4">
