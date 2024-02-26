@@ -5,8 +5,7 @@ import { useSearchService } from '~/features/search'
 import { EntityPage, HashtagPage, Tab } from "~/services/window.service"
 import { useRootService } from "~/services/root.service"
 import { observer } from 'mobx-react-lite'
-import { useDbQuery, useTakeFirstDbQuery } from '~/query-manager'
-import { useMemo } from 'react'
+import { useTakeFirstDbQuery } from '~/query-manager'
 
 const EntityPageTitle = ({ page }: { page: EntityPage }) => {
 

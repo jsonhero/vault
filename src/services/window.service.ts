@@ -103,8 +103,9 @@ export class Tab {
   }
 
   get hasPreviousPage(): boolean {
-    return this.currentPageIndex !== 0
+    return this.currentPageIndex > 0;
   }
+
 
   async goToPage(index: number) {
     if (index >= 0 && index < this.pages.length) {
