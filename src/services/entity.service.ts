@@ -39,7 +39,7 @@ export class EntityService {
       .where('id', '=', id)
       .execute();
     // also update tab
-    rootService.windowService.updateEntityTabName(id, title)
+    // rootService.windowService.updateEntityTabName(id, title)
   }
 
   async insertDocument() {

@@ -154,8 +154,6 @@ export class Editor {
       return [];
     })
 
-    console.log(nodeKeymapRecord, 'record')
-
     return [
       keymap({ ...markKeymapRecord, ...nodeKeymapRecord }),
       inputRules({ rules: [...markInputRules, ...nodeInputRules] }),

@@ -4,17 +4,22 @@ import { TagView } from "~/features/tag-view"
 import { useRootService } from "~/services/root.service"
 
 import { UtilityBar } from '../utility-bar'
+import { EntityPage, HashtagPage } from "~/services/window.service"
 
 
 export const Main = observer(() => {
   const root = useRootService()
 
   const onSelectBlockId = (blockId: string | null) => {
-    const activeTab = root.windowService.activeTab
-    if (activeTab) {
-      root.windowService.updateTabSelectedBlock(activeTab.id, blockId)
+    const tab = root.windowService.currentTab;
+    if (tab) {
+      if (tab.currentPage instanceof EntityPage) {
+        tab.currentPage.setBlockId(blockId)
+      }
     }
   }
+
+  const currentPage = root.windowService.currentTab?.currentPage
 
   return (
     <div className="relative main-grid">
@@ -27,14 +32,14 @@ export const Main = observer(() => {
       </div> */}
       <div className="w-auto overflow-y-auto ">
         <div className='px-[50px] py-10'>
-          {root.windowService.activeTab?.type === 'entity_view' && (
+          {currentPage instanceof EntityPage && (
             <EntityEditor 
-              entityId={root.windowService.activeTab.meta.entityId} 
+              entityId={currentPage.entityId} 
               onSelectBlockId={onSelectBlockId}
-              selectedBlockId={root.windowService.activeTab.meta.selectedBlockId}
+              selectedBlockId={currentPage.selectedBlockId}
             />
           )}
-          {root.windowService.activeTab?.type === 'hashtag_view' && <TagView tag={root.windowService.activeTab.meta.tag} />}
+          {currentPage instanceof HashtagPage && <TagView tag={currentPage.tag} />}
         </div>
       </div>
       <div className="w-full bg-secondary">

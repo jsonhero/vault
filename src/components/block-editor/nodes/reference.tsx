@@ -17,7 +17,7 @@ const ReferenceComponent = () => {
 
   const onOpen = () => {
     if (entity) {
-      const tab = root.windowService.addTab();
+      const tab = root.windowService.getOrCreateCurrentTab();
       tab.addEntityPage(entity.id);
     }
   }

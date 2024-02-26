@@ -1,23 +1,31 @@
-import { makeAutoObservable, reaction } from 'mobx'
+import { makeAutoObservable, reaction, runInAction } from 'mobx'
 import { nanoid } from 'nanoid'
 
 import { RootService } from './root.service';
-import { entityService } from './entity.service';
 
-class Page {
+abstract class Page {
   id: string;
-  constructor() {
-    makeAutoObservable(this)
+  type: string;
+  constructor(type: string) {
+    // makeAutoObservable(this)
     this.id = nanoid()
+    this.type = type;
   }
+
+  abstract toJson(): object;
 }
 
 export class HashtagPage extends Page {
   tag: string;
   constructor(tag: string) {
-    super()
-    makeAutoObservable(this)
+    super('hashtag')
     this.tag = tag
+  }
+
+  toJson() {
+    return {
+      tag: this.tag,
+    }
   }
 }
 
@@ -25,24 +33,50 @@ export class EntityPage extends Page {
   entityId: number;
   selectedBlockId?: string | null;
   constructor(entityId: number, selectedBlockId?: string | null) {
-    super()
-    makeAutoObservable(this)
+    super('entity')
     this.entityId = entityId
     this.selectedBlockId = selectedBlockId
+  }
+
+  setBlockId(blockId: string | null) {
+    this.selectedBlockId = blockId
+  }
+
+  toJson() {
+    return {
+      entityId: this.entityId,
+      selectedBlockId: this.selectedBlockId,
+    }
   }
 }
 
 export class Tab {
   id: string;
-  title: string;
   pages: Page[];
-  currentPageIndex = -1;
+  currentPageIndex: number;
 
-  constructor() {
-    makeAutoObservable(this)
-    this.id = nanoid()
-    this.title = 'Untitled'
-    this.pages = []
+
+  windowService: WindowService
+  constructor(
+    windowService: WindowService, 
+    props?: any
+  ) {
+    makeAutoObservable(this, {
+      id: false,
+      windowService: false,
+    })
+    this.windowService = windowService
+    this.id = props?.id ?? nanoid()
+    this.pages = props?.pages ?? []
+    this.currentPageIndex = props?.currentPageIndex ?? -1
+
+    reaction(() => this.pages, () => {
+      this.windowService.save()
+    })
+
+    reaction(() => this.currentPageIndex, () => {
+      this.windowService.save()
+    })
   }
 
   addHashtagPage(tag: string) {
@@ -64,34 +98,63 @@ export class Tab {
     return this.getPage(this.currentPageIndex);
   }
 
+  get hasNextPage(): boolean {
+    return this.currentPageIndex < this.pages.length - 1
+  }
+
+  get hasPreviousPage(): boolean {
+    return this.currentPageIndex !== 0
+  }
+
   async goToPage(index: number) {
     if (index >= 0 && index < this.pages.length) {
-
-      const page = this.getPage(index)
-
-      if (page instanceof EntityPage) {
-        this.title = (await entityService.findById(page.entityId)).title
-      } else if (page instanceof HashtagPage) {
-        this.title = page.tag
-      }
       this.currentPageIndex = index;
     }
   }
 
   getPage(index: number) {
-    return this.pages[index]
+    if (this.pages.length) {
+      return this.pages[index]
+    }
+    return undefined
   }
 
   goBack() {
     if (this.currentPageIndex > 0) {
-      this.goToPage(this.currentPageIndex--)
+      this.goToPage(this.currentPageIndex - 1)
     }
   }
 
   goForward() {
     if (this.currentPageIndex < this.pages.length - 1) {
-      this.goToPage(this.currentPageIndex++)
+      this.goToPage(this.currentPageIndex + 1)
     }
+  }
+
+  toJson() {
+    return {
+      id: this.id,
+      currentPageIndex: this.currentPageIndex,
+      pages: this.pages.map((page) => {
+        return page.toJson()
+      })
+    }
+  }
+  
+
+  static fromState(windowService: WindowService, state: any) {
+    const pages = state.pages?.length ? state.pages.map((page: any) => {
+      if (page.type === 'hashtag') {
+        return new HashtagPage(page.tag)
+      } else {
+        return new EntityPage(page.entityId, page.selectedBlockId)
+      }
+    }) : []
+    return new Tab(windowService, {
+      id: state.id,
+      currentPageIndex: state.currentPageIndex,
+      pages: pages
+    })
   }
 
 }
@@ -126,8 +189,10 @@ export class WindowService {
     if (!state) {
       await this.insertInitial()
     } else {
-      this.tabs = state.data.tabs
-      this.currentTabId = state.data.currentTabId
+      runInAction(() => {
+        this.tabs = JSON.parse(state.data.tabs).map((tab: any) => Tab.fromState(this, tab))
+        this.currentTabId = state.data.currentTabId
+      })
     }
   }
 
@@ -143,15 +208,17 @@ export class WindowService {
   }
 
 
-  private save() {
+  save() {
+    const tabsJson = JSON.stringify(this.tabs.map((t) => t.toJson())) 
     this.root.db.updateTable('app_state')
       .where('type', '=', 'window_state')
       .set({
         data: {
-          tabs: this.tabs,
+          tabs: tabsJson,
           currentTabId: this.currentTabId,
         }
       })
+      .returningAll()
       .execute()
   }
 
@@ -172,7 +239,7 @@ export class WindowService {
   }
 
   addTab() {
-    const tab = new Tab()
+    const tab = new Tab(this)
     this.tabs.push(tab);
     this.currentTabId = tab.id;
     return tab;

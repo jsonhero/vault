@@ -1,21 +1,24 @@
 import { FilePlusIcon, TableIcon } from "lucide-react"
 
-import { useAppStateService } from "~/features/app-state"
 import { entityService } from "~/services/entity.service"
 
 import { Button } from '~/components/ui/button'
+import { useRootService } from "~/services/root.service"
 
 export const IconBar = () => {
-  const appState = useAppStateService()
+  const root = useRootService()
 
   const onClickAddDocument = async () => {
     const entity = await entityService.insertDocument()
-    appState.setSelectedEntityId(entity.id)
+
+    const tab = root.windowService.getOrCreateCurrentTab()
+    tab.addEntityPage(entity.id)
   }
 
   const onClickAddTable = async () => {
     const entity = await entityService.insertTable()
-    appState.setSelectedEntityId(entity.id)
+    const tab = root.windowService.getOrCreateCurrentTab()
+    tab.addEntityPage(entity.id)
   }
 
   return (
