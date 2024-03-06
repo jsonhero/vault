@@ -29,6 +29,7 @@ module.exports = {
       },
       colors: {
         backgroundBorder: 'var(--background-border)',
+        muted: 'var(--text-muted)'
       },
       textColor: {
         normal: 'var(--text-normal)',

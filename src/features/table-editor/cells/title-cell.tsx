@@ -1,3 +1,4 @@
+import { CellInput } from '../ui';
 import { BaseCell } from './base-cell'
 
 interface TitleCellProps {
@@ -15,12 +16,11 @@ export const TitleCell = ({
 }: TitleCellProps) => {
   return (
     <BaseCell className="group">
-      <input 
+      <CellInput 
         defaultValue={row.title} 
         onBlur={(e) => onUpdate(row.id, column.id, e.target.value)} 
-        className="bg-transparent w-full focus-visible:outline-none focus-visible:border-none outline-none border-none"
       />
-      <div className="hidden group-hover:block">
+      <div className="hidden group-hover:block absolute right-0">
         <button onClick={() => setSelectedEntityId(row.id)}>Open</button>
       </div>
     </BaseCell>

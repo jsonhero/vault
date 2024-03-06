@@ -1,3 +1,4 @@
+import { CellInput } from '../ui';
 import { BaseCell } from './base-cell'
 
 interface TextCellProps {
@@ -14,10 +15,9 @@ export const TextCell = ({
 }: TextCellProps) => {
   return (
     <BaseCell>
-      <input 
+      <CellInput 
         defaultValue={value} 
         onBlur={(e) => onUpdate(row.id, column.id, e.target.value)} 
-        className="bg-transparent w-full focus-visible:outline-none focus-visible:border-none outline-none border-none"
       />
     </BaseCell>
   )

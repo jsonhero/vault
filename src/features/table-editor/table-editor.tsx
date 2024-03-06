@@ -10,6 +10,11 @@ import { TableRow } from './row'
 import { HeaderPopover } from './header'
 import { tableEditorService } from '~/services/table.service'
 import { dataSchemaService } from '~/services/data-schema.service';
+import { HeaderButton, RowHoverControl } from './ui'
+import { GripVerticalIcon } from 'lucide-react';
+import { Menu } from '@ark-ui/react';
+import { Button } from '~/components/ui/button';
+
 
 export const TableEditor = ({ entity }: { entity: Entity }) => {
   const appState = useAppStateService()
@@ -50,29 +55,33 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
   }, [entity.data_schema_id])
 
   return (
-    <div className="p-2 w-full">
+    <div className="py-2 w-full h-full overflow-x-auto">
       <div className="w-full">
-        <table className="w-full border-collapse">
+        <table className="w-full border-collapse table-fixed">
           <thead>
-            <tr className="border-b">
-              <th className="w-[50px]">
+            <tr>
+              <th className='w-[30px] sticky left-0 bg-primary z-10'></th>
+              <th className="w-[50px] border-b border-t border-muted w-[250px] border-r border-muted">
                 ID
               </th>
               {dataSchema?.schema?.columns.map((column) => (
-                <th key={column.id} className="w-[250px]">
+                <th key={column.id} className="border-b border-t border-muted w-[250px] border-l border-r border-muted last:border-r-0">
                   <HeaderPopover dataSchema={dataSchema} column={column} onUpdateSchema={onUpdateSchema} />
                 </th>
               ))}
-              <th className="min-w-[70px] flex-1 text-left">
-                <button onClick={onAddColumn}>+</button>
+              <th className="border-b border-t border-muted w-[100px] flex-1 text-left">
+                <HeaderButton onClick={onAddColumn}>+</HeaderButton>
               </th>
             </tr>
           </thead>
           <tbody>
             {
               records.map((row) => (
-                <TableRow key={row.id} className="border-b">
-                  <td>
+                <TableRow key={row.id} className='relative group'>
+                  <td className="sticky left-0 bg-primary z-10">
+                    <RowHoverControl entityId={row.id} />
+                  </td>
+                  <td className="border-b border-r border-muted">
                     {row.id}
                   </td>
                   {dataSchema?.schema?.columns.map((column) => {
@@ -121,19 +130,21 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
                     }
 
                     return (
-                      <td className="border-r border-l" key={column.id}>
+                      <td className="[&:nth-child(3)]:bg-transparent last:border-r-0 border-b border-r border-l border-muted" key={column.id}>
                         {component}
                       </td>
                     )
                   })}
+                  <td className="border-b border-t border-muted"></td>
                 </TableRow>
               ))
             }
             <tr>
-              <td colSpan={2}>
-                <button onClick={onInsertRow} className="w-full text-blue-800">
+              <td></td>
+              <td className="border-b border-muted" colSpan={dataSchema?.schema?.columns.length + 2}>
+                <Button onClick={onInsertRow} className="text-left w-full">
                   Add Row
-                </button>
+                </Button>
               </td>
             </tr>
           </tbody>

@@ -80,11 +80,18 @@ export class Tab {
   }
 
   addHashtagPage(tag: string) {
+    if (this.currentPage instanceof HashtagPage) {
+      if (this.currentPage.tag === tag) return
+    }
     const page = new HashtagPage(tag)
     this.addPage(page)
   }
 
   addEntityPage(entityId: number, selectedBlockId?: string | null) {
+
+    if (this.currentPage instanceof EntityPage) {
+      if (this.currentPage.entityId === entityId) return
+    }
     const page = new EntityPage(entityId, selectedBlockId)
     this.addPage(page)
   }
@@ -101,6 +108,10 @@ export class Tab {
   get hasNextPage(): boolean {
     return this.currentPageIndex < this.pages.length - 1
   }
+
+  get isEmpty(): boolean {
+    return this.currentPageIndex === -1
+  } 
 
   get hasPreviousPage(): boolean {
     return this.currentPageIndex > 0;

@@ -6,6 +6,10 @@ import { Input } from '~/components/input'
 
 import { DataSchema, DataSchemaValue } from "~/types/db-types";
 
+import { columnTypeToIcon } from '../utils'
+import { Button } from "~/components/ui/button";
+import { HeaderButton } from '../ui'
+
 interface HeaderPopoverProps {
   column: any;
   onUpdateSchema: (fn: (schema: DataSchemaValue) => DataSchemaValue) => void
@@ -125,9 +129,14 @@ export const HeaderPopover = ({
       placement: 'bottom-start'
     }}>
       <Popover.Trigger asChild>
-        <button className='min-w-[24px] w-full text-left'>
-          {column.name || '_'} 
-        </button>
+        <HeaderButton>
+          <span>
+            {columnTypeToIcon(column.type, {})}
+          </span>
+          <span>
+            {column.name || '_'} 
+          </span>
+        </HeaderButton>
       </Popover.Trigger>
       <Popover.Positioner>
         <Popover.Content className="bg-primary w-[230px] p-3 shadow-md rounded-md font-normal text-sm z-20">

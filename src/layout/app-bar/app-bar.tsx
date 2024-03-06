@@ -34,18 +34,17 @@ const HashtagPageTitle = ({ page }: { page: HashtagPage }) => {
 } 
 
 const WindowTabComponent = ({ tab, currentPage, onClickTab, onCloseTab, isActive }: { tab: Tab }) => {
-
   return (
     <Button data-active={isActive} isActive={isActive} onClick={() => onClickTab(tab)} className="flex justify-between items-center group p-3 w-[160px] h-full border-r border-backgroundBorder data-[active=true]:bg-primary rounded-none">
       <div className="flex-grow text-left text-sm overflow-hidden text-nowrap text-ellipsis">
         {currentPage instanceof EntityPage && <EntityPageTitle page={currentPage} />}
         {currentPage instanceof HashtagPage && <HashtagPageTitle page={currentPage} />}
-        {/* <span>Untitled</span> */}
+        {tab.isEmpty && 'Empty'}
       </div>
       <div onClick={(e) => {
           e.stopPropagation();
           onCloseTab(tab);
-      }} className="w-[30px] flex justify-end">
+      }} className="hover:bg-interactiveHover p-1 rounded-sm flex justify-end">
         <XIcon className="hidden group-hover:block group-data-[active=true]:block" size={14} />
       </div>
     </Button>

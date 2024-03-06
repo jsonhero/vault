@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { FolderTreeIcon, ListIcon } from 'lucide-react'
-import { useAppStateService } from "~/features/app-state";
 import { Entity } from "~/types/db-types";
 import { FileExplorer } from '~/features/file-explorer'
 
@@ -10,7 +9,7 @@ import { useRootService } from "~/services/root.service";
 import { Button } from '~/components/ui/button'
 
 export const ExplorerBar = () => {
-  const [active, setActive] = useState('file_tree')
+  const [active, setActive] = useState('file_list')
 
   const root = useRootService()
 

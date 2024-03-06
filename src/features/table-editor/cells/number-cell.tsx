@@ -1,6 +1,7 @@
 import { NumberInput } from '@ark-ui/react'
 
 import { BaseCell } from './base-cell'
+import { CellInput } from '../ui';
 
 interface NumberCellProps {
   row: any;
@@ -16,10 +17,16 @@ export const NumberCell = ({
 }: NumberCellProps) => {
   return (
     <BaseCell>
-      <NumberInput.Root defaultValue={value} onValueChange={(d) => onUpdate(row.id, column.id, d.value)}>
+      <NumberInput.Root 
+        className='w-full'
+        defaultValue={value} 
+        onValueChange={(d) => onUpdate(row.id, column.id, d.value)}
+      >
         <NumberInput.Input
-          className="bg-transparent w-full focus-visible:outline-none focus-visible:border-none outline-none border-none"
-        />
+          asChild
+        >
+          <CellInput />
+        </NumberInput.Input>
       </NumberInput.Root>
     </BaseCell>
   )
