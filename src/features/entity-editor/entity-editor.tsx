@@ -17,15 +17,15 @@ export const EntityEditor = ({ entityId, selectedBlockId, simple, onSelectBlockI
   if (!entity) return null;
 
   return (
-    <div className='h-full w-full'>
+    <>
       {!selectedBlockId && 
       (
-        <div className="z-10">
+        <div className="left-0 sticky z-10">
           <TitleEditor entity={entity} />
         </div>
     )}
       {entity.type === 'document' && <DocumentEditor selectedBlockId={selectedBlockId} entity={entity} simple={simple} onSelectBlockId={onSelectBlockId} />}
       {entity.type === 'table' && <TableEditor entity={entity} />}
-    </div>
+    </>
   )
 }

@@ -31,16 +31,14 @@ export const Main = observer(() => {
         </div>
       </div> */}
       <div className="w-auto relative overflow-auto">
-        <div className='py-10 h-full'>
-          {currentPage instanceof EntityPage && (
-            <EntityEditor 
-              entityId={currentPage.entityId} 
-              onSelectBlockId={onSelectBlockId}
-              selectedBlockId={currentPage.selectedBlockId}
-            />
-          )}
-          {currentPage instanceof HashtagPage && <TagView tag={currentPage.tag} />}
-        </div>
+        {currentPage instanceof EntityPage && (
+          <EntityEditor 
+            entityId={currentPage.entityId} 
+            onSelectBlockId={onSelectBlockId}
+            selectedBlockId={currentPage.selectedBlockId}
+          />
+        )}
+        {currentPage instanceof HashtagPage && <TagView tag={currentPage.tag} />}
       </div>
       <div className="w-full bg-secondary">
         <UtilityBar />
