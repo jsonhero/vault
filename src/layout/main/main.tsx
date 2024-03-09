@@ -30,8 +30,8 @@ export const Main = observer(() => {
           }
         </div>
       </div> */}
-      <div className="w-auto overflow-y-auto ">
-        <div className='px-[50px] py-10 h-full'>
+      <div className="w-auto relative overflow-auto">
+        <div className='py-10 h-full'>
           {currentPage instanceof EntityPage && (
             <EntityEditor 
               entityId={currentPage.entityId} 

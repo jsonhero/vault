@@ -40,7 +40,7 @@ export const RowHoverControl = ({ entityId }) => {
           </Button>
         </Menu.Trigger>
         <Menu.Positioner>
-          <Menu.Content className="bg-primary p-3 shadow-md rounded-md z-50">
+          <Menu.Content className="bg-primary p-3 shadow-md rounded-md z-[1000]">
             <Menu.Item id="delete" onClick={() => entityService.deleteById(entityId)}>Delete</Menu.Item>
           </Menu.Content>
         </Menu.Positioner>

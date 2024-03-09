@@ -55,21 +55,21 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
   }, [entity.data_schema_id])
 
   return (
-    <div className="py-2 w-full h-full overflow-x-auto">
+    <div className="w-full h-full">
       <div className="w-full">
-        <table className="w-full border-collapse table-fixed">
+        <table className="w-full border-separate border-spacing-0 table-fixed px-16 pb-20">
           <thead>
             <tr>
-              <th className='w-[30px] sticky left-0 bg-primary z-10'></th>
-              <th className="w-[50px] border-b border-t border-muted w-[250px] border-r border-muted">
+              <th className='w-[30px] left-0 bg-primary z-10'></th>
+              <th className="bg-primary sticky top-0 z-50 w-[50px] border-l-0 border-b border-t border-muted w-[250px] border-r border-muted">
                 ID
               </th>
               {dataSchema?.schema?.columns.map((column) => (
-                <th key={column.id} className="border-b border-t border-muted w-[250px] border-l border-r border-muted last:border-r-0">
+                <th key={column.id} className="z-50 bg-primary sticky top-0 border-l-0 border-b border-t border-muted w-[250px] border-l border-r border-muted last:border-r-0">
                   <HeaderPopover dataSchema={dataSchema} column={column} onUpdateSchema={onUpdateSchema} />
                 </th>
               ))}
-              <th className="border-b border-t border-muted w-[100px] flex-1 text-left">
+              <th className="bg-primary z-50 sticky top-0 border-b border-l-0 border-t border-muted w-[100px] flex-1 text-left">
                 <HeaderButton onClick={onAddColumn}>+</HeaderButton>
               </th>
             </tr>
@@ -78,10 +78,10 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
             {
               records.map((row) => (
                 <TableRow key={row.id} className='relative group'>
-                  <td className="sticky left-0 bg-primary z-10">
+                  <td className="left-0 bg-primary z-10">
                     <RowHoverControl entityId={row.id} />
                   </td>
-                  <td className="border-b border-r border-muted">
+                  <td className="border-b border-r border-muted border-l-0">
                     {row.id}
                   </td>
                   {dataSchema?.schema?.columns.map((column) => {
@@ -130,12 +130,12 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
                     }
 
                     return (
-                      <td className="[&:nth-child(3)]:bg-transparent last:border-r-0 border-b border-r border-l border-muted" key={column.id}>
+                      <td className="border-l-0 [&:nth-child(3)]:bg-transparent last:border-r-0 border-b border-r border-l border-muted" key={column.id}>
                         {component}
                       </td>
                     )
                   })}
-                  <td className="border-b border-t border-muted"></td>
+                  <td className="border-l-0 border-b border-muted"></td>
                 </TableRow>
               ))
             }
