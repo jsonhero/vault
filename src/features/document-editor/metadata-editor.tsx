@@ -39,9 +39,9 @@ export const MetadataEditor = ({
 
   return (
     <div className="mb-6">
-      <button className="border-1 rounded-sm flex items-center justify-center w-fit p-1 ">
+      {/* <button className="border-1 rounded-sm flex items-center justify-center w-fit p-1 ">
         {entity.table_title}
-      </button>
+      </button> */}
       <table className="border-collapse mt-2">
         <tbody>
           {entity.schema.columns.map((column) => {
@@ -95,8 +95,7 @@ export const MetadataEditor = ({
                   <div>
                     
                   </div>
-                  <div>
-
+                  <div className="text-muted">
                     {column.name}
                   </div>
                 </td>

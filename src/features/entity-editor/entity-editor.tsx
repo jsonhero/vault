@@ -20,7 +20,7 @@ export const EntityEditor = ({ entityId, selectedBlockId, simple, onSelectBlockI
     <>
       {!selectedBlockId && 
       (
-        <div className="left-0 sticky z-10">
+        <div className="left-0 sticky z-10 pt-10 pb-4 px-16">
           <TitleEditor entity={entity} />
         </div>
     )}

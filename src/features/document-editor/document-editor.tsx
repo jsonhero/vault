@@ -97,7 +97,7 @@ export const DocumentEditor = ({ entity, selectedBlockId, simple, onSelectBlockI
   const docJson = useMemo(() => document?.doc, [document?.id])
   
   return (
-    <div>
+    <div className="px-16">
       <MetadataEditor entityId={entity.id} />
       <BlockEditor
         extensions={root.extensionService.extensions}
