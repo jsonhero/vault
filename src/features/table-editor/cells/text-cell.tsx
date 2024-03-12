@@ -15,7 +15,8 @@ export const TextCell = ({
 }: TextCellProps) => {
   return (
     <BaseCell>
-      <CellInput 
+      <CellInput
+        placeholder='Empty'
         defaultValue={value} 
         onBlur={(e) => onUpdate(row.id, column.id, e.target.value)} 
       />

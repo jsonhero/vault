@@ -139,7 +139,7 @@ export const HeaderPopover = ({
         </HeaderButton>
       </Popover.Trigger>
       <Popover.Positioner>
-        <Popover.Content className="bg-primary w-[230px] p-3 shadow-md rounded-md font-normal text-sm z-20">
+        <Popover.Content className="bg-secondary w-[230px] p-3 shadow-md rounded-md font-normal text-sm z-[5000]">
           {isEditProperty ? <EditPropertyView onUpdateType={onUpdateColumnSchemaType} value={activeColumn!.type} onBack={toggleEditProperty}/> : (
             <div>
               <div className="border border-slate-700 bg-secondary rounded-sm p-1">

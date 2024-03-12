@@ -8,6 +8,11 @@ import {
 } from '~/features/table-editor/cells'
 import { useTakeFirstDbQuery } from "~/query-manager"
 import { tableEditorService } from "~/services/table.service"
+import { columnTypeToIcon } from '../table-editor/utils'
+import { HeaderPopover } from '../table-editor/header'
+import { useCallback } from 'react'
+import { dataSchemaService } from '~/services/data-schema.service'
+import { DataSchemaValue } from '~/types/db-types'
 
 
 export const MetadataEditor = ({
@@ -33,6 +38,14 @@ export const MetadataEditor = ({
       )
     }
   }
+
+  const onUpdateSchema = useCallback(async (fn: (schema: DataSchemaValue) => DataSchemaValue) => {
+    if (entity?.data_schema_id) {
+      const record = await dataSchemaService.findById(entity.data_schema_id)
+      const modifiedSchema = fn(record.schema)
+      dataSchemaService.update(record.id, modifiedSchema)
+    }
+  }, [entity?.data_schema_id])
   
   if (!entity) return null;
 
@@ -42,64 +55,68 @@ export const MetadataEditor = ({
       {/* <button className="border-1 rounded-sm flex items-center justify-center w-fit p-1 ">
         {entity.table_title}
       </button> */}
-      <table className="border-collapse mt-2">
+      <table className="border-collapse table-fixed">
         <tbody>
-          {entity.schema.columns.map((column) => {
+          {entity.schema.columns.filter((column) => column.type !== 'title').map((column) => {
             const value = _.get(entity.data, column.id)
 
             let component;
 
-              if (column.type === 'title') {
-                component = (
-                  <TitleCell 
-                    column={column} 
-                    row={entity} 
-                    onUpdate={onUpdateCell} 
-                    // setSelectedEntityId={appState.setSelectedEntityId} 
-                  />
-                )
-              } else if (column.type === 'text') {
-                component = (
-                  <TextCell
-                    column={column} 
-                    row={entity} 
-                    onUpdate={onUpdateCell}
-                    value={value}
-                  />
-                )
-              } else if (column.type === 'number') {
-                component = (
-                  <NumberCell
-                    column={column} 
-                    row={entity} 
-                    onUpdate={onUpdateCell}
-                    value={value}
-                  />
-                )
-              } else if (column.type === 'boolean') {
-                component = (
-                  <BooleanCell
-                    column={column} 
-                    row={entity} 
-                    onUpdate={onUpdateCell}
-                    value={value}
-                  />
-                )
-              } else {
-                component = value
-              }
+            if (column.type === 'title') {
+              component = (
+                <TitleCell 
+                  column={column} 
+                  row={entity} 
+                  onUpdate={onUpdateCell} 
+                  // setSelectedEntityId={appState.setSelectedEntityId} 
+                />
+              )
+            } else if (column.type === 'text') {
+              component = (
+                <TextCell
+                  column={column} 
+                  row={entity} 
+                  onUpdate={onUpdateCell}
+                  value={value}
+                />
+              )
+            } else if (column.type === 'number') {
+              component = (
+                <NumberCell
+                  column={column} 
+                  row={entity} 
+                  onUpdate={onUpdateCell}
+                  value={value}
+                />
+              )
+            } else if (column.type === 'boolean') {
+              component = (
+                <BooleanCell
+                  column={column} 
+                  row={entity} 
+                  onUpdate={onUpdateCell}
+                  value={value}
+                />
+              )
+            } else {
+              component = value
+            }
+
+            console.log(column, value, 'column')
 
             return (
               <tr>
-                <td className="pr-4 flex">
-                  <div>
-                    
-                  </div>
-                  <div className="text-muted">
-                    {column.name}
-                  </div>
+                <td className="p-0 flex items-center text-muted w-[200px] h-[38px]">
+                  <HeaderPopover 
+                    column={column}
+                    dataSchema={{
+                      id: entity.data_schema_id!,
+                      schema: entity.schema,
+                    }}
+                    onUpdateSchema={onUpdateSchema}
+                  />
                 </td>
-                <td>
+                <td className='p-0 w-full hover:bg-interactiveHover h-[38px]'>
                   {component}
                 </td>
               </tr>

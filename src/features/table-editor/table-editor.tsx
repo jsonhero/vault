@@ -55,101 +55,99 @@ export const TableEditor = ({ entity }: { entity: Entity }) => {
   }, [entity.data_schema_id])
 
   return (
-    <div className="w-full h-full">
-      <div className="w-full">
-        <table className="w-full border-separate border-spacing-0 table-fixed px-16 pb-20">
-          <thead>
-            <tr>
-              <th className='w-[30px] left-0 bg-primary z-10'></th>
-              <th className="bg-primary sticky top-0 z-50 w-[50px] border-l-0 border-b border-t border-muted w-[250px] border-r border-muted">
-                ID
+    <div className="w-full">
+      <table className="w-full border-separate border-spacing-0 table-fixed px-16 pb-20">
+        <thead>
+          <tr>
+            <th className='w-[30px] left-0 bg-primary z-10'></th>
+            <th className="bg-primary sticky top-0 z-50 w-[50px] border-l-0 border-b border-t border-muted w-[250px] border-r border-muted">
+              ID
+            </th>
+            {dataSchema?.schema?.columns.map((column) => (
+              <th key={column.id} className="z-50 bg-primary sticky top-0 border-l-0 border-b border-t border-muted w-[250px] border-l border-r border-muted last:border-r-0">
+                <HeaderPopover dataSchema={dataSchema} column={column} onUpdateSchema={onUpdateSchema} />
               </th>
-              {dataSchema?.schema?.columns.map((column) => (
-                <th key={column.id} className="z-50 bg-primary sticky top-0 border-l-0 border-b border-t border-muted w-[250px] border-l border-r border-muted last:border-r-0">
-                  <HeaderPopover dataSchema={dataSchema} column={column} onUpdateSchema={onUpdateSchema} />
-                </th>
-              ))}
-              <th className="bg-primary z-50 sticky top-0 border-b border-l-0 border-t border-muted w-[100px] flex-1 text-left">
-                <HeaderButton onClick={onAddColumn}>+</HeaderButton>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {
-              records.map((row) => (
-                <TableRow key={row.id} className='relative group'>
-                  <td className="left-0 bg-primary z-10">
-                    <RowHoverControl entityId={row.id} />
-                  </td>
-                  <td className="border-b border-r border-muted border-l-0">
-                    {row.id}
-                  </td>
-                  {dataSchema?.schema?.columns.map((column) => {
-                    const value = _.get(row.data, column.id)
+            ))}
+            <th className="bg-primary z-50 sticky top-0 border-b border-l-0 border-t border-muted w-[100px] flex-1 text-left">
+              <HeaderButton onClick={onAddColumn}>+</HeaderButton>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            records.map((row) => (
+              <TableRow key={row.id} className='relative group'>
+                <td className="left-0 bg-primary z-10">
+                  <RowHoverControl entityId={row.id} />
+                </td>
+                <td className="border-b border-r border-muted border-l-0">
+                  {row.id}
+                </td>
+                {dataSchema?.schema?.columns.map((column) => {
+                  const value = _.get(row.data, column.id)
 
-                    let component;
+                  let component;
 
-                    if (column.type === 'title') {
-                      component = (
-                        <TitleCell 
-                          column={column} 
-                          row={row} 
-                          onUpdate={onUpdateRowColumn} 
-                          setSelectedEntityId={appState.setSelectedEntityId} 
-                        />
-                      )
-                    } else if (column.type === 'text') {
-                      component = (
-                        <TextCell
-                          column={column} 
-                          row={row} 
-                          onUpdate={onUpdateRowColumn}
-                          value={value}
-                        />
-                      )
-                    } else if (column.type === 'number') {
-                      component = (
-                        <NumberCell
-                          column={column} 
-                          row={row} 
-                          onUpdate={onUpdateRowColumn}
-                          value={value}
-                        />
-                      )
-                    } else if (column.type === 'boolean') {
-                      component = (
-                        <BooleanCell
-                          column={column} 
-                          row={row} 
-                          onUpdate={onUpdateRowColumn}
-                          value={value}
-                        />
-                      )
-                    } else {
-                      component = value
-                    }
-
-                    return (
-                      <td className="border-l-0 [&:nth-child(3)]:bg-transparent last:border-r-0 border-b border-r border-l border-muted" key={column.id}>
-                        {component}
-                      </td>
+                  if (column.type === 'title') {
+                    component = (
+                      <TitleCell 
+                        column={column} 
+                        row={row} 
+                        onUpdate={onUpdateRowColumn} 
+                        setSelectedEntityId={appState.setSelectedEntityId} 
+                      />
                     )
-                  })}
-                  <td className="border-l-0 border-b border-muted"></td>
-                </TableRow>
-              ))
-            }
-            <tr>
-              <td></td>
-              <td className="border-b border-muted" colSpan={dataSchema?.schema?.columns.length + 2}>
-                <Button onClick={onInsertRow} className="text-left w-full">
-                  Add Row
-                </Button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+                  } else if (column.type === 'text') {
+                    component = (
+                      <TextCell
+                        column={column} 
+                        row={row} 
+                        onUpdate={onUpdateRowColumn}
+                        value={value}
+                      />
+                    )
+                  } else if (column.type === 'number') {
+                    component = (
+                      <NumberCell
+                        column={column} 
+                        row={row} 
+                        onUpdate={onUpdateRowColumn}
+                        value={value}
+                      />
+                    )
+                  } else if (column.type === 'boolean') {
+                    component = (
+                      <BooleanCell
+                        column={column} 
+                        row={row} 
+                        onUpdate={onUpdateRowColumn}
+                        value={value}
+                      />
+                    )
+                  } else {
+                    component = value
+                  }
+
+                  return (
+                    <td className="border-l-0 [&:nth-child(3)]:bg-transparent last:border-r-0 border-b border-r border-l border-muted" key={column.id}>
+                      {component}
+                    </td>
+                  )
+                })}
+                <td className="border-l-0 border-b border-muted"></td>
+              </TableRow>
+            ))
+          }
+          <tr>
+            <td></td>
+            <td className="border-b border-muted" colSpan={dataSchema?.schema?.columns.length + 2}>
+              <Button onClick={onInsertRow} className="text-left w-full">
+                Add Row
+              </Button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   )
 }
