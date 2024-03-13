@@ -18,7 +18,7 @@ export const HeaderButton = ({ className, ...rest }: HeaderButtonProps) => {
 }
 
 export const CellInput = forwardRef<HTMLInputElement, ComponentProps<'input'>>((props, ref) => {
-  const className = twMerge('focus:bg-interactiveHover p-1 bg-transparent w-full focus-visible:outline-none focus-visible:border-none outline-none border-none', props.className);
+  const className = twMerge('focus:bg-interactiveHover p-1 bg-transparent h-full w-full focus-visible:outline-none focus-visible:border-none outline-none border-none', props.className);
 
   return (
     <input

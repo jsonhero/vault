@@ -18,14 +18,14 @@ export const NumberCell = ({
   return (
     <BaseCell>
       <NumberInput.Root 
-        className='w-full'
+        className='w-full h-full'
         defaultValue={value} 
         onValueChange={(d) => onUpdate(row.id, column.id, d.value)}
       >
         <NumberInput.Input
           asChild
         >
-          <CellInput />
+          <CellInput placeholder='Empty' />
         </NumberInput.Input>
       </NumberInput.Root>
     </BaseCell>

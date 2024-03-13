@@ -4,6 +4,8 @@ import { Decoration, DecorationSet, EditorView } from "prosemirror-view";
 import { Editor, Extension } from "~/lib/vault-prosemirror";
 import { Node } from "prosemirror-model";
 import { ReactRenderer } from "~/lib/vault-prosemirror/react";
+import { useEffect, useState } from "react";
+import { ChevronRightIcon } from "lucide-react";
 
 /**
  * lineblock plugin will can take blockId on startup to target specific lines in tag view
@@ -146,19 +148,80 @@ function setFocusDepth(editor: Editor, depth: number) {
 }
 
 export const BreadcrumbComponent = ({
-  path,
-  view
+  view,
+  selectedBlockId,
+}: {
+  selectedBlockId: string,
+  view: EditorView
 }) => {
+
+  const [blockPath, setBlockPath] = useState<any[]>([])
+
+  useEffect(() => {
+    const doc = view.state.doc
+    const count = doc.childCount
+
+    let blockIdx: number | undefined = undefined
+    let startBlock: Node | undefined = undefined
+    let block: Node | undefined = undefined
+    for (let i = 0; i < count; i++) {
+      const child = doc.child(i)
+
+      if (child.attrs.depth === 0) {
+        startBlock = child
+      }
+
+      if (child.attrs.blockId === selectedBlockId) {
+        blockIdx = i
+        block = child
+        break;
+      }
+    }
+
+    if (blockIdx && block && startBlock) {
+      let depth: number = block.attrs.depth
+      const _childPath = []
+      for (let i = blockIdx; i >= 0; i--) {
+        const child = doc.child(i)
+
+        if (child.attrs.depth < depth) {
+          depth = child.attrs.depth
+          _childPath.unshift({
+            blockId: child.attrs.blockId,
+            content: child.textContent
+          })
+        }
+
+        if (depth === 0) {
+          break;
+        }
+      }
+
+      setBlockPath(_childPath)
+    }
+
+  }, [selectedBlockId])
+
   return (
     <div>
-      {path.length ? (
+      {selectedBlockId ? (
         <div className="flex gap-2">
-          <button onClick={() => clearFocusBlock(view)}>
-            Doc
+          <button className="flex gap-1 items-center" onClick={() => clearFocusBlock(view)}>
+            <div>
+              Title
+            </div>
+            {blockPath.length > 0 ? <ChevronRightIcon /> : null}
           </button>
-          {path.map((blockId) => {
+          {blockPath.map((node, i) => {
+            const isLast = blockPath.length - 1 === i
+
             return (
-              <button key={blockId} onClick={() => focusBlock(view, blockId)}>{blockId}</button>
+              <button className="flex gap-1 items-center" key={node.blockId} onClick={() => focusBlock(view, node.blockId)}>
+                <div>
+                  {node.content}
+                </div>
+                {!isLast && <ChevronRightIcon />}
+              </button>
             )
           })}
         </div>
@@ -208,6 +271,7 @@ export const LineblockExtension = Extension.create<LineblockExtensionOptions>({
           props: {
             view,
             path: options.selectedBlockId ? [options.selectedBlockId] : [],
+            selectedBlockId: options.selectedBlockId,
           }
         })
 

@@ -103,7 +103,7 @@ export const SuggestionPopover = forwardRef(({ children, active, upHandler, down
       <Tooltip.Positioner style={{
         zIndex: 3000
       }}>
-        <Tooltip.Content className="bg-gray-800 shadow-md">
+        <Tooltip.Content className="bg-secondary shadow-md">
           {children}
         </Tooltip.Content>
       </Tooltip.Positioner>

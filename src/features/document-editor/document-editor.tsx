@@ -98,7 +98,7 @@ export const DocumentEditor = ({ entity, selectedBlockId, simple, onSelectBlockI
   
   return (
     <div className="px-16">
-      <MetadataEditor entityId={entity.id} />
+      {!simple && <MetadataEditor entityId={entity.id} />}
       <BlockEditor
         extensions={root.extensionService.extensions}
         selectedBlockId={selectedBlockId}

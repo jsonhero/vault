@@ -8,17 +8,18 @@ import { useRootService } from '~/services/root.service';
 import { EntityEditor } from '~/features/entity-editor';
 import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import { Entity } from '~/types/db-types';
+import { EntityPage } from '~/services/window.service';
 
 export const UtilityBar = observer(() => {
   const root = useRootService()
 
   const selectedEntityId = useMemo(() => {
-    const tab = root.windowService.activeTab
-    if (tab && tab?.type === 'entity_view') {
-      return tab.meta.entityId
+    const tab = root.windowService.currentTab
+    if (tab && tab.currentPage instanceof EntityPage) {
+      return tab.currentPage.entityId
     }
     return null
-  }, [root.windowService.activeTab])
+  }, [root.windowService.currentTab])
 
   const { data: entityGraph } = useDbQuery({
     keys: [selectedEntityId],
@@ -105,7 +106,7 @@ export const UtilityBar = observer(() => {
                   {api.isOpen ? <ChevronUpIcon size={20} /> : <ChevronDownIcon size={20} />}
                 </Accordion.ItemIndicator>
               </Accordion.ItemTrigger>
-              <Accordion.ItemContent className='h-[300px] bg-tertiary overflow-y-auto'>
+              <Accordion.ItemContent className='h-[300px] bg-primary overflow-y-auto'>
                 <div className='flex flex-col px-[30px] py-5 gap-8'>
                   {fromGraphGroups.map((group) => {
                     return (
@@ -118,7 +119,7 @@ export const UtilityBar = observer(() => {
                         <div className='flex flex-col gap-4'>
                           {group.children.map((e) => (
                             <div className="border-b-1 border-gray-700 pb-3 last:border-none">
-                              <EntityEditor entityId={e.from_entity_id} selectedBlockId={e.graph_data.document.blockId} /> 
+                              <EntityEditor simple={true} entityId={e.from_entity_id} selectedBlockId={e.graph_data.document.blockId} /> 
                             </div>
                           ))}
                         </div>
